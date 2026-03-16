@@ -29,10 +29,18 @@ export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: 
     setSlides(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
   }, [])
 
+  const resetDiagrams = useCallback(() => {
+    setSlides(prev => prev.map(s =>
+      s.type === 'diagram' ? { ...s, svgContent: undefined } : s
+    ))
+  }, [])
+
   // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (showChat) return
       switch (e.key) {
         case 'ArrowRight':
         case 'ArrowDown':
@@ -57,6 +65,10 @@ export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: 
         case 'C':
           if (canEdit) setShowChat(v => !v)
           break
+        case 'r':
+        case 'R':
+          if (canEdit) resetDiagrams()
+          break
         case 'Escape':
           setShowShare(false)
           break
@@ -64,7 +76,7 @@ export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [current, goTo, canEdit])
+  }, [current, goTo, canEdit, showChat, resetDiagrams])
 
   // Fullscreen sync
   useEffect(() => {
@@ -156,6 +168,22 @@ export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: 
                   </div>
                 )}
               </div>
+            )}
+
+            {canEdit && (
+              <button
+                onClick={resetDiagrams}
+                title="Reset all diagrams (R)"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #222',
+                  borderRadius: 6, padding: '4px 10px',
+                  fontSize: 12, color: '#444', cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                Reset diagrams
+              </button>
             )}
 
             <button

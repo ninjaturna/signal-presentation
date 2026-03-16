@@ -1,4 +1,5 @@
 import { SlideShell } from '../SlideShell'
+import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
 import type { SlideData } from '../../types/deck'
@@ -13,7 +14,8 @@ interface SlideNarrativeProps {
   onUpdate?: (patch: Partial<SlideData>) => void
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate }: SlideNarrativeProps) {
+  const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
   const accentColor = mode === 'dark' ? colors.gold : colors.blue
@@ -22,23 +24,39 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
     <SlideShell slideType="content" mode={mode}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: pullQuote ? '55%' : '70%' }}>
         {eyebrow && (
-          <div style={{
-            fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: accentColor, marginBottom: 16,
-          }}>
-            {eyebrow}
-          </div>
+          <EditableText
+            value={eyebrow}
+            onSave={v => up({ eyebrow: v })}
+            editable={!!editable}
+            style={{
+              fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: accentColor, marginBottom: 16,
+              display: 'block',
+            }}
+          />
         )}
-        <h2 style={{
-          fontSize: 32, fontWeight: 600, lineHeight: 1.2,
-          color: textPrimary, marginBottom: body ? 20 : 0,
-        }}>
-          {headline}
-        </h2>
+        <EditableText
+          value={headline}
+          onSave={v => up({ headline: v })}
+          editable={!!editable}
+          multiline
+          style={{
+            fontSize: 32, fontWeight: 600, lineHeight: 1.2,
+            color: textPrimary, marginBottom: body ? 20 : 0,
+            display: 'block',
+          }}
+        />
         {body && (
-          <p style={{ fontSize: 16, lineHeight: 1.65, color: textMuted }}>
-            {body}
-          </p>
+          <EditableText
+            value={body}
+            onSave={v => up({ body: v })}
+            editable={!!editable}
+            multiline
+            style={{
+              fontSize: 16, lineHeight: 1.65,
+              color: textMuted, display: 'block',
+            }}
+          />
         )}
       </div>
       {pullQuote && (
@@ -49,12 +67,16 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           borderLeft: `3px solid ${accentColor}`,
           paddingLeft: 24,
         }}>
-          <p style={{
-            fontSize: 20, fontWeight: 500, lineHeight: 1.4,
-            color: textPrimary, fontStyle: 'italic',
-          }}>
-            {pullQuote}
-          </p>
+          <EditableText
+            value={pullQuote}
+            onSave={v => up({ pullQuote: v })}
+            editable={!!editable}
+            multiline
+            style={{
+              fontSize: 20, fontWeight: 500, lineHeight: 1.4,
+              color: textPrimary, fontStyle: 'italic', display: 'block',
+            }}
+          />
         </div>
       )}
     </SlideShell>
