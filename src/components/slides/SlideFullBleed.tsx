@@ -1,0 +1,47 @@
+import { SlideShell } from '../SlideShell'
+import { colors } from '../../design-system'
+
+interface SlideFullBleedProps {
+  statement: string
+  sub?: string
+  accentWord?: string
+}
+
+export function SlideFullBleed({ statement, sub, accentWord }: SlideFullBleedProps) {
+  const parts = accentWord ? statement.split(accentWord) : null
+
+  return (
+    <SlideShell slideType="cover" mode="dark" fullBleed>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        textAlign: 'center',
+        padding: '48px 80px',
+      }}>
+        <h2 style={{
+          fontSize: 44, fontWeight: 600, lineHeight: 1.1,
+          color: '#FFFFFF', maxWidth: 720, marginBottom: sub ? 24 : 0,
+        }}>
+          {parts ? (
+            <>
+              {parts[0]}
+              <span style={{ color: colors.gold }}>{accentWord}</span>
+              {parts[1]}
+            </>
+          ) : statement}
+        </h2>
+        {sub && (
+          <p style={{
+            fontSize: 18, color: colors.mutedDark,
+            maxWidth: 520, lineHeight: 1.5,
+          }}>
+            {sub}
+          </p>
+        )}
+      </div>
+    </SlideShell>
+  )
+}

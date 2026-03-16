@@ -1,0 +1,8 @@
+export { SlideCover } from './SlideCover'
+export { SlideSectionBreak } from './SlideSectionBreak'
+export { SlideNarrative } from './SlideNarrative'
+export { SlideStatGrid } from './SlideStatGrid'
+export { SlideTwoPane } from './SlideTwoPane'
+export { SlideFullBleed } from './SlideFullBleed'
+export { SlideDiagram } from './SlideDiagram'
+export { SlideClosing } from './SlideClosing'

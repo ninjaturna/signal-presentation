@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --signal-blue:    #1E5AF2;
+    --signal-gold:    #FFCC2D;
+    --signal-ink:     #111113;
+    --signal-surface: #FCF8F5;
+    --signal-muted:   #77706F;
+    --font-sans: "DM Sans", system-ui, sans-serif;
+    --font-mono: "DM Mono", monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer components {
+  .slide-eyebrow {
+    @apply text-slide-eyebrow uppercase tracking-widest font-semibold;
+  }
+  .slide-title {
+    @apply text-slide-title font-semibold leading-tight;
+  }
+  .slide-hero {
+    @apply text-slide-hero font-semibold leading-none;
+  }
+}
