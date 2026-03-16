@@ -1,11 +1,14 @@
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
+import type { SlideData } from '../../types/deck'
 
 interface SlideCoverProps {
   eyebrow?: string
   title: string
   subtitle?: string
   meta?: string
+  editable?: boolean
+  onUpdate?: (patch: Partial<SlideData>) => void
 }
 
 export function SlideCover({ eyebrow, title, subtitle, meta }: SlideCoverProps) {

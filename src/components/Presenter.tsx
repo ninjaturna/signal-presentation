@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import type { ReactElement } from 'react'
 import { colors } from '../design-system'
-import type { DeckSlide } from '../data/disney-deck'
+
+interface DeckSlide {
+  id: string
+  element: ReactElement
+}
 
 interface PresenterProps {
   slides: DeckSlide[]

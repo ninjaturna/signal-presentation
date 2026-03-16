@@ -1,6 +1,7 @@
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
+import type { SlideData } from '../../types/deck'
 
 interface SlideNarrativeProps {
   eyebrow?: string
@@ -8,6 +9,8 @@ interface SlideNarrativeProps {
   body?: string
   mode?: SlideMode
   pullQuote?: string
+  editable?: boolean
+  onUpdate?: (patch: Partial<SlideData>) => void
 }
 
 export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote }: SlideNarrativeProps) {
