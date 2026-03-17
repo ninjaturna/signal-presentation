@@ -1,5 +1,6 @@
 import React from 'react'
 import { colors } from '../design-system'
+import { SystemDiagram } from '../components/SystemDiagram'
 
 interface HowItWasMadeProps {
   onBack: () => void
@@ -202,10 +203,26 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
             A self-serve web presentation system. The UI is simple enough that anyone on the
             team can use it without any training.
           </p>
+
+          {/* System diagram */}
+          <div style={{
+            margin: '28px 0',
+            borderRadius: 12,
+            overflow: 'hidden',
+            border: `1px solid ${colors.borderDark}`,
+            background: '#16161a',
+            padding: '24px 20px',
+          }}>
+            <SystemDiagram />
+          </div>
+
           <p style={{ ...bodyStyle, marginTop: 16, marginBottom: 24 }}>
             Upload a content doc using the provided template. The system designs a presentation
             using Launch's brand guidelines. That's it.
-            <p>Note: This prototype is for demonstration purposes only. It contains no proprietary information from Launch or its clients, and is not intended for production use.</p>
+          </p>
+          <p style={{ ...bodyStyle, marginBottom: 24 }}>
+            Note: This prototype is for demonstration purposes only. It contains no proprietary
+            information from Launch or its clients, and is not intended for production use.
           </p>
           <div style={{
             background: '#16161a', border: '1px solid #1e1e24',

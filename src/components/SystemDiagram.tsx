@@ -1,0 +1,157 @@
+export function SystemDiagram() {
+  return (
+    <svg width="100%" viewBox="0 0 680 335" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </marker>
+      </defs>
+
+      <text x="340" y="13" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontWeight: 400, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>how signal builds a deck</text>
+
+      {/* Your content */}
+      <g>
+        <rect x="74" y="20" width="118" height="44" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(12, 68, 124)', stroke: 'rgb(133, 183, 235)' }}/>
+        <text x="133" y="42" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(181, 212, 244)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Your content</text>
+      </g>
+
+      {/* Design system */}
+      <g>
+        <rect x="212" y="20" width="118" height="44" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(60, 52, 137)', stroke: 'rgb(175, 169, 236)' }}/>
+        <text x="271" y="42" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(206, 203, 246)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Design system</text>
+      </g>
+
+      {/* Claude AI */}
+      <g>
+        <rect x="350" y="20" width="118" height="44" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(99, 56, 6)', stroke: 'rgb(239, 159, 39)' }}/>
+        <text x="409" y="42" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(250, 199, 117)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Claude AI</text>
+      </g>
+
+      {/* Your deck */}
+      <g>
+        <rect x="488" y="20" width="118" height="44" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(8, 80, 65)', stroke: 'rgb(93, 202, 165)' }}/>
+        <text x="547" y="42" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(159, 225, 203)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Your deck</text>
+      </g>
+
+      <line x1="193" y1="42" x2="210" y2="42" markerEnd="url(#ar)" style={{ stroke: 'rgb(156, 154, 146)', strokeWidth: 1.5 }}/>
+      <line x1="331" y1="42" x2="348" y2="42" markerEnd="url(#ar)" style={{ stroke: 'rgb(156, 154, 146)', strokeWidth: 1.5 }}/>
+      <line x1="469" y1="42" x2="486" y2="42" markerEnd="url(#ar)" style={{ stroke: 'rgb(156, 154, 146)', strokeWidth: 1.5 }}/>
+
+      <text x="133" y="76" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>upload .md</text>
+      <text x="271" y="76" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>tokens + types</text>
+      <text x="409" y="76" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>reads + assembles</text>
+      <text x="547" y="76" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>never the same</text>
+
+      <text x="340" y="96" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>what makes it different</text>
+      <line x1="30" y1="102" x2="650" y2="102" style={{ stroke: 'rgb(156, 154, 146)', strokeWidth: 0.5, strokeDasharray: '4px, 3px' }}/>
+
+      {/* Template box */}
+      <g>
+        <rect x="30" y="108" width="285" height="212" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(68, 68, 65)', stroke: 'rgb(180, 178, 169)' }}/>
+      </g>
+      <text x="172" y="127" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(250, 249, 245)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Template</text>
+
+      {/* Stacked slide mockups (ghost layers) */}
+      <g opacity="0.18">
+        <rect x="132" y="132" width="72" height="42" rx="2" fill="rgb(38, 38, 36)" stroke="rgba(222, 220, 209, 0.15)" strokeWidth="0.5"/>
+        <rect x="132" y="132" width="72" height="10" rx="0" fill="rgba(222, 220, 209, 0.3)"/>
+        <rect x="132" y="144" width="30" height="22" rx="1" fill="rgba(222, 220, 209, 0.15)"/>
+        <rect x="166" y="146" width="26" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+        <rect x="166" y="151" width="20" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      </g>
+      <g opacity="0.42">
+        <rect x="136" y="136" width="72" height="42" rx="2" fill="rgb(38, 38, 36)" stroke="rgba(222, 220, 209, 0.15)" strokeWidth="0.5"/>
+        <rect x="136" y="136" width="72" height="10" rx="0" fill="rgba(222, 220, 209, 0.3)"/>
+        <rect x="136" y="148" width="30" height="22" rx="1" fill="rgba(222, 220, 209, 0.15)"/>
+        <rect x="170" y="150" width="26" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+        <rect x="170" y="155" width="20" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      </g>
+      <rect x="140" y="140" width="72" height="42" rx="2" fill="rgb(48, 48, 46)" stroke="rgba(222, 220, 209, 0.3)" strokeWidth="0.5"/>
+      <rect x="140" y="140" width="72" height="10" rx="0" fill="rgba(222, 220, 209, 0.3)"/>
+      <rect x="140" y="152" width="30" height="22" rx="1" fill="rgba(222, 220, 209, 0.15)"/>
+      <rect x="174" y="154" width="26" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      <rect x="174" y="159" width="20" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      <rect x="174" y="164" width="24" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      <rect x="174" y="169" width="16" height="2" rx="1" fill="rgba(222, 220, 209, 0.3)"/>
+      <rect x="140" y="178" width="72" height="4" rx="0" fill="rgba(222, 220, 209, 0.15)"/>
+
+      <text x="172" y="200" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>↻ same shape. every time.</text>
+
+      <text x="172" y="280" textAnchor="middle" style={{ fill: 'rgb(250, 249, 245)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>one fixed layout.</text>
+      <text x="172" y="296" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>content fills predefined slots.</text>
+      <text x="172" y="312" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>every deck is the same shape.</text>
+
+      <text x="341" y="216" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>vs</text>
+
+      {/* Design system box */}
+      <rect x="365" y="108" width="285" height="212" rx="8" strokeWidth="0.5" style={{ fill: 'rgb(38, 38, 36)', stroke: 'rgba(222, 220, 209, 0.3)' }}/>
+      <text x="507" y="127" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(250, 249, 245)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Design system</text>
+
+      {/* Slide type chips — row 1 */}
+      <g>
+        <rect x="374" y="138" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(12, 68, 124)', stroke: 'rgb(133, 183, 235)' }}/>
+        <text x="406" y="147" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(133, 183, 235)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Cover</text>
+      </g>
+      <g>
+        <rect x="442" y="138" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(68, 68, 65)', stroke: 'rgb(180, 178, 169)' }}/>
+        <text x="474" y="147" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(180, 178, 169)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Narrative</text>
+      </g>
+      <g>
+        <rect x="510" y="138" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(99, 56, 6)', stroke: 'rgb(239, 159, 39)' }}/>
+        <text x="542" y="147" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(239, 159, 39)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Stat grid</text>
+      </g>
+      <g>
+        <rect x="578" y="138" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(8, 80, 65)', stroke: 'rgb(93, 202, 165)' }}/>
+        <text x="610" y="147" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(93, 202, 165)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Two-pane</text>
+      </g>
+
+      {/* Slide type chips — row 2 */}
+      <g>
+        <rect x="374" y="161" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(60, 52, 137)', stroke: 'rgb(175, 169, 236)' }}/>
+        <text x="406" y="170" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(175, 169, 236)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Sec break</text>
+      </g>
+      <g>
+        <rect x="442" y="161" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(113, 43, 19)', stroke: 'rgb(240, 153, 123)' }}/>
+        <text x="474" y="170" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(240, 153, 123)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Full bleed</text>
+      </g>
+      <g>
+        <rect x="510" y="161" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(39, 80, 10)', stroke: 'rgb(151, 196, 89)' }}/>
+        <text x="542" y="170" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(151, 196, 89)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Diagram</text>
+      </g>
+      <g>
+        <rect x="578" y="161" width="64" height="18" rx="4" strokeWidth="0.5" style={{ fill: 'rgb(8, 80, 65)', stroke: 'rgb(93, 202, 165)' }}/>
+        <text x="610" y="170" textAnchor="middle" dominantBaseline="central" style={{ fill: 'rgb(93, 202, 165)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>Closing</text>
+      </g>
+
+      <text x="507" y="193" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>↑ claude picks the right combination</text>
+
+      {/* Deck sequence bars — row 1 */}
+      <rect x="410" y="202" width="10" height="28" rx="1" fill="rgb(55, 138, 221)"/>
+      <rect x="422" y="202" width="10" height="28" rx="1" fill="rgb(136, 135, 128)"/>
+      <rect x="434" y="202" width="10" height="28" rx="1" fill="rgb(186, 117, 23)"/>
+      <rect x="446" y="202" width="10" height="28" rx="1" fill="rgb(136, 135, 128)"/>
+      <rect x="458" y="202" width="10" height="28" rx="1" fill="rgb(29, 158, 117)"/>
+
+      {/* Deck sequence bars — row 2 */}
+      <rect x="478" y="202" width="10" height="28" rx="1" fill="rgb(55, 138, 221)"/>
+      <rect x="490" y="202" width="10" height="28" rx="1" fill="rgb(127, 119, 221)"/>
+      <rect x="502" y="202" width="10" height="28" rx="1" fill="rgb(136, 135, 128)"/>
+      <rect x="514" y="202" width="10" height="28" rx="1" fill="rgb(136, 135, 128)"/>
+      <rect x="526" y="202" width="10" height="28" rx="1" fill="rgb(29, 158, 117)"/>
+
+      {/* Deck sequence bars — row 3 */}
+      <rect x="546" y="202" width="10" height="28" rx="1" fill="rgb(55, 138, 221)"/>
+      <rect x="558" y="202" width="10" height="28" rx="1" fill="rgb(186, 117, 23)"/>
+      <rect x="570" y="202" width="10" height="28" rx="1" fill="rgb(216, 90, 48)"/>
+      <rect x="582" y="202" width="10" height="28" rx="1" fill="rgb(99, 153, 34)"/>
+      <rect x="594" y="202" width="10" height="28" rx="1" fill="rgb(29, 158, 117)"/>
+
+      <text x="473" y="248" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>↑</text>
+      <text x="541" y="248" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>↑</text>
+
+      <text x="507" y="280" textAnchor="middle" style={{ fill: 'rgb(250, 249, 245)', fontSize: 14, fontWeight: 500, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>tokens + rules. never a mold.</text>
+      <text x="507" y="296" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>claude chooses which components fit</text>
+      <text x="507" y="312" textAnchor="middle" style={{ fill: 'rgb(194, 192, 182)', fontSize: 12, fontFamily: '-apple-system, "system-ui", "Segoe UI", sans-serif' }}>based on what your content needs.</text>
+    </svg>
+  )
+}
