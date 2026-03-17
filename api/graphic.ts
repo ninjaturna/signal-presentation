@@ -73,4 +73,4 @@ export default async function handler(req: Request) {
   }
 }
 
-export const config = { runtime: 'edge' }
+export const config = { maxDuration: 30 }

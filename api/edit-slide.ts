@@ -79,4 +79,4 @@ Return the JSON patch.`,
   }
 }
 
-export const config = { runtime: 'edge' }
+export const config = { maxDuration: 30 }

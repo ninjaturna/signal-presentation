@@ -115,4 +115,4 @@ Return a SlideData[] JSON array with one object per slide in order.`
   }
 }
 
-export const config = { runtime: 'edge' }
+export const config = { maxDuration: 60 }
