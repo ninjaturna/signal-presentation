@@ -3,6 +3,7 @@ import './styles/globals.css'
 import { LandingPage } from './pages/LandingPage'
 import { HowItWasMade } from './pages/HowItWasMade'
 import { SlideViewer } from './components/SlideViewer'
+import { DeckEditor } from './features/deck-editor'
 import { disneyDeck } from './data/disney-deck'
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
             />
           }
         />
+        <Route path="/editor" element={<DeckEditor />} />
         <Route path="/how" element={<HowItWasMade />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
