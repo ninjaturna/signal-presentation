@@ -93,6 +93,7 @@ export default function App() {
         mode={shareMode}
         onBack={() => goTo('dashboard', '/dashboard')}
         onSlidesChange={handleSlideUpdate}
+        onOpenEditor={() => goTo('editor', '/editor')}
       />
     )
   }

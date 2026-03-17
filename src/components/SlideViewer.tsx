@@ -10,9 +10,10 @@ interface SlideViewerProps {
   mode?: ShareMode
   onBack?: () => void
   onSlidesChange?: (slides: SlideData[]) => void
+  onOpenEditor?: () => void
 }
 
-export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange }: SlideViewerProps) {
+export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange, onOpenEditor }: SlideViewerProps) {
   const [slides, setSlides]           = useState<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
@@ -188,6 +189,22 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
                   </div>
                 )}
               </div>
+            )}
+
+            {canEdit && onOpenEditor && (
+              <button
+                onClick={onOpenEditor}
+                title="Open in editor"
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${colors.borderDark}`,
+                  borderRadius: 6, padding: '5px 10px',
+                  fontSize: 12, color: '#666', cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                Edit mode
+              </button>
             )}
 
             {canEdit && (

@@ -91,6 +91,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           mode={slide.mode}
           context={slide.context}
           editable={editable}
+          onUpdate={onUpdate}
         />
       )
 
