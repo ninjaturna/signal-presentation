@@ -6,8 +6,17 @@ export function SystemDiagram() {
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
-    const t = setTimeout(() => { svg.classList.add('sig-animate') }, 120)
-    return () => clearTimeout(t)
+
+    const play = () => {
+      svg.classList.remove('sig-animate')
+      void svg.getBoundingClientRect() // force reflow so removal is committed
+      svg.classList.add('sig-animate')
+    }
+
+    const initial = setTimeout(play, 120)
+    const loop = setInterval(play, 10000)
+
+    return () => { clearTimeout(initial); clearInterval(loop) }
   }, [])
 
   return (
