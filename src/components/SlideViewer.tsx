@@ -9,9 +9,10 @@ interface SlideViewerProps {
   title?: string
   mode?: ShareMode
   onBack?: () => void
+  onSlidesChange?: (slides: SlideData[]) => void
 }
 
-export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack }: SlideViewerProps) {
+export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange }: SlideViewerProps) {
   const [slides, setSlides]           = useState<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
@@ -27,8 +28,12 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
   }, [slides.length])
 
   const updateSlide = useCallback((id: string, patch: Partial<SlideData>) => {
-    setSlides(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
-  }, [])
+    setSlides(prev => {
+      const next = prev.map(s => s.id === id ? { ...s, ...patch } : s)
+      onSlidesChange?.(next)
+      return next
+    })
+  }, [onSlidesChange])
 
   const resetDiagrams = useCallback(() => {
     setSlides(prev => prev.map(s =>

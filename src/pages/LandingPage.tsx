@@ -3,6 +3,7 @@ import { colors } from '../design-system'
 import { parseContentDoc } from '../utils/parseContentDoc'
 import type { ParsedContentDoc } from '../utils/parseContentDoc'
 import type { SlideData } from '../types/deck'
+import { deckStore } from '../utils/deckStore'
 
 interface LandingPageProps {
   onViewDemo: () => void
@@ -63,7 +64,10 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
       })
       const data = await res.json()
       if (data.error) { setErrorMsg(data.error); setUploadState('error'); return }
-      onDeckGenerated(data.slides, data.meta?.documentTitle ?? parsedDoc.documentTitle)
+      const title      = data.meta?.documentTitle ?? parsedDoc.documentTitle
+      const clientName = data.meta?.clientName    ?? parsedDoc.clientName
+      deckStore.add({ title, clientName, slideCount: data.slides.length, slides: data.slides })
+      onDeckGenerated(data.slides, title)
     } catch {
       setErrorMsg('Generation failed. Check that your ANTHROPIC_API_KEY is set in Vercel.')
       setUploadState('error')
