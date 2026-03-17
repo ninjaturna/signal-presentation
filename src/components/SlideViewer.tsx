@@ -5,12 +5,13 @@ import { ChatPanel } from './ChatPanel'
 import type { SlideData, ShareMode } from '../types/deck'
 
 interface SlideViewerProps {
-  initialSlides: SlideData[]
+  slides: SlideData[]
   title?: string
   mode?: ShareMode
+  onBack?: () => void
 }
 
-export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: SlideViewerProps) {
+export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack }: SlideViewerProps) {
   const [slides, setSlides]           = useState<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
@@ -110,11 +111,25 @@ export function SlideViewer({ initialSlides, title = 'SIGNAL', mode = 'edit' }: 
           background: '#111113',
           gap: 12,
         }}>
-          {/* Title + slide count */}
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', flex: 1, minWidth: 0 }}>
+          {/* Back + title */}
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            {onBack && (
+              <button
+                onClick={onBack}
+                style={{
+                  background: 'transparent', border: 'none',
+                  fontSize: 18, color: colors.mutedDark, cursor: 'pointer',
+                  lineHeight: 1, padding: 0, fontFamily: 'system-ui',
+                  flexShrink: 0,
+                }}
+                title="Back to home"
+              >
+                ‹
+              </button>
+            )}
             <span style={{ color: colors.blue, letterSpacing: '0.06em', fontSize: 11 }}>SIGNAL</span>
-            <span style={{ color: colors.borderDark, margin: '0 8px' }}>·</span>
-            <span style={{ fontSize: 12, color: colors.mutedDark }}>{title}</span>
+            <span style={{ color: colors.borderDark }}>·</span>
+            <span style={{ fontSize: 12, color: colors.mutedDark, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
           </div>
 
           {/* Slide counter */}

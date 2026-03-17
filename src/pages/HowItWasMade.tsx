@@ -1,5 +1,9 @@
-import { Link } from 'react-router-dom'
 import { colors } from '../design-system'
+
+interface HowItWasMadeProps {
+  onBack?: () => void
+  onViewDemo?: () => void
+}
 
 interface SectionProps {
   phase: string
@@ -34,7 +38,7 @@ function Section({ phase, title, description, children }: SectionProps) {
   )
 }
 
-export function HowItWasMade() {
+export function HowItWasMade({ onBack, onViewDemo }: HowItWasMadeProps) {
   return (
     <div style={{
       minHeight: '100vh', background: colors.ink,
@@ -47,41 +51,42 @@ export function HowItWasMade() {
         padding: '20px 40px',
         borderBottom: `1px solid ${colors.borderDark}`,
       }}>
-        <Link
-          to="/"
+        <button
+          onClick={onBack}
           style={{
             fontSize: 13, fontWeight: 700, letterSpacing: '0.12em',
             textTransform: 'uppercase', color: '#FFFFFF',
-            textDecoration: 'none',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit', padding: 0,
           }}
         >
           SIGNAL
-        </Link>
+        </button>
         <div style={{ flex: 1 }} />
-        <Link
-          to="/view"
+        <button
+          onClick={onViewDemo}
           style={{
-            fontSize: 13, color: colors.mutedDark,
-            textDecoration: 'none', marginRight: 24,
+            fontSize: 13, color: colors.mutedDark, background: 'none', border: 'none',
+            cursor: 'pointer', fontFamily: 'inherit', marginRight: 24,
             transition: 'color 0.15s',
           }}
           onMouseEnter={e => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={e => (e.currentTarget.style.color = colors.mutedDark)}
         >
           View demo deck
-        </Link>
-        <Link
-          to="/"
+        </button>
+        <button
+          onClick={onBack}
           style={{
-            fontSize: 13, color: colors.mutedDark,
-            textDecoration: 'none',
+            fontSize: 13, color: colors.mutedDark, background: 'none', border: 'none',
+            cursor: 'pointer', fontFamily: 'inherit',
             transition: 'color 0.15s',
           }}
           onMouseEnter={e => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={e => (e.currentTarget.style.color = colors.mutedDark)}
         >
           ← Back
-        </Link>
+        </button>
       </nav>
 
       {/* Content */}
@@ -213,19 +218,19 @@ export function HowItWasMade() {
         {/* Phase 4 */}
         <Section
           phase="Phase 4"
-          title="Full rebuild — slide state model, viewer, landing, and chat"
-          description="The final phase rebuilt the architectural core. Slide content was moved from JSX elements to a typed SlideData JSON model — making every deck serialisable, diffable, and AI-editable. A renderSlide utility maps data to components. The Presenter was replaced with SlideViewer, a split-panel layout with a 300px AI chat sidebar. The chat panel calls a new /api/edit-slide edge function that takes an instruction and the current slide state, and returns a JSON patch applied directly to the deck state. A Gemini-style landing page with drag-and-drop intake and example prompt chips replaced the old intake form. React Router provides URL-based navigation between landing, viewer, and this page."
+          title="Content doc pipeline — upload, parse, generate"
+          description="The final phase added the full client upload workflow. Users fill in a structured Markdown content doc template and upload it. A frontend parser extracts slide headings, body, bullets, and notes into a typed ParsedContentDoc structure — notes are stripped before leaving the browser. A Vercel Edge Function receives the parsed document and calls Claude claude-sonnet-4-5 to map content to the eight slide types, returning a SlideData[] array. The landing page was rebuilt around the upload UX with a template download link and parsed preview. React Router was removed in favour of state-based navigation."
         >
           <div style={{
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {[
+              { label: 'parseContentDoc()', detail: 'Frontend markdown → ParsedContentDoc (notes stripped)' },
+              { label: '/api/generate-deck', detail: 'Edge function: ParsedContentDoc → SlideData[] via Claude' },
+              { label: 'LandingPage', detail: 'Upload UX, parsed preview, template download' },
               { label: 'SlideData model', detail: 'Typed JSON — all content as plain data, no JSX' },
               { label: 'renderSlide()', detail: 'Maps SlideData → React component at render time' },
               { label: 'SlideViewer', detail: 'Split panel: slide stage + AI chat sidebar' },
-              { label: 'ChatPanel', detail: 'Calls /api/edit-slide, applies JSON patch to state' },
-              { label: 'LandingPage', detail: 'Prompt input, file drop, example chips' },
-              { label: 'React Router', detail: 'URL-based navigation: /, /view, /how' },
             ].map(item => (
               <div key={item.label} style={{
                 display: 'flex', alignItems: 'baseline', gap: 12,
@@ -234,7 +239,7 @@ export function HowItWasMade() {
               }}>
                 <div style={{
                   fontSize: 13, fontWeight: 600, color: '#FFFFFF',
-                  minWidth: 150, fontFamily: '"DM Mono", monospace',
+                  minWidth: 180, fontFamily: '"DM Mono", monospace',
                 }}>
                   {item.label}
                 </div>
@@ -264,11 +269,11 @@ export function HowItWasMade() {
               ['React 19 + TypeScript', 'Frontend framework'],
               ['Vite', 'Build tool'],
               ['Tailwind CSS v3', 'Utility styling'],
-              ['React Router DOM', 'Client-side routing'],
               ['Claude claude-sonnet-4-5', 'AI backbone'],
               ['Vercel Edge Functions', 'Serverless API'],
               ['GitHub', 'Version control + CI'],
               ['DM Sans + DM Mono', 'Typography'],
+              ['State-based routing', 'Client navigation'],
             ].map(([tech, role]) => (
               <div key={tech} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ color: '#FFFFFF', fontFamily: '"DM Mono", monospace', fontSize: 12 }}>{tech}</span>
@@ -280,32 +285,31 @@ export function HowItWasMade() {
 
         {/* CTA */}
         <div style={{ display: 'flex', gap: 12 }}>
-          <Link
-            to="/view"
+          <button
+            onClick={onViewDemo}
             style={{
               background: colors.blue, border: 'none',
               borderRadius: 8, padding: '12px 24px',
               fontSize: 14, fontWeight: 600, color: '#FFFFFF',
               cursor: 'pointer',
-              textDecoration: 'none',
               fontFamily: '"DM Sans", system-ui, sans-serif',
             }}
           >
             View the demo deck →
-          </Link>
-          <Link
-            to="/"
+          </button>
+          <button
+            onClick={onBack}
             style={{
               background: 'transparent',
               border: `1px solid ${colors.borderDark}`,
               borderRadius: 8, padding: '12px 24px',
               fontSize: 14, color: colors.mutedDark,
-              textDecoration: 'none',
+              cursor: 'pointer',
               fontFamily: '"DM Sans", system-ui, sans-serif',
             }}
           >
             Back to home
-          </Link>
+          </button>
         </div>
       </div>
     </div>
