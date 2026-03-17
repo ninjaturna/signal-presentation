@@ -29,23 +29,19 @@ SVG rules:
 - No drop shadows, no gradients except for emphasis
 - Always include an arrowhead marker in <defs> for connector lines`
 
-export default async function handler(req: Request) {
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
-  }
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' })
+    return
   }
 
   const client = new Anthropic({ apiKey })
 
   try {
-    const { description, context } = await req.json()
+    const { description, context } = req.body
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-5',
@@ -60,16 +56,11 @@ export default async function handler(req: Request) {
     })
 
     const svg = (message.content[0] as { type: string; text: string }).text.trim()
-    return new Response(JSON.stringify({ svg }), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    res.json({ svg })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('graphic error:', message)
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    res.status(500).json({ error: message })
   }
 }
 

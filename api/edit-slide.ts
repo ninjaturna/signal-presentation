@@ -21,29 +21,23 @@ Rules:
 - Tone: confident, direct, intelligent — like a senior McKinsey consultant
 - Never add filler words or hedging language`
 
-export default async function handler(req: Request) {
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
-  }
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' })
+    return
   }
 
   const client = new Anthropic({ apiKey })
 
   try {
-    const { instruction, slide } = await req.json()
+    const { instruction, slide } = req.body
 
     if (!instruction || !slide) {
-      return new Response(JSON.stringify({ error: 'instruction and slide are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      res.status(400).json({ error: 'instruction and slide are required' })
+      return
     }
 
     const message = await client.messages.create({
@@ -66,16 +60,11 @@ Return the JSON patch.`,
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
     const result = JSON.parse(raw)
 
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    res.json(result)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
     console.error('edit-slide error:', msg)
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    res.status(500).json({ error: msg })
   }
 }
 

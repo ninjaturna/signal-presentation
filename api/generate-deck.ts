@@ -47,22 +47,20 @@ Rules:
 Output ONLY a valid JSON array. No markdown, no backticks, no explanation.
 Each object must have: id (string), type, mode, and the type-specific fields above.`
 
-export default async function handler(req: Request) {
-  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     console.error('ANTHROPIC_API_KEY is not set in environment variables')
-    return new Response(
-      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured. Add it in Vercel → Project → Settings → Environment Variables, then redeploy.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured. Add it in Vercel → Project → Settings → Environment Variables, then redeploy.' })
+    return
   }
 
   const client = new Anthropic({ apiKey })
 
   try {
-    const doc: ParsedContentDoc = await req.json()
+    const doc: ParsedContentDoc = req.body
 
     const slideSummary = doc.slides.map(s => ({
       number: s.number,
@@ -101,17 +99,11 @@ Return a SlideData[] JSON array with one object per slide in order.`
     const cleaned = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim()
     const slides  = JSON.parse(cleaned)
 
-    return new Response(
-      JSON.stringify({ slides, meta: { clientName: doc.clientName, documentTitle: doc.documentTitle } }),
-      { headers: { 'Content-Type': 'application/json' } },
-    )
+    res.json({ slides, meta: { clientName: doc.clientName, documentTitle: doc.documentTitle } })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('generate-deck error:', message)
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    res.status(500).json({ error: message })
   }
 }
 
