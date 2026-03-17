@@ -304,15 +304,15 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
             padding: 7, overflow: 'hidden',
           }}>
             <div style={{ width: 3, height: '100%', background: colors.blue, position: 'absolute', left: 0, top: 0 }} />
-            <div style={{ fontSize: 5, fontWeight: 600, color: colors.blue, marginBottom: 2, paddingLeft: 5 }}>TE CONNECTIVITY</div>
-            <div style={{ fontSize: 6, fontWeight: 600, color: '#FFF', lineHeight: 1.2, paddingLeft: 5 }}>500,000 SKUs. One Sales Conversation.</div>
+            <div style={{ fontSize: 5, fontWeight: 600, color: colors.blue, marginBottom: 2, paddingLeft: 5 }}>DISNEY · SIGNAL</div>
+            <div style={{ fontSize: 6, fontWeight: 600, color: '#FFF', lineHeight: 1.2, paddingLeft: 5 }}>Transforming Guest Intelligence at Disney.</div>
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', marginBottom: 3 }}>
-              See an example — TE Connectivity pitch deck
+              See an example — Disney AI Enablement deck
             </div>
             <div style={{ fontSize: 12, color: '#555', marginBottom: 10 }}>
-              11 slides · Built from a content doc · Launch by NTT DATA
+              11 slides · Built from a content doc · SIGNAL demo
             </div>
             <button
               onClick={onViewDemo}
