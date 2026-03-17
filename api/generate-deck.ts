@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedContentDoc } from '../src/utils/parseContentDoc'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// Do NOT instantiate at module level on Edge Runtime —
+// env vars are only available at request time, not at cold start
 
 const SYSTEM_PROMPT = `You are a presentation designer for SIGNAL, a strategic consultancy.
 You receive a structured content document and output a JSON array of SlideData objects.
@@ -49,10 +50,20 @@ Each object must have: id (string), type, mode, and the type-specific fields abo
 export default async function handler(req: Request) {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    console.error('ANTHROPIC_API_KEY is not set in environment variables')
+    return new Response(
+      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured. Add it in Vercel → Project → Settings → Environment Variables, then redeploy.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const client = new Anthropic({ apiKey })
+
   try {
     const doc: ParsedContentDoc = await req.json()
 
-    // Build a clean representation for Claude (notes stripped)
     const slideSummary = doc.slides.map(s => ({
       number: s.number,
       title: s.title,
@@ -86,25 +97,21 @@ Return a SlideData[] JSON array with one object per slide in order.`
       messages: [{ role: 'user', content: userContent }],
     })
 
-    const raw = (message.content[0] as { type: string; text: string }).text.trim()
-
-    // Strip any accidental markdown fences
+    const raw     = (message.content[0] as { type: string; text: string }).text.trim()
     const cleaned = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim()
-    const slides = JSON.parse(cleaned)
+    const slides  = JSON.parse(cleaned)
 
     return new Response(
-      JSON.stringify({
-        slides,
-        meta: { clientName: doc.clientName, documentTitle: doc.documentTitle },
-      }),
+      JSON.stringify({ slides, meta: { clientName: doc.clientName, documentTitle: doc.documentTitle } }),
       { headers: { 'Content-Type': 'application/json' } },
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    console.error('generate-deck error:', message)
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
   }
 }
 

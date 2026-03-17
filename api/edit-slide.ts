@@ -1,7 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const SYSTEM_PROMPT = `You are an AI co-pilot for SIGNAL, a strategic presentation tool.
 Your job is to apply targeted edits to individual presentation slides based on user instructions.
 
@@ -27,6 +25,16 @@ export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const client = new Anthropic({ apiKey })
 
   try {
     const { instruction, slide } = await req.json()
@@ -63,6 +71,7 @@ Return the JSON patch.`,
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.error('edit-slide error:', msg)
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

@@ -1,7 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const SYSTEM_PROMPT = `You are a business diagram generator for SIGNAL, a strategic consultancy.
 You output ONLY raw SVG code — no markdown, no backticks, no explanation, nothing before or after the SVG tag.
 
@@ -36,6 +34,16 @@ export default async function handler(req: Request) {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — redeploy after adding to Vercel env vars' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const client = new Anthropic({ apiKey })
+
   try {
     const { description, context } = await req.json()
 
@@ -57,6 +65,7 @@ export default async function handler(req: Request) {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('graphic error:', message)
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
