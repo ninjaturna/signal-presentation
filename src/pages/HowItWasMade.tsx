@@ -197,7 +197,7 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
         </Block>
 
         {/* ── WHAT I BUILT ────────────────────────────── */}
-        <Block label="What we built">
+        <Block label="What I built">
           <p style={bodyStyle}>
             A self-serve web presentation system. The UI is simple enough that anyone on the
             team can use it without any training.
@@ -205,7 +205,7 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
           <p style={{ ...bodyStyle, marginTop: 16, marginBottom: 24 }}>
             Upload a content doc using the provided template. The system designs a presentation
             using Launch's brand guidelines. That's it.
-            Note: This prototype is for demonstration purposes only. It contains no proprietary information from Launch or its clients, and is not intended for production use.
+            <p>Note: This prototype is for demonstration purposes only. It contains no proprietary information from Launch or its clients, and is not intended for production use.</p>
           </p>
           <div style={{
             background: '#16161a', border: '1px solid #1e1e24',
