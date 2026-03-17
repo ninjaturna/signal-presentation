@@ -57,19 +57,28 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
     setUploadState('generating')
     setErrorMsg('')
     try {
-      const res = await fetch('/api/generate-deck', {
+      const res  = await fetch('/api/generate-deck', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsedDoc),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: { error?: string; slides?: unknown[]; meta?: { documentTitle?: string; clientName?: string } }
+      try {
+        data = JSON.parse(text)
+      } catch {
+        // Vercel returned an HTML error page — surface it directly
+        setErrorMsg(`API error ${res.status}: ${text.slice(0, 200)}`)
+        setUploadState('error')
+        return
+      }
       if (data.error) { setErrorMsg(data.error); setUploadState('error'); return }
       const title      = data.meta?.documentTitle ?? parsedDoc.documentTitle
       const clientName = data.meta?.clientName    ?? parsedDoc.clientName
-      deckStore.add({ title, clientName, slideCount: data.slides.length, slides: data.slides })
-      onDeckGenerated(data.slides, title)
-    } catch {
-      setErrorMsg('Generation failed. Check that your ANTHROPIC_API_KEY is set in Vercel.')
+      deckStore.add({ title, clientName, slideCount: data.slides!.length, slides: data.slides as never })
+      onDeckGenerated(data.slides as never, title)
+    } catch (err) {
+      setErrorMsg(`Generation failed: ${err instanceof Error ? err.message : String(err)}`)
       setUploadState('error')
     }
   }
