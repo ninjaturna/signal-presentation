@@ -1,32 +1,39 @@
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideClosingProps {
   headline: string
   cta?: string
   contact?: string
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideClosing({ headline, cta, contact }: SlideClosingProps) {
+export function SlideClosing({ headline, cta, contact, theme }: SlideClosingProps) {
+  const coverBg   = theme?.coverBg   ?? undefined
+  const coverText = theme?.coverText ?? '#FFFFFF'
+  const primary   = theme?.primary   ?? colors.blue
+  const accentBar = theme?.accentBar ?? colors.gold
+
   return (
-    <SlideShell slideType="closing" mode="dark">
-      {/* Gold top accent */}
+    <SlideShell slideType="closing" mode="dark" style={coverBg ? { background: coverBg } : undefined}>
+      {/* Top accent bar */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0,
-        height: 3, background: colors.gold,
+        height: 3, background: accentBar,
       }} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <h2 style={{
           fontSize: 40, fontWeight: 600, lineHeight: 1.1,
-          color: '#FFFFFF', maxWidth: 560, marginBottom: 32,
+          color: coverText, maxWidth: 560, marginBottom: 32,
         }}>
           {headline}
         </h2>
         {cta && (
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 12,
-            background: colors.blue, borderRadius: 8,
+            background: primary, borderRadius: 8,
             padding: '14px 28px', width: 'fit-content', marginBottom: 32,
           }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>

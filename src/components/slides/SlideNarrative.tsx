@@ -3,6 +3,7 @@ import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
 import type { SlideData } from '../../types/deck'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideNarrativeProps {
   eyebrow?: string
@@ -12,13 +13,14 @@ interface SlideNarrativeProps {
   pullQuote?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme }: SlideNarrativeProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
-  const accentColor = mode === 'dark' ? colors.gold : colors.blue
+  const accentColor = theme?.accentBar ?? (mode === 'dark' ? colors.gold : colors.blue)
 
   return (
     <SlideShell slideType="content" mode={mode}>

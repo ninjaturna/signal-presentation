@@ -9,14 +9,16 @@ import {
   SlideClosing,
 } from '../components/slides'
 import type { SlideData } from '../types/deck'
+import type { DeckTheme } from '../design-system/themes'
 
 interface RenderSlideOptions {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
+  theme?: DeckTheme['tokens']
 }
 
 export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}): React.ReactElement {
-  const { editable = false, onUpdate } = options
+  const { editable = false, onUpdate, theme } = options
 
   switch (slide.type) {
     case 'cover':
@@ -28,6 +30,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           meta={slide.meta}
           editable={editable}
           onUpdate={onUpdate}
+          theme={theme}
         />
       )
 
@@ -41,6 +44,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           pullQuote={slide.pullQuote}
           editable={editable}
           onUpdate={onUpdate}
+          theme={theme}
         />
       )
 
@@ -51,6 +55,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           headline={slide.headline}
           stats={slide.stats ?? []}
           mode={slide.mode}
+          theme={theme}
         />
       )
 
@@ -70,6 +75,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           number={slide.number}
           title={slide.title ?? ''}
           subtitle={slide.subtitle}
+          theme={theme}
         />
       )
 
@@ -101,6 +107,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           headline={slide.headline ?? ''}
           cta={slide.cta}
           contact={slide.contact}
+          theme={theme}
         />
       )
 

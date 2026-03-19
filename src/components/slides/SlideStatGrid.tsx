@@ -1,6 +1,7 @@
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface Stat {
   value: string
@@ -13,11 +14,13 @@ interface SlideStatGridProps {
   headline?: string
   stats: Stat[]
   mode?: SlideMode
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light' }: SlideStatGridProps) {
+export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme }: SlideStatGridProps) {
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
+  const statColor   = theme?.statColor ?? colors.blue
   const statBg      = mode === 'dark' ? colors.inkSoft : colors.surfaceAlt
   const statBorder  = mode === 'dark' ? colors.borderDark : colors.border
 
@@ -28,7 +31,7 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light' }: Slid
           {eyebrow && (
             <div style={{
               fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: colors.blue, marginBottom: 8,
+              textTransform: 'uppercase', color: statColor, marginBottom: 8,
             }}>
               {eyebrow}
             </div>
@@ -57,7 +60,7 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light' }: Slid
           }}>
             <div style={{
               fontSize: 48, fontWeight: 600, lineHeight: 1,
-              color: colors.blue, marginBottom: 12,
+              color: statColor, marginBottom: 12,
               fontVariantNumeric: 'tabular-nums',
             }}>
               {stat.value}

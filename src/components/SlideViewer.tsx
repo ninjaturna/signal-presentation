@@ -6,7 +6,10 @@ import { EditPanel } from './EditPanel'
 import { ShareMenu } from './ShareMenu'
 import { CommentSidebar } from './CommentSidebar'
 import { GdprBanner } from './GdprBanner'
+import { ThemePanel } from './ThemePanel'
 import { triggerPrintExport } from './PrintExport'
+import { DECK_THEMES } from '../design-system/themes'
+import type { DeckTheme } from '../design-system/themes'
 import { useUndoHistory } from '../hooks/useUndoHistory'
 import type { SlideData, ShareMode } from '../types/deck'
 
@@ -83,6 +86,8 @@ export function SlideViewer({
   const [showChat, setShowChat]           = useState(false)
   const [showEditPanel, setShowEditPanel] = useState(false)
   const [showShare, setShowShare]         = useState(false)
+  const [showTheme, setShowTheme]         = useState(false)
+  const [activeTheme, setActiveTheme]     = useState<DeckTheme>(DECK_THEMES[0])
   const [isFullscreen, setIsFullscreen]   = useState(false)
   const [trackingEnabled, setTrackingEnabled] = useState(false)
 
@@ -272,6 +277,13 @@ export function SlideViewer({
                   >
                     {showEditPanel ? '✕ Exit edit mode' : 'Edit mode'}
                   </button>
+                  <button
+                    onClick={() => setShowTheme(v => !v)}
+                    title="Change theme"
+                    style={topBarBtn(showTheme)}
+                  >
+                    ◑ Theme
+                  </button>
                   <PdfButton slides={slides} title={title} />
                   <ShareMenu open={showShare} onToggle={() => setShowShare(v => !v)} />
                 </>
@@ -315,6 +327,7 @@ export function SlideViewer({
             {renderSlide(slide, {
               editable: canTextEdit,
               onUpdate: (patch) => updateSlide(slide.id, patch),
+              theme: activeTheme.tokens,
             })}
           </div>
 
@@ -385,6 +398,15 @@ export function SlideViewer({
             />
           ))}
         </div>
+      )}
+
+      {/* Theme panel — edit mode only, fixed overlay */}
+      {canEdit && showTheme && (
+        <ThemePanel
+          currentThemeId={activeTheme.id}
+          onSelect={theme => { setActiveTheme(theme); setShowTheme(false) }}
+          onClose={() => setShowTheme(false)}
+        />
       )}
 
       {/* GDPR banner — present mode only */}

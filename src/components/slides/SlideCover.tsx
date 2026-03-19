@@ -2,6 +2,7 @@ import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideData } from '../../types/deck'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideCoverProps {
   eyebrow?: string
@@ -10,16 +11,20 @@ interface SlideCoverProps {
   meta?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate }: SlideCoverProps) {
+export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate, theme }: SlideCoverProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
+  const accentBar  = theme?.accentBar  ?? colors.blue
+  const coverBg    = theme?.coverBg    ?? undefined
+  const coverText  = theme?.coverText  ?? '#FFFFFF'
 
   return (
-    <SlideShell slideType="cover" mode="dark">
+    <SlideShell slideType="cover" mode="dark" style={coverBg ? { background: coverBg } : undefined}>
       <div style={{
         position: 'absolute', top: 0, left: 0,
-        width: 4, height: '100%', background: colors.blue,
+        width: 4, height: '100%', background: accentBar,
       }} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingLeft: 12 }}>
@@ -30,7 +35,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
             editable={!!editable}
             style={{
               fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: colors.blue, marginBottom: 20,
+              textTransform: 'uppercase', color: accentBar, marginBottom: 20,
               display: 'block',
             }}
           />
@@ -42,7 +47,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
           multiline
           style={{
             fontSize: 44, fontWeight: 600, lineHeight: 1.08,
-            color: '#FFFFFF', marginBottom: subtitle ? 20 : 32,
+            color: coverText, marginBottom: subtitle ? 20 : 32,
             maxWidth: '70%', display: 'block',
           }}
         />

@@ -8,6 +8,7 @@ interface SlideShellProps {
   children: React.ReactNode
   className?: string
   fullBleed?: boolean
+  style?: React.CSSProperties
 }
 
 export function SlideShell({
@@ -16,6 +17,7 @@ export function SlideShell({
   children,
   className = '',
   fullBleed = false,
+  style,
 }: SlideShellProps) {
   const resolvedMode = mode ?? defaultModeFor(slideType)
   const mc = modeClasses(resolvedMode)
@@ -30,6 +32,7 @@ export function SlideShell({
         ${padding}
         ${className}
       `.trim()}
+      style={style}
       data-slide-type={slideType}
       data-slide-mode={resolvedMode}
     >
