@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './styles/globals.css'
+import { StagingBanner } from './components/StagingBanner'
 import { LandingPage }   from './pages/LandingPage'
 import { DeckDashboard } from './pages/DeckDashboard'
 import { HowItWasMade }  from './pages/HowItWasMade'
@@ -73,47 +74,59 @@ export default function App() {
   }
 
   if (page === 'editor') {
-    return <DeckEditor />
+    return <><StagingBanner /><DeckEditor /></>
   }
 
   if (page === 'how') {
     return (
-      <HowItWasMade
-        onBack={() => goTo('dashboard', '/dashboard')}
-        onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
-      />
+      <>
+        <StagingBanner />
+        <HowItWasMade
+          onBack={() => goTo('dashboard', '/dashboard')}
+          onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
+        />
+      </>
     )
   }
 
   if (page === 'deck') {
     return (
-      <SlideViewer
-        slides={activeDeck}
-        title={deckTitle}
-        mode={shareMode}
-        onBack={() => goTo('dashboard', '/dashboard')}
-        onSlidesChange={handleSlideUpdate}
-        onOpenEditor={() => goTo('editor', '/editor')}
-      />
+      <>
+        <StagingBanner />
+        <SlideViewer
+          slides={activeDeck}
+          title={deckTitle}
+          mode={shareMode}
+          onBack={() => goTo('dashboard', '/dashboard')}
+          onSlidesChange={handleSlideUpdate}
+          onOpenEditor={() => goTo('editor', '/editor')}
+        />
+      </>
     )
   }
 
   if (page === 'dashboard') {
     return (
-      <DeckDashboard
-        onOpenDeck={handleOpenDeck}
-        onNewDeck={() => goTo('landing', '/')}
-        onHowItsMade={() => goTo('how', '/how')}
-      />
+      <>
+        <StagingBanner />
+        <DeckDashboard
+          onOpenDeck={handleOpenDeck}
+          onNewDeck={() => goTo('landing', '/')}
+          onHowItsMade={() => goTo('how', '/how')}
+        />
+      </>
     )
   }
 
   // Default: landing
   return (
-    <LandingPage
-      onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
-      onHowItsMade={() => goTo('how', '/how')}
-      onDeckGenerated={handleDeckGenerated}
-    />
+    <>
+      <StagingBanner />
+      <LandingPage
+        onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
+        onHowItsMade={() => goTo('how', '/how')}
+        onDeckGenerated={handleDeckGenerated}
+      />
+    </>
   )
 }

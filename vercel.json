@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/generate-deck.ts": { "maxDuration": 60 },
+    "api/graphic.ts": { "maxDuration": 30 },
+    "api/edit-slide.ts": { "maxDuration": 30 }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
