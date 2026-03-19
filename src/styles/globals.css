@@ -28,58 +28,72 @@
 
 /* ── PDF / Print export ─────────────────────────────────────────────────── */
 @media print {
-  /* Force landscape, zero margin */
   @page {
-    size: 297mm 167.0625mm landscape;
-    margin: 0;
+    size: 297mm 167.0625mm;
+    margin: 0mm;
   }
 
-  /* Hide everything by default */
-  body * {
-    visibility: hidden;
+  /* Hide the entire normal app UI */
+  body > #root {
+    display: none !important;
   }
 
   /* Show only the print container */
-  #signal-print-container,
+  body > #signal-print-container {
+    display: block !important;
+    position: static !important;
+    width: 297mm !important;
+    z-index: auto !important;
+  }
+
   #signal-print-container * {
-    visibility: visible;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
-  /* Full-page positioning */
-  #signal-print-container {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    background: white;
-    z-index: 99999;
-  }
-
-  /* Each slide = one printed page */
+  /* Each slide wrapper = one printed page */
   .signal-print-slide {
-    width: 297mm;
-    height: 167.0625mm;
-    page-break-after: always;
-    break-after: page;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    overflow: hidden;
-    position: relative;
-    display: block;
+    width: 297mm !important;
+    height: 167.0625mm !important;
+    min-height: 167.0625mm !important;
+    max-height: 167.0625mm !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    position: relative !important;
+    display: block !important;
+    box-shadow: none !important;
   }
 
   .signal-print-slide:last-child {
-    page-break-after: avoid;
-    break-after: avoid;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
-  /* Kill all shadows and borders on print */
+  /* Force SlideShell to fill the print slide wrapper */
+  .signal-print-slide > div {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Override the aspect-ratio class — in print we use fixed mm dimensions */
+  .signal-print-slide .aspect-slide,
+  .signal-print-slide [class*="aspect"] {
+    aspect-ratio: unset !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Kill all shadows and interactive chrome */
   .signal-print-slide * {
     box-shadow: none !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    color-adjust: exact;
+    outline: none !important;
+    cursor: default !important;
   }
 }
 

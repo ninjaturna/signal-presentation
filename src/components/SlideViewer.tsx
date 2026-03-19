@@ -7,6 +7,52 @@ import { triggerPrintExport } from './PrintExport'
 import { useUndoHistory } from '../hooks/useUndoHistory'
 import type { SlideData, ShareMode } from '../types/deck'
 
+function PdfButton({ slides, title, canEdit }: { slides: SlideData[]; title: string; canEdit: boolean }) {
+  const [pdfLoading, setPdfLoading] = useState(false)
+
+  const handlePdfExport = () => {
+    setPdfLoading(true)
+    setTimeout(() => {
+      triggerPrintExport(slides, title)
+      setTimeout(() => setPdfLoading(false), 3500)
+    }, 50)
+  }
+
+  if (!canEdit) return null
+
+  return (
+    <button
+      onClick={handlePdfExport}
+      disabled={pdfLoading}
+      title="Export all slides as PDF"
+      style={{
+        background: 'transparent',
+        border: `1px solid ${colors.borderDark}`,
+        borderRadius: 6, padding: '4px 12px',
+        fontSize: 12, fontWeight: 600,
+        color: pdfLoading ? colors.mutedLight : colors.mutedDark,
+        cursor: pdfLoading ? 'default' : 'pointer',
+        fontFamily: '"DM Sans", system-ui, sans-serif',
+        transition: 'all 0.15s',
+        minWidth: 72,
+        opacity: pdfLoading ? 0.6 : 1,
+      }}
+      onMouseEnter={e => {
+        if (!pdfLoading) {
+          e.currentTarget.style.color = '#FFFFFF'
+          e.currentTarget.style.borderColor = colors.blue
+        }
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = pdfLoading ? colors.mutedLight : colors.mutedDark
+        e.currentTarget.style.borderColor = colors.borderDark
+      }}
+    >
+      {pdfLoading ? 'Preparing…' : '↓ PDF'}
+    </button>
+  )
+}
+
 interface SlideViewerProps {
   slides: SlideData[]
   title?: string
@@ -207,31 +253,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
               </button>
             )}
 
-            {canEdit && (
-              <button
-                onClick={() => triggerPrintExport(slides, title)}
-                title="Export all slides as PDF"
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${colors.borderDark}`,
-                  borderRadius: 6, padding: '4px 12px',
-                  fontSize: 12, fontWeight: 600,
-                  color: colors.mutedDark, cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = '#FFFFFF'
-                  e.currentTarget.style.borderColor = colors.blue
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = colors.mutedDark
-                  e.currentTarget.style.borderColor = colors.borderDark
-                }}
-              >
-                ↓ PDF
-              </button>
-            )}
+            <PdfButton slides={slides} title={title} canEdit={canEdit} />
 
             {canEdit && (
               <div style={{ position: 'relative' }}>
