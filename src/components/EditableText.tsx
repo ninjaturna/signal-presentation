@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { ToneEditor } from './ToneEditor'
 
 interface EditableTextProps {
   value: string
@@ -21,8 +22,10 @@ export function EditableText({
   multiline = false,
   placeholder = 'Click to edit',
 }: EditableTextProps) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft]     = useState(value)
+  const [editing, setEditing]   = useState(false)
+  const [draft, setDraft]       = useState(value)
+  const [hovered, setHovered]   = useState(false)
+  const [showTone, setShowTone] = useState(false)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
 
   useEffect(() => { setDraft(value) }, [value])
@@ -48,7 +51,7 @@ export function EditableText({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!multiline && e.key === 'Enter') { e.preventDefault(); commit() }
     if (e.key === 'Escape') cancel()
-    e.stopPropagation() // prevent slide nav
+    e.stopPropagation()
   }
 
   if (!editable) {
@@ -93,28 +96,65 @@ export function EditableText({
   }
 
   return (
-    <Tag
-      style={{
-        ...style,
-        cursor: 'text',
-        borderRadius: 4,
-        transition: 'background 0.1s, outline 0.1s',
-        outline: '1.5px solid transparent',
-        outlineOffset: 3,
-      }}
-      className={className}
-      onClick={() => setEditing(true)}
-      title="Click to edit"
-      onMouseEnter={e => {
-        ;(e.currentTarget as HTMLElement).style.outline = '1.5px solid rgba(30,90,242,0.3)'
-        ;(e.currentTarget as HTMLElement).style.background = 'rgba(30,90,242,0.04)'
-      }}
-      onMouseLeave={e => {
-        ;(e.currentTarget as HTMLElement).style.outline = '1.5px solid transparent'
-        ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-      }}
-    >
-      {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
-    </Tag>
+    <>
+      <div
+        style={{ position: 'relative' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <Tag
+          style={{
+            ...style,
+            cursor: 'text',
+            borderRadius: 4,
+            transition: 'background 0.1s, outline 0.1s',
+            outline: hovered ? '1.5px solid rgba(30,90,242,0.3)' : '1.5px solid transparent',
+            outlineOffset: 3,
+            background: hovered ? 'rgba(30,90,242,0.04)' : 'transparent',
+          }}
+          className={className}
+          onClick={() => setEditing(true)}
+          title="Click to edit"
+        >
+          {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
+        </Tag>
+
+        {hovered && !showTone && (
+          <button
+            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setShowTone(true) }}
+            style={{
+              position: 'absolute',
+              top: -22,
+              left: 0,
+              background: '#1a1a2e',
+              border: '1px solid rgba(30,90,242,0.4)',
+              borderRadius: 4,
+              padding: '2px 7px',
+              fontSize: 10,
+              fontWeight: 700,
+              color: 'rgba(30,90,242,0.9)',
+              cursor: 'pointer',
+              letterSpacing: '0.06em',
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+              whiteSpace: 'nowrap',
+              zIndex: 10,
+            }}
+          >
+            ✦ Rewrite
+          </button>
+        )}
+      </div>
+
+      {showTone && (
+        <ToneEditor
+          originalText={value}
+          onAccept={rewritten => {
+            onSave(rewritten)
+            setShowTone(false)
+          }}
+          onClose={() => setShowTone(false)}
+        />
+      )}
+    </>
   )
 }

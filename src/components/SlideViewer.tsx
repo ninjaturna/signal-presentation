@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { colors } from '../design-system'
 import { renderSlide } from '../utils/renderSlide'
 import { ChatPanel } from './ChatPanel'
+import { useUndoHistory } from '../hooks/useUndoHistory'
 import type { SlideData, ShareMode } from '../types/deck'
 
 interface SlideViewerProps {
@@ -14,7 +15,7 @@ interface SlideViewerProps {
 }
 
 export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange, onOpenEditor }: SlideViewerProps) {
-  const [slides, setSlides]           = useState<SlideData[]>(initialSlides)
+  const { current: slides, push: pushSlides, undo, redo, canUndo, canRedo } = useUndoHistory<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
   const [showShare, setShowShare]     = useState(false)
@@ -29,24 +30,30 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
   }, [slides.length])
 
   const updateSlide = useCallback((id: string, patch: Partial<SlideData>) => {
-    setSlides(prev => {
-      const next = prev.map(s => s.id === id ? { ...s, ...patch } : s)
-      onSlidesChange?.(next)
-      return next
-    })
-  }, [onSlidesChange])
+    const next = slides.map(s => s.id === id ? { ...s, ...patch } : s)
+    pushSlides(next)
+    onSlidesChange?.(next)
+  }, [slides, pushSlides, onSlidesChange])
 
   const resetDiagrams = useCallback(() => {
-    setSlides(prev => prev.map(s =>
-      s.type === 'diagram' ? { ...s, svgContent: undefined } : s
-    ))
-  }, [])
+    const next = slides.map(s => s.type === 'diagram' ? { ...s, svgContent: undefined } : s)
+    pushSlides(next)
+  }, [slides, pushSlides])
 
   // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      // Undo/redo — works even with chat open
+      if (e.key === 'z' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+        return
+      }
+
       if (showChat) return
       switch (e.key) {
         case 'ArrowRight':
@@ -83,7 +90,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [current, goTo, canEdit, showChat, resetDiagrams])
+  }, [current, goTo, canEdit, showChat, resetDiagrams, undo, redo])
 
   // Fullscreen sync
   useEffect(() => {
@@ -132,6 +139,26 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
               >
                 ‹
               </button>
+            )}
+            {canEdit && (
+              <>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title="Undo (⌘Z)"
+                  style={undoRedoBtn(!canUndo)}
+                >
+                  ↩
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  title="Redo (⌘⇧Z)"
+                  style={undoRedoBtn(!canRedo)}
+                >
+                  ↪
+                </button>
+              </>
             )}
             <span style={{ color: colors.blue, letterSpacing: '0.06em', fontSize: 11 }}>SIGNAL</span>
             <span style={{ color: colors.borderDark }}>·</span>
@@ -320,6 +347,21 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
 }
 
 // ─── helpers ───────────────────────────────────────────────────────────────
+
+function undoRedoBtn(disabled: boolean): React.CSSProperties {
+  return {
+    background: 'transparent',
+    border: 'none',
+    padding: '2px 4px',
+    fontSize: 16,
+    color: disabled ? '#2a2a2a' : '#555',
+    cursor: disabled ? 'default' : 'pointer',
+    opacity: disabled ? 0.3 : 1,
+    lineHeight: 1,
+    fontFamily: 'system-ui',
+    flexShrink: 0,
+  }
+}
 
 function topBarBtn(active: boolean): React.CSSProperties {
   return {
