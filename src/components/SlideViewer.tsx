@@ -406,6 +406,19 @@ export function SlideViewer({
                   insertDiagramSlide(svg)
                 }
               }}
+              onInsertPoll={(poll) => {
+                const newSlide: SlideData = {
+                  id: `poll-${Date.now()}`,
+                  type: 'poll',
+                  mode: 'dark',
+                  eyebrow: 'AUDIENCE POLL',
+                  poll,
+                }
+                const next = [...slides.slice(0, current + 1), newSlide, ...slides.slice(current + 1)]
+                pushSlides(next)
+                onSlidesChange?.(next)
+                setCurrent(current + 1)
+              }}
             />
           </div>
         )}

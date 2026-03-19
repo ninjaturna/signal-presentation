@@ -16,7 +16,7 @@ export interface StatData {
 
 export interface SlideData {
   id: string
-  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing'
+  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll'
   mode?: SlideMode
   // cover / closing / shared
   eyebrow?: string
@@ -45,6 +45,13 @@ export interface SlideData {
   svgContent?: string
   placeholder?: string
   context?: string
+  // poll
+  poll?: {
+    question: string
+    type: 'yes-no' | 'multiple-choice' | 'rating'
+    options: string[]
+    allowMultiple?: boolean
+  }
 }
 
 export type ShareMode = 'edit' | 'review' | 'present'

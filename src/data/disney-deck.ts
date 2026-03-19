@@ -72,6 +72,23 @@ export const disneyDeck: SlideData[] = [
     },
   },
   {
+    id: 'disney-poll-1',
+    type: 'poll',
+    mode: 'dark',
+    eyebrow: 'AUDIENCE POLL',
+    poll: {
+      question: 'How well does your organization currently use customer data to personalize experiences?',
+      type: 'multiple-choice',
+      options: [
+        'We barely scratch the surface',
+        'We personalize in one channel only',
+        'We personalize across a few channels',
+        'We have a fully unified data strategy',
+      ],
+      allowMultiple: false,
+    },
+  },
+  {
     id: 'disney-full-bleed',
     type: 'full-bleed',
     mode: 'dark',

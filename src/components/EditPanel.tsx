@@ -9,6 +9,7 @@ interface EditPanelProps {
   onClose: () => void
   onResetDiagrams: () => void
   onInsertDiagram: (svg: string) => void
+  onInsertPoll: (poll: NonNullable<SlideData['poll']>) => void
 }
 
 const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: string; multiline?: boolean }>> = {
@@ -22,13 +23,18 @@ const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: strin
   closing:         [{ key: 'headline', label: 'Headline', multiline: true }, { key: 'cta', label: 'CTA text' }, { key: 'contact', label: 'Contact' }],
 }
 
-export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram }: EditPanelProps) {
+export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll }: EditPanelProps) {
   const [showChat, setShowChat]               = useState(false)
   const [showDiagram, setShowDiagram]         = useState(false)
   const [diagramPrompt, setDiagramPrompt]     = useState('')
   const [diagramSvg, setDiagramSvg]           = useState('')
   const [diagramLoading, setDiagramLoading]   = useState(false)
   const [diagramError, setDiagramError]       = useState('')
+  const [showPoll, setShowPoll]               = useState(false)
+  const [pollQuestion, setPollQuestion]       = useState('')
+  const [pollType, setPollType]               = useState<'yes-no' | 'multiple-choice' | 'rating'>('yes-no')
+  const [pollOptions, setPollOptions]         = useState(['', '', '', ''])
+  const [pollMultiple, setPollMultiple]       = useState(false)
 
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
@@ -61,6 +67,22 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
     setDiagramSvg('')
     setDiagramPrompt('')
     setShowDiagram(false)
+  }
+
+  const addPoll = () => {
+    if (!pollQuestion.trim()) return
+    const poll: NonNullable<SlideData['poll']> = {
+      question: pollQuestion.trim(),
+      type: pollType,
+      options: pollType === 'multiple-choice' ? pollOptions.filter(o => o.trim()) : [],
+      allowMultiple: pollType === 'multiple-choice' ? pollMultiple : false,
+    }
+    onInsertPoll(poll)
+    setPollQuestion('')
+    setPollType('yes-no')
+    setPollOptions(['', '', '', ''])
+    setPollMultiple(false)
+    setShowPoll(false)
   }
 
   if (showChat) {
@@ -360,6 +382,126 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
         )}
       </div>
 
+      {/* Insert Poll section */}
+      <div style={{ borderTop: `1px solid ${colors.borderDark}`, padding: '14px 16px' }}>
+        <button
+          onClick={() => setShowPoll(v => !v)}
+          style={{
+            width: '100%', background: 'transparent',
+            border: `1px solid ${showPoll ? colors.gold : colors.borderDark}`,
+            borderRadius: 7, padding: '8px 14px',
+            fontSize: 12, fontWeight: 600,
+            color: showPoll ? colors.gold : colors.mutedDark,
+            cursor: 'pointer', textAlign: 'left',
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <span>◎</span>
+          {showPoll ? 'Close poll builder' : 'Insert poll'}
+        </button>
+
+        {showPoll && (
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <label style={fieldLabelStyle}>Question</label>
+              <textarea
+                value={pollQuestion}
+                onChange={e => setPollQuestion(e.target.value)}
+                onKeyDown={e => e.stopPropagation()}
+                placeholder="Ask your audience something…"
+                rows={2}
+                style={fieldTextareaStyle}
+                onFocus={e => (e.currentTarget.style.borderColor = colors.gold)}
+                onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+              />
+            </div>
+
+            <div>
+              <label style={fieldLabelStyle}>Poll type</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['yes-no', 'multiple-choice', 'rating'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setPollType(t)}
+                    style={{
+                      flex: 1, background: pollType === t ? colors.gold : 'transparent',
+                      border: `1px solid ${pollType === t ? colors.gold : colors.borderDark}`,
+                      borderRadius: 5, padding: '5px 4px',
+                      fontSize: 10, fontWeight: 600,
+                      color: pollType === t ? colors.ink : colors.mutedDark,
+                      cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                      textTransform: 'uppercase', letterSpacing: '0.04em',
+                    }}
+                  >
+                    {t === 'yes-no' ? 'Yes / No' : t === 'multiple-choice' ? 'Choice' : 'Rating'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {pollType === 'multiple-choice' && (
+              <div>
+                <label style={fieldLabelStyle}>Options (up to 4)</label>
+                {pollOptions.map((opt, i) => (
+                  <input
+                    key={i}
+                    value={opt}
+                    onChange={e => {
+                      const next = [...pollOptions]
+                      next[i] = e.target.value
+                      setPollOptions(next)
+                    }}
+                    onKeyDown={e => e.stopPropagation()}
+                    placeholder={`Option ${i + 1}`}
+                    style={{ ...fieldInputStyle, marginBottom: 6 }}
+                    onFocus={e => (e.currentTarget.style.borderColor = colors.gold)}
+                    onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+                  />
+                ))}
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 11, color: colors.mutedDark, cursor: 'pointer', marginTop: 4,
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={pollMultiple}
+                    onChange={e => setPollMultiple(e.target.checked)}
+                  />
+                  Allow multiple selections
+                </label>
+              </div>
+            )}
+
+            <div style={{
+              background: '#1a1a1e', borderRadius: 6, padding: '8px 10px',
+              fontSize: 11, color: colors.mutedDark, lineHeight: 1.5,
+            }}>
+              {pollQuestion.trim()
+                ? `"${pollQuestion.trim()}" — ${pollType === 'yes-no' ? 'Yes or No' : pollType === 'rating' ? 'Rating 1–5' : `${pollOptions.filter(o => o.trim()).length} option(s)`}`
+                : 'Enter a question above to preview'}
+            </div>
+
+            <button
+              onClick={addPoll}
+              disabled={!pollQuestion.trim()}
+              style={{
+                background: pollQuestion.trim() ? colors.gold : colors.inkSoft,
+                border: 'none', borderRadius: 6, padding: '8px 14px',
+                fontSize: 12, fontWeight: 700,
+                color: pollQuestion.trim() ? colors.ink : colors.mutedDark,
+                cursor: pollQuestion.trim() ? 'pointer' : 'default',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                opacity: !pollQuestion.trim() ? 0.4 : 1,
+              }}
+            >
+              ◎ Insert poll slide
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Bottom actions */}
       <div style={{
         padding: '14px 16px',
@@ -397,4 +539,26 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
       </div>
     </div>
   )
+}
+
+const fieldLabelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 10, fontWeight: 600,
+  color: colors.mutedDark, letterSpacing: '0.06em',
+  textTransform: 'uppercase', marginBottom: 5,
+}
+
+const fieldInputStyle: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box',
+  background: '#1a1a1e',
+  border: `1px solid ${colors.borderDark}`,
+  borderRadius: 6, padding: '7px 10px',
+  fontSize: 13, color: '#FFFFFF',
+  fontFamily: '"DM Sans", system-ui, sans-serif',
+  outline: 'none', display: 'block',
+}
+
+const fieldTextareaStyle: React.CSSProperties = {
+  ...fieldInputStyle,
+  resize: 'vertical' as const,
+  lineHeight: 1.5,
 }

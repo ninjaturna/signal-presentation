@@ -7,6 +7,7 @@ import {
   SlideDiagram,
   SlideFullBleed,
   SlideClosing,
+  SlidePoll,
 } from '../components/slides'
 import type { SlideData } from '../types/deck'
 import type { DeckTheme } from '../design-system/themes'
@@ -108,6 +109,16 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           cta={slide.cta}
           contact={slide.contact}
           theme={theme}
+        />
+      )
+
+    case 'poll':
+      return (
+        <SlidePoll
+          id={slide.id}
+          eyebrow={slide.eyebrow}
+          poll={slide.poll ?? { question: 'What do you think?', type: 'yes-no', options: [] }}
+          mode={slide.mode ?? 'dark'}
         />
       )
 
