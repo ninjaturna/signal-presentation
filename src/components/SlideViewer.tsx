@@ -15,7 +15,7 @@ interface SlideViewerProps {
   onOpenEditor?: () => void
 }
 
-export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange, onOpenEditor }: SlideViewerProps) {
+export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'edit', onBack, onSlidesChange }: SlideViewerProps) {
   const { current: slides, push: pushSlides, undo, redo, canUndo, canRedo } = useUndoHistory<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
