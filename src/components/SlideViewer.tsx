@@ -312,6 +312,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
           <ChatPanel
             slide={slide}
             onUpdate={(patch) => updateSlide(slide.id, patch)}
+            onClose={() => setShowChat(false)}
           />
         )}
       </div>

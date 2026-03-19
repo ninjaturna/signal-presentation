@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import { ToneEditor } from './ToneEditor'
 
 interface EditableTextProps {
   value: string
@@ -22,10 +21,8 @@ export function EditableText({
   multiline = false,
   placeholder = 'Click to edit',
 }: EditableTextProps) {
-  const [editing, setEditing]   = useState(false)
-  const [draft, setDraft]       = useState(value)
-  const [hovered, setHovered]   = useState(false)
-  const [showTone, setShowTone] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft]     = useState(value)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
 
   useEffect(() => { setDraft(value) }, [value])
@@ -96,65 +93,62 @@ export function EditableText({
   }
 
   return (
-    <>
-      <div
-        style={{ position: 'relative' }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+    <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+      <Tag
+        style={{
+          ...style,
+          cursor: 'text',
+          borderRadius: 4,
+          transition: 'outline 0.1s',
+          outline: '1.5px solid transparent',
+          outlineOffset: 3,
+          display: 'block',
+        }}
+        className={className}
+        onClick={() => setEditing(true)}
+        title="Click to edit"
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.outline = '1.5px solid rgba(30,90,242,0.35)'
+          el.style.background = 'rgba(30,90,242,0.04)'
+          const badge = el.parentElement?.querySelector('.edit-badge') as HTMLElement
+          if (badge) badge.style.opacity = '1'
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.outline = '1.5px solid transparent'
+          el.style.background = 'transparent'
+          const badge = el.parentElement?.querySelector('.edit-badge') as HTMLElement
+          if (badge) badge.style.opacity = '0'
+        }}
       >
-        <Tag
-          style={{
-            ...style,
-            cursor: 'text',
-            borderRadius: 4,
-            transition: 'background 0.1s, outline 0.1s',
-            outline: hovered ? '1.5px solid rgba(30,90,242,0.3)' : '1.5px solid transparent',
-            outlineOffset: 3,
-            background: hovered ? 'rgba(30,90,242,0.04)' : 'transparent',
-          }}
-          className={className}
-          onClick={() => setEditing(true)}
-          title="Click to edit"
-        >
-          {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
-        </Tag>
-
-        {hovered && !showTone && (
-          <button
-            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setShowTone(true) }}
-            style={{
-              position: 'absolute',
-              top: -22,
-              left: 0,
-              background: '#1a1a2e',
-              border: '1px solid rgba(30,90,242,0.4)',
-              borderRadius: 4,
-              padding: '2px 7px',
-              fontSize: 10,
-              fontWeight: 700,
-              color: 'rgba(30,90,242,0.9)',
-              cursor: 'pointer',
-              letterSpacing: '0.06em',
-              fontFamily: '"DM Sans", system-ui, sans-serif',
-              whiteSpace: 'nowrap',
-              zIndex: 10,
-            }}
-          >
-            ✦ Rewrite
-          </button>
-        )}
+        {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
+      </Tag>
+      <div
+        className="edit-badge"
+        onClick={() => setEditing(true)}
+        style={{
+          position: 'absolute',
+          top: -8,
+          right: 0,
+          opacity: 0,
+          transition: 'opacity 0.12s',
+          background: 'rgba(30,90,242,0.9)',
+          color: '#FFFFFF',
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: '0.06em',
+          padding: '2px 6px',
+          borderRadius: 3,
+          cursor: 'text',
+          pointerEvents: 'none',
+          fontFamily: '"DM Sans", system-ui, sans-serif',
+          whiteSpace: 'nowrap',
+          zIndex: 10,
+        }}
+      >
+        EDIT
       </div>
-
-      {showTone && (
-        <ToneEditor
-          originalText={value}
-          onAccept={rewritten => {
-            onSave(rewritten)
-            setShowTone(false)
-          }}
-          onClose={() => setShowTone(false)}
-        />
-      )}
-    </>
+    </div>
   )
 }

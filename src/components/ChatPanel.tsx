@@ -10,6 +10,7 @@ interface Message {
 interface ChatPanelProps {
   slide: SlideData
   onUpdate: (patch: Partial<SlideData>) => void
+  onClose?: () => void
 }
 
 const QUICK_ACTIONS = [
@@ -19,7 +20,7 @@ const QUICK_ACTIONS = [
   'Sharpen the narrative',
 ]
 
-export function ChatPanel({ slide, onUpdate }: ChatPanelProps) {
+export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
@@ -42,7 +43,23 @@ export function ChatPanel({ slide, onUpdate }: ChatPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instruction: userMsg, slide }),
       })
-      const data = await res.json()
+      const raw = await res.text()
+      let data: { error?: string; patch?: Partial<SlideData>; message?: string }
+      try {
+        const cleaned = raw
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/\s*```$/i, '')
+          .trim()
+        data = JSON.parse(cleaned)
+      } catch {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          text: 'Parse error — Claude returned unexpected format. Try again.',
+        }])
+        setLoading(false)
+        return
+      }
       if (data.error) {
         setMessages(prev => [...prev, { role: 'assistant', text: `Error: ${data.error}` }])
         return
@@ -87,6 +104,20 @@ export function ChatPanel({ slide, onUpdate }: ChatPanelProps) {
         }}>
           {slide.type}
         </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent', border: 'none',
+              fontSize: 16, color: colors.mutedDark, cursor: 'pointer',
+              lineHeight: 1, padding: '4px 6px',
+              fontFamily: 'system-ui', marginLeft: 4,
+            }}
+            title="Close co-pilot"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Quick actions */}

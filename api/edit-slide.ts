@@ -58,7 +58,12 @@ Return the JSON patch.`,
     })
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
-    const result = JSON.parse(raw)
+    const cleaned = raw
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
+    const result = JSON.parse(cleaned)
 
     res.json(result)
   } catch (err) {

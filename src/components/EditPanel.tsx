@@ -47,7 +47,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams }: EditPan
           </button>
           <span style={{ fontSize: 12, fontWeight: 600, color: '#FFFFFF' }}>AI Co-pilot</span>
         </div>
-        <ChatPanel slide={slide} onUpdate={onUpdate} />
+        <ChatPanel slide={slide} onUpdate={onUpdate} onClose={() => setShowChat(false)} />
       </div>
     )
   }
