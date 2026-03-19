@@ -7,6 +7,9 @@ import { ShareMenu } from './ShareMenu'
 import { CommentSidebar } from './CommentSidebar'
 import { GdprBanner } from './GdprBanner'
 import { ThemePanel } from './ThemePanel'
+import type { TransitionType } from './ThemePanel'
+import { InsertPollModal } from './InsertPollModal'
+import { DiagramFromTextPanel } from './DiagramFromTextPanel'
 import { triggerPrintExport } from './PrintExport'
 import { DECK_THEMES } from '../design-system/themes'
 import type { DeckTheme } from '../design-system/themes'
@@ -86,7 +89,10 @@ export function SlideViewer({
   const [showChat, setShowChat]           = useState(false)
   const [showEditPanel, setShowEditPanel] = useState(false)
   const [showShare, setShowShare]         = useState(false)
-  const [showTheme, setShowTheme]         = useState(false)
+  const [showTheme, setShowTheme]               = useState(false)
+  const [showPollModal, setShowPollModal]       = useState(false)
+  const [activeTransition, setActiveTransition]   = useState<TransitionType>('fade')
+  const [diagramSourceText, setDiagramSourceText] = useState<string | null>(null)
   const [activeTheme, setActiveTheme]     = useState<DeckTheme>(DECK_THEMES[0])
   const [isFullscreen, setIsFullscreen]   = useState(false)
   const [trackingEnabled, setTrackingEnabled] = useState(false)
@@ -116,6 +122,28 @@ export function SlideViewer({
     const next = slides.map(s => s.type === 'diagram' ? { ...s, svgContent: undefined } : s)
     pushSlides(next)
   }, [slides, pushSlides])
+
+  const insertPollAfterCurrent = useCallback((pollSlide: SlideData) => {
+    const next = [...slides.slice(0, current + 1), pollSlide, ...slides.slice(current + 1)]
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(current + 1)
+    setShowPollModal(false)
+  }, [slides, current, pushSlides, onSlidesChange])
+
+  const insertDiagramSlide = useCallback((svgContent: string) => {
+    const newSlide: SlideData = {
+      id: `diagram-${Date.now()}`,
+      type: 'diagram',
+      mode: 'dark',
+      svgContent,
+    }
+    const next = [...slides.slice(0, current + 1), newSlide, ...slides.slice(current + 1)]
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(current + 1)
+    setDiagramSourceText(null)
+  }, [slides, current, pushSlides, onSlidesChange])
 
   // Engagement tracking — store slide view timestamps when consent given
   useEffect(() => {
@@ -185,6 +213,17 @@ export function SlideViewer({
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
+
+  // Diagram-from-text trigger from EditableText badge
+  useEffect(() => {
+    if (!canEdit) return
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text
+      if (text) setDiagramSourceText(text)
+    }
+    window.addEventListener('signal:diagram-request', handler)
+    return () => window.removeEventListener('signal:diagram-request', handler)
+  }, [canEdit])
 
   return (
     <div style={{
@@ -284,6 +323,13 @@ export function SlideViewer({
                   >
                     ◑ Theme
                   </button>
+                  <button
+                    onClick={() => setShowPollModal(true)}
+                    title="Insert a poll slide after this slide"
+                    style={topBarBtn(false)}
+                  >
+                    + Poll
+                  </button>
                   <PdfButton slides={slides} title={title} />
                   <ShareMenu open={showShare} onToggle={() => setShowShare(v => !v)} />
                 </>
@@ -324,11 +370,16 @@ export function SlideViewer({
             borderRadius: isFullscreen ? 0 : 4,
             overflow: 'hidden',
           }}>
-            {renderSlide(slide, {
-              editable: canTextEdit,
-              onUpdate: (patch) => updateSlide(slide.id, patch),
-              theme: activeTheme.tokens,
-            })}
+            <div
+              key={current}
+              style={{ animation: getTransitionAnimation(activeTransition), width: '100%', height: '100%' }}
+            >
+              {renderSlide(slide, {
+                editable: canTextEdit,
+                onUpdate: (patch) => updateSlide(slide.id, patch),
+                theme: activeTheme.tokens,
+              })}
+            </div>
           </div>
 
           {/* Prev / next arrows */}
@@ -348,6 +399,13 @@ export function SlideViewer({
               onUpdate={(patch) => updateSlide(slide.id, patch)}
               onClose={() => setShowEditPanel(false)}
               onResetDiagrams={resetDiagrams}
+              onInsertDiagram={(svg) => {
+                if (slide.type === 'diagram') {
+                  updateSlide(slide.id, { svgContent: svg })
+                } else {
+                  insertDiagramSlide(svg)
+                }
+              }}
             />
           </div>
         )}
@@ -359,6 +417,17 @@ export function SlideViewer({
               slide={slide}
               onUpdate={(patch) => updateSlide(slide.id, patch)}
               onClose={() => setShowChat(false)}
+            />
+          </div>
+        )}
+
+        {/* Diagram-from-text panel — edit mode, triggered by EditableText badge */}
+        {canEdit && diagramSourceText && (
+          <div data-no-print style={{ display: 'flex', height: '100%' }}>
+            <DiagramFromTextPanel
+              sourceText={diagramSourceText}
+              onInsert={insertDiagramSlide}
+              onClose={() => setDiagramSourceText(null)}
             />
           </div>
         )}
@@ -406,6 +475,16 @@ export function SlideViewer({
           currentThemeId={activeTheme.id}
           onSelect={theme => { setActiveTheme(theme); setShowTheme(false) }}
           onClose={() => setShowTheme(false)}
+          activeTransition={activeTransition}
+          onTransitionChange={t => setActiveTransition(t)}
+        />
+      )}
+
+      {/* Insert poll modal — edit mode only */}
+      {canEdit && showPollModal && (
+        <InsertPollModal
+          onInsert={insertPollAfterCurrent}
+          onClose={() => setShowPollModal(false)}
         />
       )}
 
@@ -443,6 +522,15 @@ function topBarBtn(active: boolean): React.CSSProperties {
     cursor: 'pointer',
     fontFamily: '"DM Sans", system-ui, sans-serif',
     transition: 'all 0.15s',
+  }
+}
+
+function getTransitionAnimation(type: TransitionType): string {
+  switch (type) {
+    case 'fade':       return 'signal-fade 0.3s ease'
+    case 'slide-left': return 'signal-slide-left 0.3s ease'
+    case 'zoom':       return 'signal-zoom 0.25s ease-out'
+    default:           return 'none'
   }
 }
 

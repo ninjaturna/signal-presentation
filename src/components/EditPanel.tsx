@@ -8,6 +8,7 @@ interface EditPanelProps {
   onUpdate: (patch: Partial<SlideData>) => void
   onClose: () => void
   onResetDiagrams: () => void
+  onInsertDiagram: (svg: string) => void
 }
 
 const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: string; multiline?: boolean }>> = {
@@ -21,9 +22,46 @@ const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: strin
   closing:         [{ key: 'headline', label: 'Headline', multiline: true }, { key: 'cta', label: 'CTA text' }, { key: 'contact', label: 'Contact' }],
 }
 
-export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams }: EditPanelProps) {
-  const [showChat, setShowChat] = useState(false)
+export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram }: EditPanelProps) {
+  const [showChat, setShowChat]               = useState(false)
+  const [showDiagram, setShowDiagram]         = useState(false)
+  const [diagramPrompt, setDiagramPrompt]     = useState('')
+  const [diagramSvg, setDiagramSvg]           = useState('')
+  const [diagramLoading, setDiagramLoading]   = useState(false)
+  const [diagramError, setDiagramError]       = useState('')
+
   const fields = EDITABLE_FIELDS[slide.type] ?? []
+
+  const generateDiagram = async () => {
+    if (!diagramPrompt.trim()) return
+    setDiagramLoading(true)
+    setDiagramError('')
+    setDiagramSvg('')
+    try {
+      const res = await fetch('/api/graphic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: diagramPrompt,
+          context: `Slide type: ${slide.type}. ${slide.headline ?? slide.title ?? ''}`,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) { setDiagramError(data.error); return }
+      setDiagramSvg(data.svg)
+    } catch {
+      setDiagramError('Generation failed — check API key')
+    } finally {
+      setDiagramLoading(false)
+    }
+  }
+
+  const acceptDiagram = () => {
+    onInsertDiagram(diagramSvg)
+    setDiagramSvg('')
+    setDiagramPrompt('')
+    setShowDiagram(false)
+  }
 
   if (showChat) {
     return (
@@ -156,6 +194,169 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams }: EditPan
           <p style={{ fontSize: 13, color: colors.mutedDark, lineHeight: 1.5 }}>
             No editable text fields for this slide type. Use AI Co-pilot to make changes.
           </p>
+        )}
+
+        {/* Diagram-specific: SVG state + clear option */}
+        {slide.type === 'diagram' && slide.svgContent && (
+          <div style={{
+            background: 'rgba(29,158,117,0.08)',
+            border: '1px solid rgba(29,158,117,0.2)',
+            borderRadius: 7, padding: '10px 12px',
+          }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: '#1D9E75',
+              letterSpacing: '0.06em', marginBottom: 6,
+            }}>
+              DIAGRAM IN DECK
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => onUpdate({ svgContent: undefined })}
+                style={{
+                  flex: 1, background: 'transparent',
+                  border: `1px solid ${colors.borderDark}`,
+                  borderRadius: 5, padding: '6px 10px',
+                  fontSize: 11, color: '#FF1C52', cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                Clear diagram
+              </button>
+            </div>
+            <p style={{
+              fontSize: 10, color: colors.mutedDark, marginTop: 6, lineHeight: 1.5,
+            }}>
+              Use "Insert diagram" below to replace it.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Insert Diagram section */}
+      <div style={{
+        borderTop: `1px solid ${colors.borderDark}`,
+        padding: '14px 16px',
+      }}>
+        <button
+          onClick={() => { setShowDiagram(v => !v); setDiagramSvg(''); setDiagramError('') }}
+          style={{
+            width: '100%', background: 'transparent',
+            border: `1px solid ${showDiagram ? colors.blue : colors.borderDark}`,
+            borderRadius: 7, padding: '8px 14px',
+            fontSize: 12, fontWeight: 600,
+            color: showDiagram ? colors.blue : colors.mutedDark,
+            cursor: 'pointer', textAlign: 'left',
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <span style={{ fontSize: 14 }}>⬡</span>
+          {showDiagram ? 'Close diagram generator' : 'Insert diagram'}
+        </button>
+
+        {showDiagram && (
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <textarea
+              value={diagramPrompt}
+              onChange={e => setDiagramPrompt(e.target.value)}
+              onKeyDown={e => {
+                e.stopPropagation()
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateDiagram() }
+              }}
+              placeholder="Describe the diagram… (Enter to generate)"
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: '#1a1a1e',
+                border: `1px solid ${colors.borderDark}`,
+                borderRadius: 6, padding: '8px 10px',
+                fontSize: 12, color: '#FFFFFF', lineHeight: 1.5,
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                outline: 'none', resize: 'none',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+              onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+            />
+
+            <button
+              onClick={generateDiagram}
+              disabled={diagramLoading || !diagramPrompt.trim()}
+              style={{
+                background: diagramLoading ? colors.inkSoft : colors.blue,
+                border: 'none', borderRadius: 6, padding: '8px 14px',
+                fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+                cursor: diagramLoading ? 'default' : 'pointer',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                opacity: !diagramPrompt.trim() ? 0.4 : 1,
+              }}
+            >
+              {diagramLoading ? 'Generating…' : 'Generate →'}
+            </button>
+
+            {diagramError && (
+              <p style={{ fontSize: 11, color: '#FF1C52', margin: 0 }}>{diagramError}</p>
+            )}
+
+            {diagramSvg && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{
+                  background: '#1a1a1e',
+                  border: `1px solid ${colors.blue}`,
+                  borderRadius: 8, overflow: 'hidden',
+                  padding: 8, position: 'relative',
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: colors.gold,
+                    letterSpacing: '0.06em', marginBottom: 6,
+                  }}>
+                    PREVIEW
+                  </div>
+                  <div
+                    style={{ width: '100%' }}
+                    dangerouslySetInnerHTML={{ __html: diagramSvg }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={acceptDiagram}
+                    style={{
+                      flex: 1, background: '#1D9E75', border: 'none',
+                      borderRadius: 6, padding: '7px 10px',
+                      fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+                      cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                    }}
+                  >
+                    ✓ Insert
+                  </button>
+                  <button
+                    onClick={generateDiagram}
+                    disabled={diagramLoading}
+                    style={{
+                      flex: 1, background: 'transparent',
+                      border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '7px 10px',
+                      fontSize: 12, color: colors.mutedDark, cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                    }}
+                  >
+                    Try again
+                  </button>
+                  <button
+                    onClick={() => setDiagramSvg('')}
+                    style={{
+                      background: 'transparent', border: 'none',
+                      fontSize: 11, color: colors.mutedDark, cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                      padding: '7px 4px',
+                    }}
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

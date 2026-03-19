@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { SlideShell } from '../SlideShell'
+import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
 import type { SlideData } from '../../types/deck'
@@ -91,18 +92,30 @@ export function SlideDiagram({
 
   return (
     <SlideShell slideType="content" mode={mode}>
-      {(eyebrow || title) && (
+      {(eyebrow !== undefined || title !== undefined) && (
         <div style={{ marginBottom: 20 }}>
-          {eyebrow && (
-            <div style={{
-              fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: colors.blue, marginBottom: 6,
-            }}>
-              {eyebrow}
-            </div>
+          {eyebrow !== undefined && (
+            <EditableText
+              value={eyebrow}
+              onSave={v => onUpdate?.({ eyebrow: v })}
+              editable={!!editable}
+              style={{
+                fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
+                textTransform: 'uppercase', color: colors.blue,
+                marginBottom: 6, display: 'block',
+              }}
+            />
           )}
-          {title && (
-            <h2 style={{ fontSize: 24, fontWeight: 600, color: textPrimary }}>{title}</h2>
+          {title !== undefined && (
+            <EditableText
+              value={title}
+              onSave={v => onUpdate?.({ title: v })}
+              editable={!!editable}
+              multiline
+              style={{
+                fontSize: 24, fontWeight: 600, color: textPrimary, display: 'block',
+              }}
+            />
           )}
         </div>
       )}
