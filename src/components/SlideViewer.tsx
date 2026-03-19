@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { colors } from '../design-system'
 import { renderSlide } from '../utils/renderSlide'
 import { ChatPanel } from './ChatPanel'
+import { EditPanel } from './EditPanel'
 import { useUndoHistory } from '../hooks/useUndoHistory'
 import type { SlideData, ShareMode } from '../types/deck'
 
@@ -18,6 +19,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
   const { current: slides, push: pushSlides, undo, redo, canUndo, canRedo } = useUndoHistory<SlideData[]>(initialSlides)
   const [current, setCurrent]         = useState(0)
   const [showChat, setShowChat]       = useState(false)
+  const [showEditPanel, setShowEditPanel] = useState(false)
   const [showShare, setShowShare]     = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [copied, setCopied]           = useState<'review' | 'present' | null>(null)
@@ -218,35 +220,25 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
               </div>
             )}
 
-            {canEdit && onOpenEditor && (
-              <button
-                onClick={onOpenEditor}
-                title="Open in editor"
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${colors.borderDark}`,
-                  borderRadius: 6, padding: '5px 10px',
-                  fontSize: 12, color: '#666', cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                }}
-              >
-                Edit mode
-              </button>
-            )}
-
             {canEdit && (
               <button
-                onClick={resetDiagrams}
-                title="Reset all diagrams (R)"
+                onClick={() => {
+                  setShowEditPanel(v => !v)
+                  setShowChat(false)
+                }}
+                title="Toggle edit panel"
                 style={{
-                  background: 'transparent',
-                  border: '1px solid #222',
-                  borderRadius: 6, padding: '4px 10px',
-                  fontSize: 12, color: '#444', cursor: 'pointer',
+                  background: showEditPanel ? colors.blue : 'transparent',
+                  border: `1px solid ${showEditPanel ? colors.blue : colors.borderDark}`,
+                  borderRadius: 6, padding: '4px 12px',
+                  fontSize: 12, fontWeight: 600,
+                  color: showEditPanel ? '#FFFFFF' : colors.mutedDark,
+                  cursor: 'pointer',
                   fontFamily: '"DM Sans", system-ui, sans-serif',
+                  transition: 'all 0.15s',
                 }}
               >
-                Reset diagrams
+                {showEditPanel ? '✕ Exit edit mode' : 'Edit mode'}
               </button>
             )}
 
@@ -305,8 +297,18 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
           )}
         </div>
 
-        {/* Chat panel */}
-        {canEdit && showChat && (
+        {/* Edit panel */}
+        {canEdit && showEditPanel && (
+          <EditPanel
+            slide={slide}
+            onUpdate={(patch) => updateSlide(slide.id, patch)}
+            onClose={() => setShowEditPanel(false)}
+            onResetDiagrams={resetDiagrams}
+          />
+        )}
+
+        {/* Chat panel — only when edit panel is closed */}
+        {canEdit && showChat && !showEditPanel && (
           <ChatPanel
             slide={slide}
             onUpdate={(patch) => updateSlide(slide.id, patch)}
