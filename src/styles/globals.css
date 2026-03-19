@@ -97,6 +97,22 @@
   }
 }
 
+/* ── Slide transitions ──────────────────────────────────────────────────── */
+@keyframes signal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes signal-slide-left {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes signal-zoom {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 @layer components {
   .slide-eyebrow {
     @apply text-slide-eyebrow uppercase tracking-widest font-semibold;

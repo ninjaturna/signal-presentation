@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { colors } from '../design-system'
 
 interface EditableTextProps {
   value: string
@@ -23,6 +24,7 @@ export function EditableText({
 }: EditableTextProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value)
+  const [hovered, setHovered] = useState(false)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
 
   useEffect(() => { setDraft(value) }, [value])
@@ -49,6 +51,11 @@ export function EditableText({
     if (!multiline && e.key === 'Enter') { e.preventDefault(); commit() }
     if (e.key === 'Escape') cancel()
     e.stopPropagation()
+  }
+
+  const handleDiagramClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.dispatchEvent(new CustomEvent('signal:diagram-request', { detail: { text: value } }))
   }
 
   if (!editable) {
@@ -92,63 +99,76 @@ export function EditableText({
     )
   }
 
+  const showDiagramBadge = hovered && value.length > 30
+
   return (
-    <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+    <div
+      style={{ position: 'relative', display: 'inline-block', width: '100%' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <Tag
         style={{
           ...style,
           cursor: 'text',
           borderRadius: 4,
           transition: 'outline 0.1s',
-          outline: '1.5px solid transparent',
+          outline: hovered ? '1.5px solid rgba(30,90,242,0.35)' : '1.5px solid transparent',
+          background: hovered ? 'rgba(30,90,242,0.04)' : 'transparent',
           outlineOffset: 3,
           display: 'block',
         }}
         className={className}
         onClick={() => setEditing(true)}
         title="Click to edit"
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement
-          el.style.outline = '1.5px solid rgba(30,90,242,0.35)'
-          el.style.background = 'rgba(30,90,242,0.04)'
-          const badge = el.parentElement?.querySelector('.edit-badge') as HTMLElement
-          if (badge) badge.style.opacity = '1'
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement
-          el.style.outline = '1.5px solid transparent'
-          el.style.background = 'transparent'
-          const badge = el.parentElement?.querySelector('.edit-badge') as HTMLElement
-          if (badge) badge.style.opacity = '0'
-        }}
       >
         {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
       </Tag>
-      <div
-        className="edit-badge"
-        onClick={() => setEditing(true)}
-        style={{
-          position: 'absolute',
-          top: -8,
-          right: 0,
-          opacity: 0,
-          transition: 'opacity 0.12s',
-          background: 'rgba(30,90,242,0.9)',
-          color: '#FFFFFF',
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: '0.06em',
-          padding: '2px 6px',
-          borderRadius: 3,
-          cursor: 'text',
+
+      {/* Badge row — visible on hover */}
+      {hovered && (
+        <div style={{
+          position: 'absolute', top: -20, right: 0,
+          display: 'flex', gap: 4,
           pointerEvents: 'none',
-          fontFamily: '"DM Sans", system-ui, sans-serif',
-          whiteSpace: 'nowrap',
-          zIndex: 10,
-        }}
-      >
-        EDIT
-      </div>
+        }}>
+          {/* EDIT badge */}
+          <div
+            onClick={() => setEditing(true)}
+            style={badgeStyle('#1E5AF2', true)}
+          >
+            EDIT
+          </div>
+
+          {/* Diagram badge — only for longer text */}
+          {showDiagramBadge && (
+            <div
+              onClick={handleDiagramClick}
+              style={badgeStyle(colors.mutedDark, true)}
+            >
+              ◈ Diagram
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
+}
+
+function badgeStyle(bg: string, clickable: boolean): React.CSSProperties {
+  return {
+    background: bg === '#1E5AF2' ? 'rgba(30,90,242,0.9)' : 'rgba(119,112,111,0.85)',
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    padding: '2px 6px',
+    borderRadius: 3,
+    cursor: clickable ? 'pointer' : 'default',
+    pointerEvents: clickable ? 'auto' : 'none',
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+    whiteSpace: 'nowrap',
+    zIndex: 10,
+    userSelect: 'none',
+  }
 }
