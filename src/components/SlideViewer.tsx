@@ -3,6 +3,7 @@ import { colors } from '../design-system'
 import { renderSlide } from '../utils/renderSlide'
 import { ChatPanel } from './ChatPanel'
 import { EditPanel } from './EditPanel'
+import { triggerPrintExport } from './PrintExport'
 import { useUndoHistory } from '../hooks/useUndoHistory'
 import type { SlideData, ShareMode } from '../types/deck'
 
@@ -185,6 +186,54 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
             )}
 
             {canEdit && (
+              <button
+                onClick={() => {
+                  setShowEditPanel(v => !v)
+                  setShowChat(false)
+                }}
+                title="Toggle edit panel"
+                style={{
+                  background: showEditPanel ? colors.blue : 'transparent',
+                  border: `1px solid ${showEditPanel ? colors.blue : colors.borderDark}`,
+                  borderRadius: 6, padding: '4px 12px',
+                  fontSize: 12, fontWeight: 600,
+                  color: showEditPanel ? '#FFFFFF' : colors.mutedDark,
+                  cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {showEditPanel ? '✕ Exit edit mode' : 'Edit mode'}
+              </button>
+            )}
+
+            {canEdit && (
+              <button
+                onClick={() => triggerPrintExport(slides, title)}
+                title="Export all slides as PDF"
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${colors.borderDark}`,
+                  borderRadius: 6, padding: '4px 12px',
+                  fontSize: 12, fontWeight: 600,
+                  color: colors.mutedDark, cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = '#FFFFFF'
+                  e.currentTarget.style.borderColor = colors.blue
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = colors.mutedDark
+                  e.currentTarget.style.borderColor = colors.borderDark
+                }}
+              >
+                ↓ PDF
+              </button>
+            )}
+
+            {canEdit && (
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setShowShare(v => !v)}
@@ -219,47 +268,6 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
                 )}
               </div>
             )}
-
-            {canEdit && (
-              <button
-                onClick={() => {
-                  setShowEditPanel(v => !v)
-                  setShowChat(false)
-                }}
-                title="Toggle edit panel"
-                style={{
-                  background: showEditPanel ? colors.blue : 'transparent',
-                  border: `1px solid ${showEditPanel ? colors.blue : colors.borderDark}`,
-                  borderRadius: 6, padding: '4px 12px',
-                  fontSize: 12, fontWeight: 600,
-                  color: showEditPanel ? '#FFFFFF' : colors.mutedDark,
-                  cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {showEditPanel ? '✕ Exit edit mode' : 'Edit mode'}
-              </button>
-            )}
-
-            <button
-              data-no-print
-              onClick={() => {
-                document.body.classList.add('printing')
-                window.print()
-                document.body.classList.remove('printing')
-              }}
-              style={{
-                background: 'transparent',
-                border: '1px solid #222',
-                borderRadius: 6, padding: '6px 12px',
-                fontSize: 12, color: '#666', cursor: 'pointer',
-                fontFamily: '"DM Sans", system-ui, sans-serif',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              ↓ Export PDF
-            </button>
 
             <button
               onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()}

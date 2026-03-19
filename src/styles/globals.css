@@ -26,38 +26,60 @@
   }
 }
 
+/* ── PDF / Print export ─────────────────────────────────────────────────── */
 @media print {
-  /* Hide all UI chrome */
-  [data-no-print],
-  .slide-nav,
-  .top-bar,
-  .chat-panel,
-  .share-menu,
-  button,
-  nav {
-    display: none !important;
+  /* Force landscape, zero margin */
+  @page {
+    size: 297mm 167.0625mm landscape;
+    margin: 0;
   }
 
-  /* Each slide = one page */
-  [data-slide] {
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the print container */
+  #signal-print-container,
+  #signal-print-container * {
+    visibility: visible;
+  }
+
+  /* Full-page positioning */
+  #signal-print-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    background: white;
+    z-index: 99999;
+  }
+
+  /* Each slide = one printed page */
+  .signal-print-slide {
+    width: 297mm;
+    height: 167.0625mm;
     page-break-after: always;
     break-after: page;
-    width: 100vw;
-    height: 100vh;
-    position: relative;
+    page-break-inside: avoid;
+    break-inside: avoid;
     overflow: hidden;
+    position: relative;
+    display: block;
   }
 
-  body, html {
-    margin: 0;
-    padding: 0;
-    background: white;
+  .signal-print-slide:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
   }
 
-  /* Force color printing */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* Kill all shadows and borders on print */
+  .signal-print-slide * {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
   }
 }
 
