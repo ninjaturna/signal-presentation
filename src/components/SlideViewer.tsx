@@ -118,7 +118,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
     }}>
       {/* Top bar */}
       {!isFullscreen && (
-        <div style={{
+        <div data-no-print style={{
           height: 48, flexShrink: 0,
           display: 'flex', alignItems: 'center',
           padding: '0 16px',
@@ -243,6 +243,25 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
             )}
 
             <button
+              data-no-print
+              onClick={() => {
+                document.body.classList.add('printing')
+                window.print()
+                document.body.classList.remove('printing')
+              }}
+              style={{
+                background: 'transparent',
+                border: '1px solid #222',
+                borderRadius: 6, padding: '6px 12px',
+                fontSize: 12, color: '#666', cursor: 'pointer',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              ↓ Export PDF
+            </button>
+
+            <button
               onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()}
               title="Fullscreen (F)"
               style={topBarBtn(false)}
@@ -264,7 +283,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
           position: 'relative',
         }}>
           {/* Slide */}
-          <div style={{
+          <div data-slide={current} style={{
             width: '100%', maxWidth: isFullscreen ? '100vw' : 'min(calc(100% - 0px), calc((100vh - 96px) * 16/9))',
             boxShadow: isFullscreen ? 'none' : '0 4px 32px rgba(0,0,0,0.6)',
             borderRadius: isFullscreen ? 0 : 4,
@@ -280,6 +299,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
           {!isFullscreen && (
             <>
               <button
+                data-no-print
                 onClick={() => goTo(current - 1)}
                 disabled={current === 0}
                 style={navArrow('left')}
@@ -287,6 +307,7 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
                 ‹
               </button>
               <button
+                data-no-print
                 onClick={() => goTo(current + 1)}
                 disabled={current === slides.length - 1}
                 style={navArrow('right')}
@@ -299,27 +320,31 @@ export function SlideViewer({ slides: initialSlides, title = 'SIGNAL', mode = 'e
 
         {/* Edit panel */}
         {canEdit && showEditPanel && (
-          <EditPanel
-            slide={slide}
-            onUpdate={(patch) => updateSlide(slide.id, patch)}
-            onClose={() => setShowEditPanel(false)}
-            onResetDiagrams={resetDiagrams}
-          />
+          <div data-no-print style={{ display: 'flex', height: '100%' }}>
+            <EditPanel
+              slide={slide}
+              onUpdate={(patch) => updateSlide(slide.id, patch)}
+              onClose={() => setShowEditPanel(false)}
+              onResetDiagrams={resetDiagrams}
+            />
+          </div>
         )}
 
         {/* Chat panel — only when edit panel is closed */}
         {canEdit && showChat && !showEditPanel && (
-          <ChatPanel
-            slide={slide}
-            onUpdate={(patch) => updateSlide(slide.id, patch)}
-            onClose={() => setShowChat(false)}
-          />
+          <div data-no-print style={{ display: 'flex', height: '100%' }}>
+            <ChatPanel
+              slide={slide}
+              onUpdate={(patch) => updateSlide(slide.id, patch)}
+              onClose={() => setShowChat(false)}
+            />
+          </div>
         )}
       </div>
 
       {/* Bottom progress bar + dot nav */}
       {!isFullscreen && (
-        <div style={{
+        <div data-no-print style={{
           height: 40, flexShrink: 0,
           background: '#111113',
           borderTop: `1px solid ${colors.borderDark}`,
