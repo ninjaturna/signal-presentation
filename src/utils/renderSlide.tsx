@@ -137,7 +137,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'diagram':
-      return withWrappers(
+      return (
         <SlideDiagram
           eyebrow={slide.eyebrow}
           title={slide.title}
@@ -148,8 +148,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           context={slide.context}
           editable={editable}
           onUpdate={onUpdate}
-        />,
-        slide, options
+        />
       )
 
     case 'closing':

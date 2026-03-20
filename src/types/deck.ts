@@ -24,7 +24,7 @@ export interface DiagramNode {
   y: number        // % of canvas height, top-left origin (0–100)
   width: number    // % of canvas width
   height: number   // % of canvas height
-  style?: 'primary' | 'secondary' | 'accent'
+  color?: 'blue' | 'accent' | 'dark' | 'muted'
 }
 
 export interface DiagramEdge {
