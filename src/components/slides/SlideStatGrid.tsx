@@ -59,7 +59,7 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme 
             justifyContent: 'space-between',
           }}>
             <div style={{
-              fontSize: 48, fontWeight: 600, lineHeight: 1,
+              fontSize: 'clamp(24px, 3.8vw, 48px)', fontWeight: 600, lineHeight: 1,
               color: statColor, marginBottom: 12,
               fontVariantNumeric: 'tabular-nums',
             }}>

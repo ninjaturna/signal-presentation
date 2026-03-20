@@ -38,19 +38,19 @@ export function SlideTwoPane({ left, right, split = '50/50', mode = 'light' }: S
         </div>
       )}
       <h3 style={{
-        fontSize: 24, fontWeight: 600, lineHeight: 1.25,
+        fontSize: 'clamp(16px, 1.9vw, 24px)', fontWeight: 600, lineHeight: 1.25,
         color: textPrimary, marginBottom: pane.body || pane.bullets ? 16 : 0,
       }}>
         {pane.heading}
       </h3>
       {pane.body && (
-        <p style={{ fontSize: 15, lineHeight: 1.6, color: textMuted }}>{pane.body}</p>
+        <p style={{ fontSize: 'clamp(11px, 1.2vw, 15px)', lineHeight: 1.6, color: textMuted }}>{pane.body}</p>
       )}
       {pane.bullets && (
         <ul style={{ listStyle: 'none', padding: 0, marginTop: pane.body ? 16 : 0 }}>
           {pane.bullets.map((b, i) => (
             <li key={i} style={{
-              fontSize: 15, lineHeight: 1.5, color: textMuted,
+              fontSize: 'clamp(11px, 1.2vw, 15px)', lineHeight: 1.5, color: textMuted,
               paddingLeft: 16, marginBottom: 8, position: 'relative',
             }}>
               <span style={{

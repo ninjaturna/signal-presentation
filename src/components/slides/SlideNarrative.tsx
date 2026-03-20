@@ -56,7 +56,7 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           editable={!!editable}
           multiline
           style={{
-            fontSize: isMinimal ? 44 : 32,
+            fontSize: isMinimal ? 'clamp(28px, 3.5vw, 44px)' : 'clamp(18px, 2.6vw, 32px)',
             fontWeight: 600, lineHeight: 1.2,
             color: textPrimary, marginBottom: body && !isMinimal ? 20 : 0,
             display: 'block',
@@ -69,7 +69,7 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
             editable={!!editable}
             multiline
             style={{
-              fontSize: 16, lineHeight: 1.65,
+              fontSize: 'clamp(12px, 1.3vw, 16px)', lineHeight: 1.65,
               color: textMuted, display: 'block',
             }}
           />
@@ -89,7 +89,7 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
             editable={!!editable}
             multiline
             style={{
-              fontSize: 20, fontWeight: 500, lineHeight: 1.4,
+              fontSize: 'clamp(14px, 1.6vw, 20px)', fontWeight: 500, lineHeight: 1.4,
               color: textPrimary, fontStyle: 'italic', display: 'block',
             }}
           />

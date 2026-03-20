@@ -11,6 +11,7 @@ import {
   SlideEmbed,
 } from '../components/slides'
 import { SlideImageLayer } from '../components/SlideImageLayer'
+import { OverflowBadge } from '../components/OverflowBadge'
 import type { SlideData } from '../types/deck'
 import type { DeckTheme } from '../design-system/themes'
 
@@ -20,23 +21,36 @@ interface RenderSlideOptions {
   theme?: DeckTheme['tokens']
 }
 
-function withImageLayer(
+function withWrappers(
   slideEl: React.ReactElement,
   slide: SlideData,
   options: RenderSlideOptions
 ): React.ReactElement {
-  if (!options.editable && (!slide.images || slide.images.length === 0)) {
-    return slideEl
-  }
+  // Layer 1: image overlay
+  const withImages = (!options.editable && (!slide.images || slide.images.length === 0))
+    ? slideEl
+    : (
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {slideEl}
+        <SlideImageLayer
+          images={slide.images ?? []}
+          editable={!!options.editable}
+          onUpdate={imgs => options.onUpdate?.({ images: imgs } as Partial<SlideData>)}
+        />
+      </div>
+    )
+
+  // Layer 2: overflow detection + AI Trim (edit mode only)
+  if (!options.editable) return withImages
+
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
-      {slideEl}
-      <SlideImageLayer
-        images={slide.images ?? []}
-        editable={!!options.editable}
-        onUpdate={imgs => options.onUpdate?.({ images: imgs } as Partial<SlideData>)}
-      />
-    </div>
+    <OverflowBadge
+      slide={slide}
+      editable={true}
+      onUpdate={options.onUpdate}
+    >
+      {withImages}
+    </OverflowBadge>
   )
 }
 
@@ -45,7 +59,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
 
   switch (slide.type) {
     case 'cover':
-      return withImageLayer(
+      return withWrappers(
         <SlideCover
           eyebrow={slide.eyebrow}
           title={slide.title ?? ''}
@@ -60,7 +74,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'narrative':
-      return withImageLayer(
+      return withWrappers(
         <SlideNarrative
           eyebrow={slide.eyebrow}
           headline={slide.headline ?? ''}
@@ -76,7 +90,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'stat-grid':
-      return withImageLayer(
+      return withWrappers(
         <SlideStatGrid
           eyebrow={slide.eyebrow}
           headline={slide.headline}
@@ -88,7 +102,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'two-pane':
-      return withImageLayer(
+      return withWrappers(
         <SlideTwoPane
           left={slide.left ?? { heading: '' }}
           right={slide.right ?? { heading: '' }}
@@ -99,7 +113,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'section-break':
-      return withImageLayer(
+      return withWrappers(
         <SlideSectionBreak
           number={slide.number}
           title={slide.title ?? ''}
@@ -110,7 +124,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'full-bleed':
-      return withImageLayer(
+      return withWrappers(
         <SlideFullBleed
           statement={slide.statement ?? ''}
           accentWord={slide.accentWord}
@@ -119,7 +133,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'diagram':
-      return withImageLayer(
+      return withWrappers(
         <SlideDiagram
           eyebrow={slide.eyebrow}
           title={slide.title}
@@ -134,7 +148,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'closing':
-      return withImageLayer(
+      return withWrappers(
         <SlideClosing
           headline={slide.headline ?? ''}
           cta={slide.cta}
@@ -147,7 +161,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
       )
 
     case 'embed':
-      return withImageLayer(
+      return withWrappers(
         <SlideEmbed
           eyebrow={slide.eyebrow}
           title={slide.title}

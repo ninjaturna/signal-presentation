@@ -56,7 +56,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
           editable={!!editable}
           multiline
           style={{
-            fontSize: isBold ? 56 : 44,
+            fontSize: isBold ? 'clamp(32px, 4.4vw, 56px)' : 'clamp(24px, 3.5vw, 44px)',
             fontWeight: 600, lineHeight: 1.08,
             color: coverText, marginBottom: subtitle ? 20 : 32,
             maxWidth: isBold ? '90%' : isCentered ? '80%' : '70%',
@@ -70,7 +70,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
             editable={!!editable}
             multiline
             style={{
-              fontSize: 18, fontWeight: 400, lineHeight: 1.5,
+              fontSize: 'clamp(13px, 1.4vw, 18px)', fontWeight: 400, lineHeight: 1.5,
               color: colors.mutedDark, marginBottom: 32, maxWidth: '55%',
               display: 'block',
             }}

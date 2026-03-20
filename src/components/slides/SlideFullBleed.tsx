@@ -22,7 +22,7 @@ export function SlideFullBleed({ statement, sub, accentWord }: SlideFullBleedPro
         padding: '48px 80px',
       }}>
         <h2 style={{
-          fontSize: 44, fontWeight: 600, lineHeight: 1.1,
+          fontSize: 'clamp(24px, 3.4vw, 44px)', fontWeight: 600, lineHeight: 1.1,
           color: '#FFFFFF', maxWidth: 720, marginBottom: sub ? 24 : 0,
         }}>
           {parts ? (
