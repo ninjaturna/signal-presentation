@@ -8,6 +8,7 @@ import {
   SlideFullBleed,
   SlideClosing,
   SlidePoll,
+  SlideEmbed,
 } from '../components/slides'
 import { SlideImageLayer } from '../components/SlideImageLayer'
 import type { SlideData } from '../types/deck'
@@ -137,8 +138,21 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
         <SlideClosing
           headline={slide.headline ?? ''}
           cta={slide.cta}
+          ctaUrl={slide.ctaUrl}
+          ctaTarget={slide.ctaTarget}
           contact={slide.contact}
           theme={theme}
+        />,
+        slide, options
+      )
+
+    case 'embed':
+      return withImageLayer(
+        <SlideEmbed
+          eyebrow={slide.eyebrow}
+          title={slide.title}
+          embed={slide.embed ?? { url: 'https://', embedType: 'webpage' }}
+          mode={slide.mode ?? 'light'}
         />,
         slide, options
       )

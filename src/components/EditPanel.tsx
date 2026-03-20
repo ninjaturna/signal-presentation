@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { colors } from '../design-system'
 import { ChatPanel } from './ChatPanel'
 import { getVariantsForType } from '../utils/layoutVariants'
+import { detectEmbedType, getEmbedLabel } from '../utils/embedDetect'
 import type { SlideData } from '../types/deck'
 
 interface EditPanelProps {
@@ -12,6 +13,7 @@ interface EditPanelProps {
   onInsertDiagram: (svg: string) => void
   onInsertPoll: (poll: NonNullable<SlideData['poll']>) => void
   onInsertImage: (src: string) => void
+  onInsertEmbed: (embed: NonNullable<SlideData['embed']>) => void
 }
 
 const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: string; multiline?: boolean }>> = {
@@ -25,7 +27,7 @@ const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: strin
   closing:         [{ key: 'headline', label: 'Headline', multiline: true }, { key: 'cta', label: 'CTA text' }, { key: 'contact', label: 'Contact' }],
 }
 
-export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll, onInsertImage }: EditPanelProps) {
+export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll, onInsertImage, onInsertEmbed }: EditPanelProps) {
   const [showChat, setShowChat]               = useState(false)
   const [showDiagram, setShowDiagram]         = useState(false)
   const [diagramPrompt, setDiagramPrompt]     = useState('')
@@ -40,6 +42,9 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [showImage, setShowImage]             = useState(false)
   const [imageUrl, setImageUrl]               = useState('')
   const imageFileRef                          = useRef<HTMLInputElement>(null)
+  const [showEmbed, setShowEmbed]             = useState(false)
+  const [embedUrl, setEmbedUrl]               = useState('')
+  const [embedTitle, setEmbedTitle]           = useState('')
 
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
@@ -95,6 +100,20 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
     onInsertImage(imageUrl.trim())
     setImageUrl('')
     setShowImage(false)
+  }
+
+  const insertEmbed = () => {
+    if (!embedUrl.trim()) return
+    const embedType = detectEmbedType(embedUrl)
+    onInsertEmbed({
+      url: embedUrl.trim(),
+      embedType,
+      title: embedTitle.trim() || getEmbedLabel(embedType),
+      aspectRatio: '16:9',
+    })
+    setEmbedUrl('')
+    setEmbedTitle('')
+    setShowEmbed(false)
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,6 +294,73 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           <p style={{ fontSize: 13, color: colors.mutedDark, lineHeight: 1.5 }}>
             No editable text fields for this slide type. Use AI Co-pilot to make changes.
           </p>
+        )}
+
+        {/* CTA URL — closing slides only */}
+        {slide.type === 'closing' && (
+          <div style={{
+            background: '#1a1a1e',
+            border: `1px solid ${colors.borderDark}`,
+            borderRadius: 8, padding: '12px',
+            marginTop: 4,
+          }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: colors.mutedDark,
+              letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10,
+            }}>
+              CTA Button
+            </div>
+
+            <label style={fieldLabelStyle}>Button label</label>
+            <input
+              value={slide.cta ?? ''}
+              onChange={e => onUpdate({ cta: e.target.value })}
+              onKeyDown={e => e.stopPropagation()}
+              placeholder="Schedule a working session"
+              style={{ ...fieldInputStyle, marginBottom: 8 }}
+              onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+              onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+            />
+
+            <label style={fieldLabelStyle}>Link URL</label>
+            <input
+              value={slide.ctaUrl ?? ''}
+              onChange={e => onUpdate({ ctaUrl: e.target.value })}
+              onKeyDown={e => e.stopPropagation()}
+              placeholder="https://cal.com/yourname"
+              style={{ ...fieldInputStyle, marginBottom: 8 }}
+              onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+              onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+            />
+
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              fontSize: 11, color: colors.mutedDark, cursor: 'pointer',
+            }}>
+              <input
+                type="checkbox"
+                checked={(slide.ctaTarget ?? '_blank') === '_blank'}
+                onChange={e => onUpdate({ ctaTarget: e.target.checked ? '_blank' : '_self' })}
+              />
+              Open in new tab
+            </label>
+
+            {slide.ctaUrl && (
+              <div style={{
+                marginTop: 10, padding: '6px 8px',
+                background: 'rgba(30,90,242,0.08)',
+                border: '1px solid rgba(30,90,242,0.2)',
+                borderRadius: 5,
+                fontSize: 10, color: colors.blue,
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <span>↗</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {slide.ctaUrl}
+                </span>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Diagram-specific: SVG state + clear option */}
@@ -635,6 +721,96 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             <p style={{ fontSize: 10, color: colors.mutedDark, margin: 0, lineHeight: 1.5 }}>
               Image will be added as a draggable overlay. Resize and reposition on the slide.
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* Insert Embed section */}
+      <div style={{ borderTop: `1px solid ${colors.borderDark}`, padding: '14px 16px' }}>
+        <button
+          onClick={() => setShowEmbed(v => !v)}
+          style={{
+            width: '100%', background: 'transparent',
+            border: `1px solid ${showEmbed ? colors.blue : colors.borderDark}`,
+            borderRadius: 7, padding: '8px 14px',
+            fontSize: 12, fontWeight: 600,
+            color: showEmbed ? colors.blue : colors.mutedDark,
+            cursor: 'pointer', textAlign: 'left',
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <span>⊕</span>
+          {showEmbed ? 'Close embed' : 'Insert embed'}
+        </button>
+
+        {showEmbed && (
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <label style={fieldLabelStyle}>URL to embed</label>
+              <input
+                value={embedUrl}
+                onChange={e => setEmbedUrl(e.target.value)}
+                onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') insertEmbed() }}
+                placeholder="YouTube, Figma, Loom, or any URL"
+                style={fieldInputStyle}
+                onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+                onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+              />
+            </div>
+
+            {embedUrl && (
+              <div style={{
+                fontSize: 10, fontWeight: 600,
+                color: colors.blue, letterSpacing: '0.06em',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <span style={{
+                  background: 'rgba(30,90,242,0.1)',
+                  border: '1px solid rgba(30,90,242,0.25)',
+                  borderRadius: 4, padding: '2px 6px',
+                }}>
+                  {getEmbedLabel(detectEmbedType(embedUrl))}
+                </span>
+                detected
+              </div>
+            )}
+
+            <div>
+              <label style={fieldLabelStyle}>Title (optional)</label>
+              <input
+                value={embedTitle}
+                onChange={e => setEmbedTitle(e.target.value)}
+                onKeyDown={e => e.stopPropagation()}
+                placeholder="e.g. Disney Journey Map"
+                style={fieldInputStyle}
+                onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+                onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+              />
+            </div>
+
+            <div style={{
+              background: '#1a1a1e', borderRadius: 6,
+              padding: '8px 10px',
+              fontSize: 10, color: colors.mutedDark, lineHeight: 1.6,
+            }}>
+              Supported: YouTube · Figma · Loom · Typeform · Any URL
+            </div>
+
+            <button
+              onClick={insertEmbed}
+              disabled={!embedUrl.trim()}
+              style={{
+                background: embedUrl.trim() ? colors.blue : colors.inkSoft,
+                border: 'none', borderRadius: 6, padding: '8px 14px',
+                fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+                cursor: embedUrl.trim() ? 'pointer' : 'default',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                opacity: !embedUrl.trim() ? 0.4 : 1,
+              }}
+            >
+              ⊕ Insert embed slide
+            </button>
           </div>
         )}
       </div>

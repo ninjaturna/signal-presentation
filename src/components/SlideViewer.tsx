@@ -492,6 +492,20 @@ export function SlideViewer({
                 setCurrent(current + 1)
               }}
               onInsertImage={insertImageOnSlide}
+              onInsertEmbed={(embed) => {
+                const newSlide: SlideData = {
+                  id: `embed-${Date.now()}`,
+                  type: 'embed',
+                  mode: 'light',
+                  eyebrow: embed.embedType.toUpperCase(),
+                  title: embed.title ?? '',
+                  embed,
+                }
+                const next = [...slides.slice(0, current + 1), newSlide, ...slides.slice(current + 1)]
+                pushSlides(next)
+                onSlidesChange?.(next)
+                setCurrent(current + 1)
+              }}
             />
           </div>
         )}

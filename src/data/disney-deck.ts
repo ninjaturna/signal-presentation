@@ -130,6 +130,8 @@ export const disneyDeck: SlideData[] = [
     mode: 'dark',
     headline: "Let's build the intelligence layer Disney's experience deserves.",
     cta: 'Schedule a working session',
+    ctaUrl: 'https://cal.com',
+    ctaTarget: '_blank',
     contact: 'signal.co · hello@signal.co',
   },
 ]

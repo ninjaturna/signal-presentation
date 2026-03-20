@@ -5,11 +5,13 @@ import type { DeckTheme } from '../../design-system/themes'
 interface SlideClosingProps {
   headline: string
   cta?: string
+  ctaUrl?: string
+  ctaTarget?: '_blank' | '_self'
   contact?: string
   theme?: DeckTheme['tokens']
 }
 
-export function SlideClosing({ headline, cta, contact, theme }: SlideClosingProps) {
+export function SlideClosing({ headline, cta, ctaUrl, ctaTarget, contact, theme }: SlideClosingProps) {
   const coverBg   = theme?.coverBg   ?? undefined
   const coverText = theme?.coverText ?? '#FFFFFF'
   const primary   = theme?.primary   ?? colors.blue
@@ -31,14 +33,44 @@ export function SlideClosing({ headline, cta, contact, theme }: SlideClosingProp
           {headline}
         </h2>
         {cta && (
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 12,
-            background: primary, borderRadius: 8,
-            padding: '14px 28px', width: 'fit-content', marginBottom: 32,
-          }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
-            <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
-          </div>
+          ctaUrl ? (
+            <a
+              href={ctaUrl}
+              target={ctaTarget ?? '_blank'}
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                background: primary, borderRadius: 8,
+                padding: '14px 28px', width: 'fit-content', marginBottom: 32,
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s, transform 0.1s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = colors.blueDim
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = primary
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
+              <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
+            </a>
+          ) : (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 12,
+              background: primary, borderRadius: 8,
+              padding: '14px 28px', width: 'fit-content', marginBottom: 32,
+              opacity: 0.6,
+              cursor: 'default',
+            }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
+              <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
+            </div>
+          )
         )}
         {contact && (
           <p style={{ fontSize: 14, color: colors.mutedDark }}>{contact}</p>

@@ -27,7 +27,7 @@ export interface ImageElement {
 
 export interface SlideData {
   id: string
-  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll'
+  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll' | 'embed'
   mode?: SlideMode
   // cover / closing / shared
   eyebrow?: string
@@ -45,7 +45,10 @@ export interface SlideData {
   accentWord?: string
   // closing
   cta?: string
+  ctaUrl?: string
+  ctaTarget?: '_blank' | '_self'
   contact?: string
+  footerUrl?: string
   // stat-grid
   stats?: StatData[]
   // two-pane
@@ -62,6 +65,13 @@ export interface SlideData {
     type: 'yes-no' | 'multiple-choice' | 'rating' | 'likert'
     options: string[]
     allowMultiple?: boolean
+  }
+  // embed slide
+  embed?: {
+    url: string
+    embedType: 'youtube' | 'figma' | 'loom' | 'typeform' | 'webpage'
+    title?: string
+    aspectRatio?: '16:9' | '4:3' | '1:1'
   }
   // images
   images?: ImageElement[]
