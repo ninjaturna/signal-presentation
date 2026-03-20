@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { colors } from '../design-system'
+import { useTextSelection } from '../hooks/useTextSelection'
 import { ChatPanel } from './ChatPanel'
 import { TonePicker } from './TonePicker'
 import type { Tone, Length } from './TonePicker'
@@ -94,6 +95,15 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [showAddLink, setShowAddLink]   = useState(false)
   const [newLinkText, setNewLinkText]   = useState('')
   const [newLinkUrl, setNewLinkUrl]     = useState('')
+
+  // Text selection → link affordance
+  const {
+    selection: textSelection,
+    onFocus: onFieldFocus,
+    onBlur: onFieldBlur,
+    onSelect: onFieldSelect,
+    clearSelection: clearTextSelection,
+  } = useTextSelection()
 
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
@@ -254,6 +264,13 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   }
 
   return (
+    <>
+    <style>{`
+      @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    `}</style>
     <div style={{
       width: 280,
       flexShrink: 0,
@@ -381,6 +398,9 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                     value={value}
                     onChange={e => onUpdate({ [key]: e.target.value } as Partial<SlideData>)}
                     onKeyDown={e => e.stopPropagation()}
+                    onFocus={e => { e.currentTarget.style.borderColor = colors.blue; onFieldFocus(key as string) }}
+                    onBlur={e => { e.currentTarget.style.borderColor = colors.borderDark; onFieldBlur() }}
+                    onSelect={onFieldSelect}
                     rows={3}
                     style={{
                       width: '100%', boxSizing: 'border-box',
@@ -391,14 +411,15 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                       fontFamily: '"DM Sans", system-ui, sans-serif',
                       outline: 'none', resize: 'vertical',
                     }}
-                    onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
-                    onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
                   />
                 ) : (
                   <input
                     value={value}
                     onChange={e => onUpdate({ [key]: e.target.value } as Partial<SlideData>)}
                     onKeyDown={e => e.stopPropagation()}
+                    onFocus={e => { e.currentTarget.style.borderColor = colors.blue; onFieldFocus(key as string) }}
+                    onBlur={e => { e.currentTarget.style.borderColor = colors.borderDark; onFieldBlur() }}
+                    onSelect={onFieldSelect}
                     style={{
                       width: '100%', boxSizing: 'border-box',
                       background: '#1a1a1e',
@@ -408,8 +429,6 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                       fontFamily: '"DM Sans", system-ui, sans-serif',
                       outline: 'none',
                     }}
-                    onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
-                    onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
                   />
                 )}
 
@@ -452,12 +471,15 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
         )}
 
         {/* ── Inline Links section ──────────────────────────────────────── */}
-        <div style={{
-          background: '#1a1a1e',
-          border: `1px solid ${colors.borderDark}`,
-          borderRadius: 8,
-          padding: '12px',
-        }}>
+        <div
+          id="inline-links-section"
+          style={{
+            background: '#1a1a1e',
+            border: `1px solid ${colors.borderDark}`,
+            borderRadius: 8,
+            padding: '12px',
+          }}
+        >
           <div style={{
             fontSize: 10, fontWeight: 700,
             color: colors.mutedDark, letterSpacing: '0.08em',
@@ -511,13 +533,14 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                 value={newLinkText}
                 onChange={e => setNewLinkText(e.target.value)}
                 onKeyDown={e => { e.stopPropagation(); if (e.key === 'Escape') setShowAddLink(false) }}
-                placeholder="Text phrase to link (exact match)"
-                autoFocus
+                placeholder={newLinkText ? 'Text to link' : 'Text phrase to link (exact match)'}
+                autoFocus={!newLinkText}
                 style={{ ...fieldInputStyle, fontSize: 12 }}
                 onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
                 onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
               />
               <input
+                id="link-url-input"
                 value={newLinkUrl}
                 onChange={e => setNewLinkUrl(e.target.value)}
                 onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') addLink(); if (e.key === 'Escape') setShowAddLink(false) }}
@@ -1155,7 +1178,79 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           Reset diagrams (R)
         </button>
       </div>
+
+      {/* Floating "Link this" badge — appears on text selection */}
+      {textSelection && (
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          left: 0, right: 0,
+          background: colors.blue,
+          padding: '10px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          zIndex: 40,
+          borderTop: `1px solid rgba(255,255,255,0.1)`,
+          borderRadius: '8px 8px 0 0',
+          boxShadow: '0 -4px 16px rgba(0,0,0,0.4)',
+          animation: 'slideUpFade 0.18s ease',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700,
+              color: 'rgba(255,255,255,0.6)',
+              letterSpacing: '0.06em', marginBottom: 1,
+            }}>
+              SELECTED TEXT
+            </div>
+            <div style={{
+              fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              "{textSelection.text}"
+            </div>
+          </div>
+          <button
+            onMouseDown={e => {
+              e.preventDefault()
+              setNewLinkText(textSelection.text)
+              setShowAddLink(true)
+              clearTextSelection()
+              setTimeout(() => {
+                document.getElementById('inline-links-section')?.scrollIntoView({
+                  behavior: 'smooth', block: 'nearest',
+                })
+                document.getElementById('link-url-input')?.focus()
+              }, 80)
+            }}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 6, padding: '5px 12px',
+              fontSize: 12, fontWeight: 700, color: '#FFFFFF',
+              cursor: 'pointer', flexShrink: 0,
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+              display: 'flex', alignItems: 'center', gap: 5,
+            }}
+          >
+            🔗 Link this
+          </button>
+          <button
+            onMouseDown={e => { e.preventDefault(); clearTextSelection() }}
+            style={{
+              background: 'transparent', border: 'none',
+              color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+              fontSize: 14, lineHeight: 1, padding: '2px 4px', flexShrink: 0,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
+    </>
   )
 }
 
