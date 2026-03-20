@@ -97,6 +97,9 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           stats={slide.stats ?? []}
           mode={slide.mode}
           theme={theme}
+          layout={slide.layout}
+          editable={editable}
+          onUpdate={onUpdate}
         />,
         slide, options
       )
