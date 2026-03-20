@@ -16,7 +16,7 @@ import { triggerPrintExport } from './PrintExport'
 import { DECK_THEMES } from '../design-system/themes'
 import type { DeckTheme } from '../design-system/themes'
 import { useUndoHistory } from '../hooks/useUndoHistory'
-import type { SlideData, ShareMode, ImageElement } from '../types/deck'
+import type { SlideData, ShareMode, ImageElement, DiagramData } from '../types/deck'
 
 // ─── PdfButton sub-component ───────────────────────────────────────────────
 
@@ -136,7 +136,21 @@ export function SlideViewer({
     setShowPollModal(false)
   }, [slides, current, pushSlides, onSlidesChange])
 
-  const insertDiagramSlide = useCallback((svgContent: string) => {
+  const insertDiagramSlide = useCallback((data: DiagramData) => {
+    const newSlide: SlideData = {
+      id: `diagram-${Date.now()}`,
+      type: 'diagram',
+      mode: 'dark',
+      diagramData: data,
+    }
+    const next = [...slides.slice(0, current + 1), newSlide, ...slides.slice(current + 1)]
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(current + 1)
+    setDiagramSourceText(null)
+  }, [slides, current, pushSlides, onSlidesChange])
+
+  const insertDiagramSlideFromSvg = useCallback((svgContent: string) => {
     const newSlide: SlideData = {
       id: `diagram-${Date.now()}`,
       type: 'diagram',
@@ -511,11 +525,11 @@ export function SlideViewer({
               onUpdate={(patch) => updateSlide(slide.id, patch)}
               onClose={() => setShowEditPanel(false)}
               onResetDiagrams={resetDiagrams}
-              onInsertDiagram={(svg) => {
+              onInsertDiagram={(data) => {
                 if (slide.type === 'diagram') {
-                  updateSlide(slide.id, { svgContent: svg })
+                  updateSlide(slide.id, { diagramData: data, svgContent: undefined })
                 } else {
-                  insertDiagramSlide(svg)
+                  insertDiagramSlide(data)
                 }
               }}
               onInsertPoll={(poll) => {
@@ -577,7 +591,7 @@ export function SlideViewer({
           <div data-no-print style={{ display: 'flex', height: '100%' }}>
             <DiagramFromTextPanel
               sourceText={diagramSourceText}
-              onInsert={insertDiagramSlide}
+              onInsert={insertDiagramSlideFromSvg}
               onClose={() => setDiagramSourceText(null)}
             />
           </div>

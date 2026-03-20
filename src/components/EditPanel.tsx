@@ -5,14 +5,14 @@ import { TonePicker } from './TonePicker'
 import type { Tone, Length } from './TonePicker'
 import { getVariantsForType } from '../utils/layoutVariants'
 import { detectEmbedType, getEmbedLabel } from '../utils/embedDetect'
-import type { SlideData } from '../types/deck'
+import type { SlideData, DiagramData } from '../types/deck'
 
 interface EditPanelProps {
   slide: SlideData
   onUpdate: (patch: Partial<SlideData>) => void
   onClose: () => void
   onResetDiagrams: () => void
-  onInsertDiagram: (svg: string) => void
+  onInsertDiagram: (data: DiagramData) => void
   onInsertPoll: (poll: NonNullable<SlideData['poll']>) => void
   onInsertImage: (src: string) => void
   onInsertEmbed: (embed: NonNullable<SlideData['embed']>) => void
@@ -70,7 +70,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [showChat, setShowChat]               = useState(false)
   const [showDiagram, setShowDiagram]         = useState(false)
   const [diagramPrompt, setDiagramPrompt]     = useState('')
-  const [diagramSvg, setDiagramSvg]           = useState('')
+  const [diagramData, setDiagramData]         = useState<DiagramData | null>(null)
   const [diagramLoading, setDiagramLoading]   = useState(false)
   const [diagramError, setDiagramError]       = useState('')
   const [showPoll, setShowPoll]               = useState(false)
@@ -148,7 +148,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
     if (!diagramPrompt.trim()) return
     setDiagramLoading(true)
     setDiagramError('')
-    setDiagramSvg('')
+    setDiagramData(null)
     try {
       const res = await fetch('/api/graphic', {
         method: 'POST',
@@ -158,9 +158,10 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           context: `Slide type: ${slide.type}. ${slide.headline ?? slide.title ?? ''}`,
         }),
       })
-      const data = await res.json()
-      if (data.error) { setDiagramError(data.error); return }
-      setDiagramSvg(data.svg)
+      const json = await res.json()
+      if (json.error) { setDiagramError(json.error); return }
+      if (!json.diagramData) { setDiagramError('Unexpected response — try again'); return }
+      setDiagramData(json.diagramData)
     } catch {
       setDiagramError('Generation failed — check API key')
     } finally {
@@ -169,8 +170,9 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   }
 
   const acceptDiagram = () => {
-    onInsertDiagram(diagramSvg)
-    setDiagramSvg('')
+    if (!diagramData) return
+    onInsertDiagram(diagramData)
+    setDiagramData(null)
     setDiagramPrompt('')
     setShowDiagram(false)
   }
@@ -709,7 +711,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
         padding: '14px 16px',
       }}>
         <button
-          onClick={() => { setShowDiagram(v => !v); setDiagramSvg(''); setDiagramError('') }}
+          onClick={() => { setShowDiagram(v => !v); setDiagramData(null); setDiagramError('') }}
           style={{
             width: '100%', background: 'transparent',
             border: `1px solid ${showDiagram ? colors.blue : colors.borderDark}`,
@@ -768,7 +770,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
               <p style={{ fontSize: 11, color: '#FF1C52', margin: 0 }}>{diagramError}</p>
             )}
 
-            {diagramSvg && (
+            {diagramData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{
                   background: '#1a1a1e',
@@ -780,12 +782,11 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                     fontSize: 9, fontWeight: 700, color: colors.gold,
                     letterSpacing: '0.06em', marginBottom: 6,
                   }}>
-                    PREVIEW
+                    PREVIEW — {diagramData.nodes.length} nodes, {diagramData.edges.length} edges
                   </div>
-                  <div
-                    style={{ width: '100%' }}
-                    dangerouslySetInnerHTML={{ __html: diagramSvg }}
-                  />
+                  <div style={{ fontSize: 11, color: colors.mutedDark }}>
+                    Click Insert to add the interactive diagram to the deck.
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button
@@ -814,7 +815,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                     Try again
                   </button>
                   <button
-                    onClick={() => setDiagramSvg('')}
+                    onClick={() => setDiagramData(null)}
                     style={{
                       background: 'transparent', border: 'none',
                       fontSize: 11, color: colors.mutedDark, cursor: 'pointer',
