@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { colors } from '../design-system'
 import { ChatPanel } from './ChatPanel'
+import { getVariantsForType } from '../utils/layoutVariants'
 import type { SlideData } from '../types/deck'
 
 interface EditPanelProps {
@@ -10,6 +11,7 @@ interface EditPanelProps {
   onResetDiagrams: () => void
   onInsertDiagram: (svg: string) => void
   onInsertPoll: (poll: NonNullable<SlideData['poll']>) => void
+  onInsertImage: (src: string) => void
 }
 
 const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: string; multiline?: boolean }>> = {
@@ -23,7 +25,7 @@ const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: strin
   closing:         [{ key: 'headline', label: 'Headline', multiline: true }, { key: 'cta', label: 'CTA text' }, { key: 'contact', label: 'Contact' }],
 }
 
-export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll }: EditPanelProps) {
+export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll, onInsertImage }: EditPanelProps) {
   const [showChat, setShowChat]               = useState(false)
   const [showDiagram, setShowDiagram]         = useState(false)
   const [diagramPrompt, setDiagramPrompt]     = useState('')
@@ -32,9 +34,12 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [diagramError, setDiagramError]       = useState('')
   const [showPoll, setShowPoll]               = useState(false)
   const [pollQuestion, setPollQuestion]       = useState('')
-  const [pollType, setPollType]               = useState<'yes-no' | 'multiple-choice' | 'rating'>('yes-no')
+  const [pollType, setPollType]               = useState<'yes-no' | 'multiple-choice' | 'rating' | 'likert'>('yes-no')
   const [pollOptions, setPollOptions]         = useState(['', '', '', ''])
   const [pollMultiple, setPollMultiple]       = useState(false)
+  const [showImage, setShowImage]             = useState(false)
+  const [imageUrl, setImageUrl]               = useState('')
+  const imageFileRef                          = useRef<HTMLInputElement>(null)
 
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
@@ -83,6 +88,25 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
     setPollOptions(['', '', '', ''])
     setPollMultiple(false)
     setShowPoll(false)
+  }
+
+  const insertImageUrl = () => {
+    if (!imageUrl.trim()) return
+    onInsertImage(imageUrl.trim())
+    setImageUrl('')
+    setShowImage(false)
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const src = ev.target?.result as string
+      if (src) { onInsertImage(src); setShowImage(false) }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
   }
 
   if (showChat) {
@@ -161,6 +185,41 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
 
       {/* Editable fields */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+
+        {/* Layout variants */}
+        {(() => {
+          const variants = getVariantsForType(slide.type)
+          if (!['cover', 'narrative', 'stat-grid', 'closing'].includes(slide.type)) return null
+          if (variants.length === 0) return null
+          return (
+            <div>
+              <label style={fieldLabelStyle}>Layout</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {variants.map(v => {
+                  const isActive = (slide.layout ?? 'default') === v.variant
+                  return (
+                    <button
+                      key={v.variant}
+                      onClick={() => onUpdate({ layout: v.variant })}
+                      style={{
+                        background: isActive ? colors.blue : 'transparent',
+                        border: `1px solid ${isActive ? colors.blue : colors.borderDark}`,
+                        borderRadius: 5, padding: '5px 9px',
+                        fontSize: 11, fontWeight: 600,
+                        color: isActive ? '#FFFFFF' : colors.mutedDark,
+                        cursor: 'pointer',
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                      }}
+                    >
+                      {v.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
         {fields.length > 0 ? (
           fields.map(({ key, label, multiline }) => {
             const value = (slide[key] as string) ?? ''
@@ -419,15 +478,15 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
 
             <div>
               <label style={fieldLabelStyle}>Poll type</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['yes-no', 'multiple-choice', 'rating'] as const).map(t => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {(['yes-no', 'multiple-choice', 'rating', 'likert'] as const).map(t => (
                   <button
                     key={t}
                     onClick={() => setPollType(t)}
                     style={{
-                      flex: 1, background: pollType === t ? colors.gold : 'transparent',
+                      background: pollType === t ? colors.gold : 'transparent',
                       border: `1px solid ${pollType === t ? colors.gold : colors.borderDark}`,
-                      borderRadius: 5, padding: '5px 4px',
+                      borderRadius: 5, padding: '5px 8px',
                       fontSize: 10, fontWeight: 600,
                       color: pollType === t ? colors.ink : colors.mutedDark,
                       cursor: 'pointer',
@@ -435,7 +494,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                       textTransform: 'uppercase', letterSpacing: '0.04em',
                     }}
                   >
-                    {t === 'yes-no' ? 'Yes / No' : t === 'multiple-choice' ? 'Choice' : 'Rating'}
+                    {t === 'yes-no' ? 'Yes/No' : t === 'multiple-choice' ? 'Choice' : t === 'rating' ? 'Rating' : 'Likert'}
                   </button>
                 ))}
               </div>
@@ -479,7 +538,7 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
               fontSize: 11, color: colors.mutedDark, lineHeight: 1.5,
             }}>
               {pollQuestion.trim()
-                ? `"${pollQuestion.trim()}" — ${pollType === 'yes-no' ? 'Yes or No' : pollType === 'rating' ? 'Rating 1–5' : `${pollOptions.filter(o => o.trim()).length} option(s)`}`
+                ? `"${pollQuestion.trim()}" — ${pollType === 'yes-no' ? 'Yes or No' : pollType === 'rating' ? 'Rating 1–5' : pollType === 'likert' ? 'Likert scale 1–5' : `${pollOptions.filter(o => o.trim()).length} option(s)`}`
                 : 'Enter a question above to preview'}
             </div>
 
@@ -498,6 +557,84 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             >
               ◎ Insert poll slide
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Insert Image section */}
+      <div style={{ borderTop: `1px solid ${colors.borderDark}`, padding: '14px 16px' }}>
+        <button
+          onClick={() => setShowImage(v => !v)}
+          style={{
+            width: '100%', background: 'transparent',
+            border: `1px solid ${showImage ? colors.blue : colors.borderDark}`,
+            borderRadius: 7, padding: '8px 14px',
+            fontSize: 12, fontWeight: 600,
+            color: showImage ? colors.blue : colors.mutedDark,
+            cursor: 'pointer', textAlign: 'left',
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <span style={{ fontSize: 14 }}>⬚</span>
+          {showImage ? 'Close image panel' : 'Insert image'}
+        </button>
+
+        {showImage && (
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <label style={fieldLabelStyle}>From URL</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  value={imageUrl}
+                  onChange={e => setImageUrl(e.target.value)}
+                  onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') insertImageUrl() }}
+                  placeholder="https://…"
+                  style={{ ...fieldInputStyle, flex: 1 }}
+                  onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+                  onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+                />
+                <button
+                  onClick={insertImageUrl}
+                  disabled={!imageUrl.trim()}
+                  style={{
+                    background: imageUrl.trim() ? colors.blue : colors.inkSoft,
+                    border: 'none', borderRadius: 6, padding: '0 12px',
+                    fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+                    cursor: imageUrl.trim() ? 'pointer' : 'default',
+                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    flexShrink: 0, opacity: imageUrl.trim() ? 1 : 0.4,
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            <div>
+              <label style={fieldLabelStyle}>Or upload file</label>
+              <input
+                ref={imageFileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+              />
+              <button
+                onClick={() => imageFileRef.current?.click()}
+                style={{
+                  width: '100%', background: 'transparent',
+                  border: `1px dashed ${colors.borderDark}`,
+                  borderRadius: 6, padding: '8px 12px',
+                  fontSize: 12, color: colors.mutedDark, cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                Choose file…
+              </button>
+            </div>
+            <p style={{ fontSize: 10, color: colors.mutedDark, margin: 0, lineHeight: 1.5 }}>
+              Image will be added as a draggable overlay. Resize and reposition on the slide.
+            </p>
           </div>
         )}
       </div>

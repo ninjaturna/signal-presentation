@@ -14,17 +14,30 @@ interface SlideNarrativeProps {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
+  layout?: string
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout }: SlideNarrativeProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
   const accentColor = theme?.accentBar ?? (mode === 'dark' ? colors.gold : colors.blue)
 
+  const isCentered = layout === 'centered'
+  const isMinimal  = layout === 'minimal'
+
+  const maxWidth = isCentered ? '80%' : pullQuote ? '55%' : '70%'
+
   return (
     <SlideShell slideType="content" mode={mode}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: pullQuote ? '55%' : '70%' }}>
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: 'center',
+        maxWidth,
+        margin: isCentered ? '0 auto' : undefined,
+        alignItems: isCentered ? 'center' : 'flex-start',
+        textAlign: isCentered ? 'center' : 'left',
+      }}>
         {eyebrow && (
           <EditableText
             value={eyebrow}
@@ -43,12 +56,13 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           editable={!!editable}
           multiline
           style={{
-            fontSize: 32, fontWeight: 600, lineHeight: 1.2,
-            color: textPrimary, marginBottom: body ? 20 : 0,
+            fontSize: isMinimal ? 44 : 32,
+            fontWeight: 600, lineHeight: 1.2,
+            color: textPrimary, marginBottom: body && !isMinimal ? 20 : 0,
             display: 'block',
           }}
         />
-        {body && (
+        {body && !isMinimal && (
           <EditableText
             value={body}
             onSave={v => up({ body: v })}
@@ -61,7 +75,7 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           />
         )}
       </div>
-      {pullQuote && (
+      {pullQuote && !isCentered && !isMinimal && (
         <div style={{
           position: 'absolute', right: 48, top: '50%',
           transform: 'translateY(-50%)',

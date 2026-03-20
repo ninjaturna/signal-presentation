@@ -14,6 +14,7 @@ interface SlidePollProps {
 function resolveOptions(poll: NonNullable<SlideData['poll']>): string[] {
   if (poll.type === 'yes-no')  return ['Yes', 'No']
   if (poll.type === 'rating')  return ['1', '2', '3', '4', '5']
+  if (poll.type === 'likert')  return ['1', '2', '3', '4', '5']
   return poll.options ?? []
 }
 
@@ -90,7 +91,77 @@ export function SlidePoll({ id, eyebrow, poll, mode = 'dark' }: SlidePollProps) 
           {poll.question}
         </h2>
 
-        {!voted ? (
+        {/* Likert — voting */}
+        {!voted && poll.type === 'likert' && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <div style={{
+                position: 'absolute', left: '10%', right: '10%',
+                top: '50%', height: 2, background: cardBorder, zIndex: 0,
+              }} />
+              {['1','2','3','4','5'].map(opt => {
+                const isSelected = selected.includes(opt)
+                return (
+                  <div key={opt} style={{ flex: 1, display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+                    <button
+                      onClick={() => toggleOption(opt)}
+                      style={{
+                        width: 40, height: 40, borderRadius: '50%',
+                        background: isSelected ? colors.blue : cardBg,
+                        border: `2px solid ${isSelected ? colors.blue : cardBorder}`,
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 14, fontWeight: 700,
+                        color: isSelected ? '#FFFFFF' : textPrimary,
+                        transition: 'all 0.15s',
+                        boxShadow: isSelected ? '0 0 0 4px rgba(30,90,242,0.2)' : 'none',
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
+              <span style={{ fontSize: 11, color: textMuted }}>Strongly disagree</span>
+              <span style={{ fontSize: 11, color: textMuted }}>Strongly agree</span>
+            </div>
+          </div>
+        )}
+
+        {/* Likert — results */}
+        {voted && poll.type === 'likert' && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 80 }}>
+              {['1','2','3','4','5'].map(opt => {
+                const count = results[opt] ?? 0
+                const pct = total > 0 ? count / total : 0
+                return (
+                  <div key={opt} style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  }}>
+                    <span style={{ fontSize: 11, color: textMuted }}>{count}</span>
+                    <div style={{
+                      width: '100%', height: Math.max(4, pct * 64),
+                      background: colors.blue, borderRadius: '3px 3px 0 0',
+                      transition: 'height 0.6s ease',
+                    }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: textPrimary }}>{opt}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+              <span style={{ fontSize: 10, color: textMuted }}>Strongly disagree</span>
+              <span style={{ fontSize: 10, color: textMuted }}>Strongly agree</span>
+            </div>
+          </div>
+        )}
+
+        {/* Standard options — voting (non-likert) */}
+        {!voted && poll.type !== 'likert' && (
           <div style={{
             display: 'flex',
             flexDirection: poll.type === 'rating' ? 'row' : 'column',
@@ -124,7 +195,10 @@ export function SlidePoll({ id, eyebrow, poll, mode = 'dark' }: SlidePollProps) 
               )
             })}
           </div>
-        ) : (
+        )}
+
+        {/* Standard results — bar chart (non-likert) */}
+        {voted && poll.type !== 'likert' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
             {options.map(opt => {
               const count = results[opt] ?? 0
@@ -142,21 +216,16 @@ export function SlidePoll({ id, eyebrow, poll, mode = 'dark' }: SlidePollProps) 
                     }}>
                       {opt}
                       {isWinner && (
-                        <span style={{ fontSize: 10, color: colors.gold, fontWeight: 700 }}>
-                          LEADING
-                        </span>
+                        <span style={{ fontSize: 10, color: colors.gold, fontWeight: 700 }}>LEADING</span>
                       )}
                     </span>
                     <span style={{ fontSize: 13, color: textMuted }}>
                       {pct}% · {count} vote{count !== 1 ? 's' : ''}
                     </span>
                   </div>
-                  <div style={{
-                    height: 10, background: cardBorder, borderRadius: 5, overflow: 'hidden',
-                  }}>
+                  <div style={{ height: 10, background: cardBorder, borderRadius: 5, overflow: 'hidden' }}>
                     <div style={{
-                      height: '100%', borderRadius: 5,
-                      width: `${pct}%`,
+                      height: '100%', borderRadius: 5, width: `${pct}%`,
                       background: isWinner ? colors.gold : colors.blue,
                       transition: 'width 0.6s ease',
                     }} />

@@ -10,11 +10,12 @@ import { ThemePanel } from './ThemePanel'
 import type { TransitionType } from './ThemePanel'
 import { InsertPollModal } from './InsertPollModal'
 import { DiagramFromTextPanel } from './DiagramFromTextPanel'
+import { SlidePanel } from './SlidePanel'
 import { triggerPrintExport } from './PrintExport'
 import { DECK_THEMES } from '../design-system/themes'
 import type { DeckTheme } from '../design-system/themes'
 import { useUndoHistory } from '../hooks/useUndoHistory'
-import type { SlideData, ShareMode } from '../types/deck'
+import type { SlideData, ShareMode, ImageElement } from '../types/deck'
 
 // ─── PdfButton sub-component ───────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ export function SlideViewer({
   const [current, setCurrent]             = useState(0)
   const [showChat, setShowChat]           = useState(false)
   const [showEditPanel, setShowEditPanel] = useState(false)
+  const [showSlidePanel, setShowSlidePanel] = useState(false)
   const [showShare, setShowShare]         = useState(false)
   const [showTheme, setShowTheme]               = useState(false)
   const [showPollModal, setShowPollModal]       = useState(false)
@@ -144,6 +146,56 @@ export function SlideViewer({
     setCurrent(current + 1)
     setDiagramSourceText(null)
   }, [slides, current, pushSlides, onSlidesChange])
+
+  const reorderSlides = useCallback((from: number, to: number) => {
+    const next = [...slides]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(to)
+  }, [slides, pushSlides, onSlidesChange])
+
+  const duplicateSlide = useCallback((index: number) => {
+    const clone = { ...slides[index], id: `${slides[index].id}-copy-${Date.now()}` }
+    const next = [...slides.slice(0, index + 1), clone, ...slides.slice(index + 1)]
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(index + 1)
+  }, [slides, pushSlides, onSlidesChange])
+
+  const deleteSlide = useCallback((index: number) => {
+    if (slides.length <= 1) return
+    const next = slides.filter((_, i) => i !== index)
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(Math.min(index, next.length - 1))
+  }, [slides, pushSlides, onSlidesChange])
+
+  const addBlankSlide = useCallback(() => {
+    const blank: SlideData = {
+      id: `slide-${Date.now()}`,
+      type: 'narrative',
+      mode: 'light',
+      headline: 'New slide',
+      body: 'Edit this text',
+    }
+    const next = [...slides.slice(0, current + 1), blank, ...slides.slice(current + 1)]
+    pushSlides(next)
+    onSlidesChange?.(next)
+    setCurrent(current + 1)
+  }, [slides, current, pushSlides, onSlidesChange])
+
+  const insertImageOnSlide = useCallback((src: string) => {
+    const img: ImageElement = {
+      id: `img-${Date.now()}`,
+      src,
+      x: 10, y: 10, width: 40, height: 30,
+      objectFit: 'contain',
+    }
+    const existing = slide.images ?? []
+    updateSlide(slide.id, { images: [...existing, img] })
+  }, [slide, updateSlide])
 
   // Engagement tracking — store slide view timestamps when consent given
   useEffect(() => {
@@ -301,6 +353,13 @@ export function SlideViewer({
                     ✦ Co-pilot
                   </button>
                   <button
+                    onClick={() => setShowSlidePanel(v => !v)}
+                    title="Toggle slide panel"
+                    style={topBarBtn(showSlidePanel)}
+                  >
+                    ☰ Slides
+                  </button>
+                  <button
                     onClick={() => { setShowEditPanel(v => !v); setShowChat(false) }}
                     title="Toggle edit panel"
                     style={{
@@ -355,6 +414,19 @@ export function SlideViewer({
 
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Slide panel — edit mode only */}
+        {canEdit && showSlidePanel && (
+          <SlidePanel
+            slides={slides}
+            currentIndex={current}
+            onNavigate={goTo}
+            onReorder={reorderSlides}
+            onDuplicateSlide={duplicateSlide}
+            onDeleteSlide={deleteSlide}
+            onAddSlide={addBlankSlide}
+          />
+        )}
+
         {/* Slide stage */}
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
@@ -419,6 +491,7 @@ export function SlideViewer({
                 onSlidesChange?.(next)
                 setCurrent(current + 1)
               }}
+              onInsertImage={insertImageOnSlide}
             />
           </div>
         )}

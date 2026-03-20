@@ -12,13 +12,17 @@ interface SlideCoverProps {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
+  layout?: string
 }
 
-export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate, theme }: SlideCoverProps) {
+export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate, theme, layout }: SlideCoverProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
-  const accentBar  = theme?.accentBar  ?? colors.blue
-  const coverBg    = theme?.coverBg    ?? undefined
-  const coverText  = theme?.coverText  ?? '#FFFFFF'
+  const accentBar = theme?.accentBar ?? colors.blue
+  const coverBg   = theme?.coverBg   ?? undefined
+  const coverText = theme?.coverText ?? '#FFFFFF'
+
+  const isCentered = layout === 'centered'
+  const isBold     = layout === 'bold'
 
   return (
     <SlideShell slideType="cover" mode="dark" style={coverBg ? { background: coverBg } : undefined}>
@@ -27,7 +31,13 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
         width: 4, height: '100%', background: accentBar,
       }} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingLeft: 12 }}>
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: isCentered ? 'center' : 'flex-end',
+        alignItems: isCentered ? 'center' : 'flex-start',
+        paddingLeft: isCentered ? 0 : 12,
+        textAlign: isCentered ? 'center' : 'left',
+      }}>
         {eyebrow && (
           <EditableText
             value={eyebrow}
@@ -46,12 +56,14 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
           editable={!!editable}
           multiline
           style={{
-            fontSize: 44, fontWeight: 600, lineHeight: 1.08,
+            fontSize: isBold ? 56 : 44,
+            fontWeight: 600, lineHeight: 1.08,
             color: coverText, marginBottom: subtitle ? 20 : 32,
-            maxWidth: '70%', display: 'block',
+            maxWidth: isBold ? '90%' : isCentered ? '80%' : '70%',
+            display: 'block',
           }}
         />
-        {subtitle && (
+        {subtitle && !isBold && (
           <EditableText
             value={subtitle}
             onSave={v => up({ subtitle: v })}
@@ -64,7 +76,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
             }}
           />
         )}
-        {meta && (
+        {meta && !isBold && (
           <EditableText
             value={meta}
             onSave={v => up({ meta: v })}

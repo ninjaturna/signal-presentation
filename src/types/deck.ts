@@ -14,6 +14,17 @@ export interface StatData {
   context?: string
 }
 
+export interface ImageElement {
+  id: string
+  src: string
+  x: number       // percent of slide width  0–100
+  y: number       // percent of slide height 0–100
+  width: number   // percent of slide width
+  height: number  // percent of slide height
+  alt?: string
+  objectFit?: 'cover' | 'contain' | 'fill'
+}
+
 export interface SlideData {
   id: string
   type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll'
@@ -48,10 +59,14 @@ export interface SlideData {
   // poll
   poll?: {
     question: string
-    type: 'yes-no' | 'multiple-choice' | 'rating'
+    type: 'yes-no' | 'multiple-choice' | 'rating' | 'likert'
     options: string[]
     allowMultiple?: boolean
   }
+  // images
+  images?: ImageElement[]
+  // layout variant
+  layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
 }
 
 export type ShareMode = 'edit' | 'review' | 'present'
