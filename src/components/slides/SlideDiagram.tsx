@@ -1,13 +1,14 @@
-import { useState, useRef } from 'react'
-import { SlideShell } from '../SlideShell'
+import { useState, useRef, useEffect } from 'react'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
-import type { SlideData } from '../../types/deck'
+import type { SlideData, DiagramData } from '../../types/deck'
+import { DiagramCanvas } from '../DiagramCanvas'
 
 interface SlideDiagramProps {
   eyebrow?: string
   title?: string
   svgContent?: string
+  diagramData?: DiagramData
   placeholder?: string
   mode?: SlideMode
   context?: string
@@ -17,28 +18,69 @@ interface SlideDiagramProps {
 
 type PanelState = 'idle' | 'input' | 'preview' | 'accepted'
 
+// Measures its container and passes px dimensions to DiagramCanvas
+function DiagramCanvasWrapper({
+  data,
+  editable,
+  onUpdate,
+}: {
+  data: DiagramData
+  editable: boolean
+  onUpdate?: (d: DiagramData) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ w: 0, h: 0 })
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      const r = entries[0].contentRect
+      setDims({ w: r.width, h: r.height })
+    })
+    ro.observe(el)
+    setDims({ w: el.clientWidth, h: el.clientHeight })
+    return () => ro.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {dims.w > 0 && dims.h > 0 && (
+        <DiagramCanvas
+          data={data}
+          editable={editable}
+          containerWidth={dims.w}
+          containerHeight={dims.h}
+          onChange={onUpdate}
+        />
+      )}
+    </div>
+  )
+}
+
 export function SlideDiagram({
-  eyebrow,
-  title,
-  svgContent: committedSvg,
+  eyebrow, title,
+  svgContent, diagramData,
   placeholder,
   mode = 'light',
   context,
   editable = true,
   onUpdate,
 }: SlideDiagramProps) {
-  const [pendingSvg, setPendingSvg] = useState<string>('')
-  const [panel, setPanel]           = useState<PanelState>(committedSvg ? 'accepted' : 'idle')
-  const [prompt, setPrompt]         = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
+  const [panel, setPanel]         = useState<PanelState>(
+    (diagramData || svgContent) ? 'accepted' : 'idle'
+  )
+  const [pendingData, setPendingData] = useState<DiagramData | null>(null)
+  const [prompt, setPrompt]       = useState('')
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   const textPrimary  = mode === 'dark' ? '#FFFFFF' : colors.ink
-  const canvasBg     = mode === 'dark' ? colors.inkSoft : colors.surfaceAlt
+  const canvasBg     = mode === 'dark' ? colors.inkSoft : '#FFFFFF'
   const canvasBorder = mode === 'dark' ? colors.borderDark : colors.border
 
-  const displaySvg = panel === 'preview' ? pendingSvg : committedSvg ?? ''
+  const activeData = panel === 'preview' ? pendingData : (diagramData ?? null)
 
   const generate = async () => {
     if (!prompt.trim()) return
@@ -51,9 +93,13 @@ export function SlideDiagram({
         body: JSON.stringify({ description: prompt, context }),
       })
       const data = await res.json()
-      if (data.error) { setError(data.error); return }
-      setPendingSvg(data.svg)
-      setPanel('preview')
+      if (data.error) { setError(data.error); setLoading(false); return }
+      if (data.diagramData) {
+        setPendingData(data.diagramData)
+        setPanel('preview')
+      } else {
+        setError('Unexpected response format from diagram API')
+      }
     } catch {
       setError('Generation failed — check API key in Vercel settings')
     } finally {
@@ -62,17 +108,16 @@ export function SlideDiagram({
   }
 
   const accept = () => {
-    if (!pendingSvg) return
-    onUpdate?.({ svgContent: pendingSvg })
-    setPendingSvg('')
+    if (!pendingData) return
+    onUpdate?.({ diagramData: pendingData, svgContent: undefined })
+    setPendingData(null)
     setPanel('accepted')
     setPrompt('')
   }
 
   const discard = () => {
-    setPendingSvg('')
-    setPanel(committedSvg ? 'accepted' : 'idle')
-    setPrompt('')
+    setPendingData(null)
+    setPanel(diagramData ? 'accepted' : 'idle')
   }
 
   const openInput = () => {
@@ -83,16 +128,21 @@ export function SlideDiagram({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation()
     if (e.key === 'Enter') generate()
-    if (e.key === 'Escape') {
-      setPanel(committedSvg ? 'accepted' : 'idle')
-      setPrompt('')
-    }
+    if (e.key === 'Escape') discard()
   }
 
   return (
-    <SlideShell slideType="content" mode={mode}>
+    <div style={{
+      width: '100%', aspectRatio: '16/9',
+      display: 'flex', flexDirection: 'column',
+      padding: '32px 48px',
+      boxSizing: 'border-box',
+      background: mode === 'dark' ? colors.ink : colors.surface,
+      fontFamily: '"DM Sans", system-ui, sans-serif',
+    }}>
+      {/* Slide header */}
       {(eyebrow || title) && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 16, flexShrink: 0 }}>
           {eyebrow && (
             <div style={{
               fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
@@ -102,12 +152,17 @@ export function SlideDiagram({
             </div>
           )}
           {title && (
-            <h2 style={{ fontSize: 24, fontWeight: 600, color: textPrimary }}>{title}</h2>
+            <h2 style={{
+              fontSize: 24, fontWeight: 600,
+              color: textPrimary, lineHeight: 1.2, margin: 0,
+            }}>
+              {title}
+            </h2>
           )}
         </div>
       )}
 
-      {/* SVG Canvas */}
+      {/* Canvas area */}
       <div style={{
         flex: 1,
         background: canvasBg,
@@ -118,104 +173,80 @@ export function SlideDiagram({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        minHeight: 0,
       }}>
-        {displaySvg ? (
+        {panel === 'preview' && (
+          <div style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 20,
+            background: 'rgba(255,204,45,0.15)',
+            border: '1px solid rgba(255,204,45,0.35)',
+            borderRadius: 5, padding: '3px 8px',
+            fontSize: 10, fontWeight: 600, color: colors.gold,
+          }}>
+            Preview — click Accept to add to deck
+          </div>
+        )}
+
+        {panel === 'accepted' && editable && (
+          <button
+            onClick={openInput}
+            style={{
+              position: 'absolute', top: 10, right: 10, zIndex: 20,
+              background: 'rgba(17,17,19,0.8)',
+              border: `1px solid ${colors.borderDark}`,
+              borderRadius: 6, padding: '4px 10px',
+              fontSize: 11, fontWeight: 600, color: colors.mutedDark,
+              cursor: 'pointer',
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+            }}
+          >
+            Replace diagram
+          </button>
+        )}
+
+        {activeData ? (
+          <DiagramCanvasWrapper
+            data={activeData}
+            editable={!!editable && panel !== 'preview'}
+            onUpdate={updated => onUpdate?.({ diagramData: updated })}
+          />
+        ) : svgContent ? (
           <div
             style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            dangerouslySetInnerHTML={{ __html: displaySvg }}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : (
           <div style={{ textAlign: 'center', padding: 24 }}>
             <div style={{
-              width: 40, height: 40, borderRadius: 10,
+              width: 48, height: 48, borderRadius: 12,
               background: mode === 'dark' ? colors.borderDark : colors.border,
-              margin: '0 auto 12px',
+              margin: '0 auto 16px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="8" height="8" rx="2" stroke={colors.blue} strokeWidth="1.5"/>
-                <rect x="13" y="3" width="8" height="8" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
-                <rect x="3" y="13" width="8" height="8" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
-                <rect x="13" y="13" width="8" height="8" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="2" width="9" height="9" rx="2" stroke={colors.blue} strokeWidth="1.5"/>
+                <rect x="13" y="2" width="9" height="9" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
+                <rect x="2" y="13" width="9" height="9" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
+                <rect x="13" y="13" width="9" height="9" rx="2" stroke={colors.mutedDark} strokeWidth="1.5"/>
               </svg>
             </div>
-            <p style={{ fontSize: 13, color: colors.mutedDark }}>
+            <p style={{ fontSize: 13, color: colors.mutedDark, margin: 0 }}>
               {placeholder ?? 'Describe a diagram to generate it'}
             </p>
           </div>
         )}
-
-        {/* Preview badge */}
-        {panel === 'preview' && (
-          <div style={{
-            position: 'absolute', top: 12, left: 12,
-            background: 'rgba(255,204,45,0.15)',
-            border: '1px solid rgba(255,204,45,0.35)',
-            borderRadius: 5, padding: '3px 8px',
-            fontSize: 11, fontWeight: 600, color: colors.gold,
-            letterSpacing: '0.06em',
-          }}>
-            Preview — not yet in deck
-          </div>
-        )}
-
-        {/* Accepted badge */}
-        {panel === 'accepted' && editable && (
-          <div style={{
-            position: 'absolute', top: 12, left: 12,
-            background: 'rgba(29,158,117,0.1)',
-            border: '1px solid rgba(29,158,117,0.25)',
-            borderRadius: 5, padding: '3px 8px',
-            fontSize: 11, fontWeight: 600, color: '#1D9E75',
-            letterSpacing: '0.06em',
-          }}>
-            In deck
-          </div>
-        )}
-
-        {/* Regenerate button */}
-        {displaySvg && editable && panel !== 'input' && (
-          <button
-            onClick={openInput}
-            style={{
-              position: 'absolute', top: 12, right: 12,
-              background: colors.inkSoft, border: `1px solid ${colors.borderDark}`,
-              borderRadius: 6, padding: '5px 10px',
-              fontSize: 11, fontWeight: 600, color: colors.mutedDark,
-              cursor: 'pointer', letterSpacing: '0.04em',
-              fontFamily: '"DM Sans", system-ui, sans-serif',
-            }}
-          >
-            Regenerate
-          </button>
-        )}
       </div>
 
-      {/* Bottom action area */}
+      {/* Bottom action bar */}
       {editable && (
-        <div style={{ marginTop: 10 }}>
-
-          {/* idle or accepted → co-pilot button */}
-          {(panel === 'idle' || panel === 'accepted') && (
-            <button
-              onClick={openInput}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${canvasBorder}`,
-                borderRadius: 8, padding: '7px 14px',
-                fontSize: 12, fontWeight: 600,
-                color: colors.blue, cursor: 'pointer',
-                letterSpacing: '0.04em',
-                fontFamily: '"DM Sans", system-ui, sans-serif',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
+        <div style={{ marginTop: 10, flexShrink: 0 }}>
+          {panel === 'idle' && (
+            <button onClick={openInput} style={coPilotBtn}>
               <span style={{ opacity: 0.6 }}>✦</span>
-              {panel === 'accepted' ? 'Replace diagram' : 'AI graphic co-pilot'}
+              AI graphic co-pilot
             </button>
           )}
 
-          {/* input → prompt bar */}
           {panel === 'input' && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <div style={{
@@ -232,114 +263,76 @@ export function SlideDiagram({
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Describe the diagram — press Enter to generate"
+                  placeholder="Describe the diagram (Enter to generate)"
                   style={{
-                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                    fontSize: 13, color: textPrimary,
+                    flex: 1, background: 'transparent', border: 'none',
+                    outline: 'none', fontSize: 13, color: textPrimary,
                     fontFamily: '"DM Sans", system-ui, sans-serif',
                   }}
                 />
               </div>
-              <button
-                onClick={generate}
-                disabled={loading || !prompt.trim()}
-                style={{
-                  background: loading ? colors.mutedDark : colors.blue,
-                  border: 'none', borderRadius: 8,
-                  padding: '8px 16px', fontSize: 13, fontWeight: 600,
-                  color: '#FFFFFF', cursor: loading ? 'default' : 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <button onClick={generate} disabled={loading || !prompt.trim()}
+                style={generateBtn(loading || !prompt.trim())}>
                 {loading ? 'Generating…' : 'Generate →'}
               </button>
-              <button
-                onClick={() => { setPanel(committedSvg ? 'accepted' : 'idle'); setPrompt('') }}
-                style={{
-                  background: 'transparent', border: `1px solid ${canvasBorder}`,
-                  borderRadius: 8, padding: '8px 12px',
-                  fontSize: 13, color: colors.mutedDark, cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                }}
-              >
-                Cancel
-              </button>
+              <button onClick={discard} style={cancelBtn}>Cancel</button>
             </div>
           )}
 
-          {/* preview → accept / try again / edit prompt / discard */}
           {panel === 'preview' && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button
-                onClick={accept}
-                style={{
-                  background: '#1D9E75',
-                  border: 'none', borderRadius: 8,
-                  padding: '8px 20px', fontSize: 13, fontWeight: 600,
-                  color: '#FFFFFF', cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 7L5.5 10.5L12 3.5" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Accept — add to deck
+              <button onClick={accept} style={acceptBtn}>✓ Accept</button>
+              <button onClick={generate} disabled={loading} style={cancelBtn}>
+                {loading ? 'Generating…' : 'Try again'}
               </button>
-              <button
-                onClick={generate}
-                disabled={loading}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${canvasBorder}`,
-                  borderRadius: 8, padding: '8px 14px',
-                  fontSize: 13, color: colors.mutedDark, cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                }}
-              >
-                {loading ? 'Regenerating…' : 'Try again'}
-              </button>
-              <button
-                onClick={() => setPanel('input')}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${canvasBorder}`,
-                  borderRadius: 8, padding: '8px 14px',
-                  fontSize: 13, color: colors.mutedDark, cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                }}
-              >
-                Edit prompt
-              </button>
-              <button
-                onClick={discard}
-                style={{
-                  background: 'transparent', border: 'none',
-                  fontSize: 12, color: colors.mutedDark, cursor: 'pointer',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  marginLeft: 4,
-                }}
-              >
-                Discard
-              </button>
-              {prompt && (
-                <div style={{
-                  marginLeft: 'auto', fontSize: 11, color: colors.mutedDark,
-                  maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap', fontStyle: 'italic',
-                }}>
-                  "{prompt}"
-                </div>
-              )}
+              <button onClick={() => setPanel('input')} style={cancelBtn}>Edit prompt</button>
+              <button onClick={discard} style={ghostBtn}>Discard</button>
             </div>
           )}
 
           {error && (
-            <p style={{ fontSize: 11, color: colors.red, marginTop: 6 }}>{error}</p>
+            <p style={{ fontSize: 11, color: '#FF4D6D', marginTop: 6 }}>{error}</p>
           )}
         </div>
       )}
-    </SlideShell>
+    </div>
   )
+}
+
+// ─── Button styles ────────────────────────────────────────────────────────────
+
+const coPilotBtn: React.CSSProperties = {
+  background: 'transparent', border: `1px solid ${colors.borderDark}`,
+  borderRadius: 8, padding: '7px 14px',
+  fontSize: 12, fontWeight: 600, color: colors.blue,
+  cursor: 'pointer', fontFamily: '"DM Sans", system-ui, sans-serif',
+  display: 'inline-flex', alignItems: 'center', gap: 6,
+}
+
+const generateBtn = (disabled: boolean): React.CSSProperties => ({
+  background: disabled ? colors.borderDark : colors.blue,
+  border: 'none', borderRadius: 8, padding: '8px 16px',
+  fontSize: 13, fontWeight: 600, color: '#FFFFFF',
+  cursor: disabled ? 'default' : 'pointer',
+  fontFamily: '"DM Sans", system-ui, sans-serif',
+  whiteSpace: 'nowrap' as const,
+})
+
+const acceptBtn: React.CSSProperties = {
+  background: '#1D9E75', border: 'none', borderRadius: 8,
+  padding: '8px 20px', fontSize: 13, fontWeight: 600, color: '#FFFFFF',
+  cursor: 'pointer', fontFamily: '"DM Sans", system-ui, sans-serif',
+}
+
+const cancelBtn: React.CSSProperties = {
+  background: 'transparent', border: `1px solid ${colors.borderDark}`,
+  borderRadius: 8, padding: '8px 14px',
+  fontSize: 13, color: colors.mutedDark, cursor: 'pointer',
+  fontFamily: '"DM Sans", system-ui, sans-serif',
+}
+
+const ghostBtn: React.CSSProperties = {
+  background: 'transparent', border: 'none',
+  fontSize: 12, color: colors.mutedDark, cursor: 'pointer',
+  fontFamily: '"DM Sans", system-ui, sans-serif', marginLeft: 4,
 }

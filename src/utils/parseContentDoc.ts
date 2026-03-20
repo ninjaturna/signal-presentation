@@ -13,6 +13,11 @@ export interface ParsedSlide {
   left?: { label: string; bullets: string[] }
   right?: { label: string; bullets: string[] }
   isAppendix: boolean
+  // poll fields (populated when title contains "POLL")
+  isPoll?: boolean
+  pollType?: 'yes-no' | 'multiple-choice' | 'rating' | 'likert'
+  pollQuestion?: string
+  pollOptions?: string[]
 }
 
 export interface ParsedStats {
@@ -147,6 +152,25 @@ export function parseContentDoc(rawMarkdown: string): ParsedContentDoc {
     const { found, left, right } = extractLeftRight(bodyRaw)
     const isBodyParagraph   = bullets.length === 0 && !found
 
+    // Poll detection — triggered by "POLL" in slide title
+    const isPoll = /poll/i.test(slideTitle)
+    let pollType: ParsedSlide['pollType']
+    let pollQuestion: string | undefined
+    let pollOptions: string[] | undefined
+
+    if (isPoll) {
+      const pollTypeMatch = block.match(/\*\*POLL TYPE:\*\*\s*(yes-no|multiple-choice|rating|likert)/i)
+      pollType = (pollTypeMatch?.[1]?.toLowerCase() as ParsedSlide['pollType']) ?? 'yes-no'
+
+      const questionMatch = block.match(/\*\*QUESTION\*\*\s*\n([^\n]+)/i)
+      pollQuestion = questionMatch?.[1]?.trim() ?? heading
+
+      const optionBullets = extractBullets(bodyRaw)
+      pollOptions = optionBullets.length > 0
+        ? optionBullets
+        : pollType === 'yes-no' ? ['Yes', 'No'] : ['Option A', 'Option B', 'Option C']
+    }
+
     return {
       id: `slide-${number}`,
       number,
@@ -162,6 +186,10 @@ export function parseContentDoc(rawMarkdown: string): ParsedContentDoc {
       left,
       right,
       isAppendix,
+      isPoll: isPoll || undefined,
+      pollType,
+      pollQuestion,
+      pollOptions,
     }
   })
 

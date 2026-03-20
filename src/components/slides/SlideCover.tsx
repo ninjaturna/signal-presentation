@@ -2,6 +2,7 @@ import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideData } from '../../types/deck'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideCoverProps {
   eyebrow?: string
@@ -10,19 +11,33 @@ interface SlideCoverProps {
   meta?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
+  theme?: DeckTheme['tokens']
+  layout?: string
 }
 
-export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate }: SlideCoverProps) {
+export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, onUpdate, theme, layout }: SlideCoverProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
+  const accentBar = theme?.accentBar ?? colors.blue
+  const coverBg   = theme?.coverBg   ?? undefined
+  const coverText = theme?.coverText ?? '#FFFFFF'
+
+  const isCentered = layout === 'centered'
+  const isBold     = layout === 'bold'
 
   return (
-    <SlideShell slideType="cover" mode="dark">
+    <SlideShell slideType="cover" mode="dark" style={coverBg ? { background: coverBg } : undefined}>
       <div style={{
         position: 'absolute', top: 0, left: 0,
-        width: 4, height: '100%', background: colors.blue,
+        width: 4, height: '100%', background: accentBar,
       }} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingLeft: 12 }}>
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: isCentered ? 'center' : 'flex-end',
+        alignItems: isCentered ? 'center' : 'flex-start',
+        paddingLeft: isCentered ? 0 : 12,
+        textAlign: isCentered ? 'center' : 'left',
+      }}>
         {eyebrow && (
           <EditableText
             value={eyebrow}
@@ -30,7 +45,7 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
             editable={!!editable}
             style={{
               fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: colors.blue, marginBottom: 20,
+              textTransform: 'uppercase', color: accentBar, marginBottom: 20,
               display: 'block',
             }}
           />
@@ -41,25 +56,27 @@ export function SlideCover({ eyebrow, title, subtitle, meta, editable = false, o
           editable={!!editable}
           multiline
           style={{
-            fontSize: 44, fontWeight: 600, lineHeight: 1.08,
-            color: '#FFFFFF', marginBottom: subtitle ? 20 : 32,
-            maxWidth: '70%', display: 'block',
+            fontSize: isBold ? 'clamp(32px, 4.4vw, 56px)' : 'clamp(24px, 3.5vw, 44px)',
+            fontWeight: 600, lineHeight: 1.08,
+            color: coverText, marginBottom: subtitle ? 20 : 32,
+            maxWidth: isBold ? '90%' : isCentered ? '80%' : '70%',
+            display: 'block',
           }}
         />
-        {subtitle && (
+        {subtitle && !isBold && (
           <EditableText
             value={subtitle}
             onSave={v => up({ subtitle: v })}
             editable={!!editable}
             multiline
             style={{
-              fontSize: 18, fontWeight: 400, lineHeight: 1.5,
+              fontSize: 'clamp(13px, 1.4vw, 18px)', fontWeight: 400, lineHeight: 1.5,
               color: colors.mutedDark, marginBottom: 32, maxWidth: '55%',
               display: 'block',
             }}
           />
         )}
-        {meta && (
+        {meta && !isBold && (
           <EditableText
             value={meta}
             onSave={v => up({ meta: v })}

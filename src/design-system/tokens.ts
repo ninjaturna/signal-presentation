@@ -71,3 +71,27 @@ export const slideAspect = {
   widescreen: '16/9',
   standard:   '4/3',
 } as const
+
+// CSS variable references — use in inline styles instead of raw hex values
+// when component-tokens don't cover the case
+export const cssVars = {
+  blue:         'var(--color-blue)',
+  blueHover:    'var(--color-blue-hover)',
+  blueSubtle:   'var(--color-blue-subtle)',
+  gold:         'var(--color-gold)',
+  goldSubtle:   'var(--color-gold-subtle)',
+  ink:          'var(--color-ink)',
+  inkRaised:    'var(--color-ink-raised)',
+  inkElevated:  'var(--color-ink-elevated)',
+  inkBorder:    'var(--color-ink-border)',
+  surface:      'var(--color-surface)',
+  surfaceCard:  'var(--color-surface-card)',
+  border:       'var(--color-border)',
+  textDark:     'var(--color-text-primary-dark)',
+  textLight:    'var(--color-text-primary-light)',
+  mutedDark:    'var(--color-text-muted-dark)',
+  mutedLight:   'var(--color-text-muted-light)',
+  success:      'var(--color-success)',
+  error:        'var(--color-error)',
+  warning:      'var(--color-warning)',
+} as const

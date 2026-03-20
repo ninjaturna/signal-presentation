@@ -1,4 +1,9 @@
 import { useState, useRef } from 'react'
+
+const preloadViewer = () => {
+  import('../components/SlideViewer')
+  import('../utils/renderSlide')
+}
 import { colors } from '../design-system'
 import { parseContentDoc } from '../utils/parseContentDoc'
 import type { ParsedContentDoc } from '../utils/parseContentDoc'
@@ -105,6 +110,7 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <button
             onClick={onViewDemo}
+            onMouseEnter={preloadViewer}
             style={{ background: 'transparent', border: 'none', fontSize: 13, color: '#666', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Demo deck
@@ -282,12 +288,41 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke={colors.blue} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Download template (.md)
+            Download template v2 (.md)
           </a>
         </div>
-        <p style={{ fontSize: 11, color: '#333', marginTop: 6 }}>
-          Fill in your slide content, save as .md, and upload above
+        <p style={{ fontSize: 11, color: '#555', marginTop: 6, lineHeight: 1.6 }}>
+          Fill in your content, upload above. Polls, diagrams,
+          and slide builds are generated automatically.
         </p>
+        <div style={{
+          marginTop: 12,
+          display: 'flex',
+          flexWrap: 'wrap' as const,
+          gap: 6,
+          justifyContent: 'center',
+        }}>
+          {[
+            '2 engagement polls',
+            '3-slide case study arc',
+            'Diagram prompts',
+            'Slide builds',
+            'Brand voice guide',
+          ].map(label => (
+            <span key={label} style={{
+              background: 'rgba(30,90,242,0.08)',
+              border: '1px solid rgba(30,90,242,0.2)',
+              borderRadius: 999,
+              padding: '2px 10px',
+              fontSize: 10,
+              fontWeight: 600,
+              color: colors.blue,
+              letterSpacing: '0.04em',
+            }}>
+              {label}
+            </span>
+          ))}
+        </div>
 
         {/* Demo deck card */}
         <div style={{
@@ -316,6 +351,7 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
             </div>
             <button
               onClick={onViewDemo}
+              onMouseEnter={preloadViewer}
               style={{ background: 'transparent', border: '1px solid #333', borderRadius: 6, padding: '5px 12px', fontSize: 12, color: '#888', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               View demo deck →

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+
+const preloadViewer = () => { import('../components/SlideViewer') }
 import { colors } from '../design-system'
 import { deckStore } from '../utils/deckStore'
 import type { StoredDeck } from '../utils/deckStore'
@@ -80,6 +82,7 @@ function DeckCard({
       {/* Thumbnail */}
       <div
         onClick={onOpen}
+        onMouseEnter={preloadViewer}
         style={{
           aspectRatio: '16/9',
           background: previewBg,

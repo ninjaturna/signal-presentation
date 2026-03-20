@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { colors } from '../design-system'
 
 interface EditableTextProps {
   value: string
@@ -23,6 +24,7 @@ export function EditableText({
 }: EditableTextProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value)
+  const [hovered, setHovered] = useState(false)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
 
   useEffect(() => { setDraft(value) }, [value])
@@ -48,7 +50,17 @@ export function EditableText({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!multiline && e.key === 'Enter') { e.preventDefault(); commit() }
     if (e.key === 'Escape') cancel()
-    e.stopPropagation() // prevent slide nav
+    e.stopPropagation()
+  }
+
+  const handleDiagramClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.dispatchEvent(new CustomEvent('signal:diagram-request', { detail: { text: value } }))
+  }
+
+  const handleRewriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.dispatchEvent(new CustomEvent('signal:rewrite-request', { detail: { text: value } }))
   }
 
   if (!editable) {
@@ -92,29 +104,87 @@ export function EditableText({
     )
   }
 
+  const showDiagramBadge = hovered && value.length > 30
+
   return (
-    <Tag
-      style={{
-        ...style,
-        cursor: 'text',
-        borderRadius: 4,
-        transition: 'background 0.1s, outline 0.1s',
-        outline: '1.5px solid transparent',
-        outlineOffset: 3,
-      }}
-      className={className}
-      onClick={() => setEditing(true)}
-      title="Click to edit"
-      onMouseEnter={e => {
-        ;(e.currentTarget as HTMLElement).style.outline = '1.5px solid rgba(30,90,242,0.3)'
-        ;(e.currentTarget as HTMLElement).style.background = 'rgba(30,90,242,0.04)'
-      }}
-      onMouseLeave={e => {
-        ;(e.currentTarget as HTMLElement).style.outline = '1.5px solid transparent'
-        ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-      }}
+    <div
+      style={{ position: 'relative', display: 'inline-block', width: '100%' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
-    </Tag>
+      <Tag
+        style={{
+          ...style,
+          cursor: 'text',
+          borderRadius: 4,
+          transition: 'outline 0.1s',
+          outline: hovered ? '1.5px solid rgba(30,90,242,0.35)' : '1.5px solid transparent',
+          background: hovered ? 'rgba(30,90,242,0.04)' : 'transparent',
+          outlineOffset: 3,
+          display: 'block',
+        }}
+        className={className}
+        onClick={() => setEditing(true)}
+        title="Click to edit"
+      >
+        {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
+      </Tag>
+
+      {/* Badge row — visible on hover */}
+      {hovered && (
+        <div style={{
+          position: 'absolute', top: -20, right: 0,
+          display: 'flex', gap: 4,
+          pointerEvents: 'none',
+        }}>
+          {/* EDIT badge */}
+          <div
+            onClick={() => setEditing(true)}
+            style={badgeStyle('#1E5AF2', true)}
+          >
+            EDIT
+          </div>
+
+          {/* Rewrite badge */}
+          <div
+            onClick={handleRewriteClick}
+            style={badgeStyle('rewrite', true)}
+          >
+            ✦ Rewrite
+          </div>
+
+          {/* Diagram badge — only for longer text */}
+          {showDiagramBadge && (
+            <div
+              onClick={handleDiagramClick}
+              style={badgeStyle(colors.mutedDark, true)}
+            >
+              ◈ Diagram
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
+}
+
+function badgeStyle(bg: string, clickable: boolean): React.CSSProperties {
+  let background = 'rgba(119,112,111,0.85)'
+  if (bg === '#1E5AF2') background = 'rgba(30,90,242,0.9)'
+  else if (bg === 'rewrite') background = 'rgba(140,80,220,0.88)'
+  return {
+    background,
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    padding: '2px 6px',
+    borderRadius: 3,
+    cursor: clickable ? 'pointer' : 'default',
+    pointerEvents: clickable ? 'auto' : 'none',
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+    whiteSpace: 'nowrap',
+    zIndex: 10,
+    userSelect: 'none',
+  }
 }

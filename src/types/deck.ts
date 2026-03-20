@@ -14,9 +14,64 @@ export interface StatData {
   context?: string
 }
 
+// ── Structured diagram data model ──────────────────────────────────────────
+
+export interface DiagramNode {
+  id: string
+  label: string
+  sublabel?: string
+  x: number        // % of canvas width, top-left origin (0–100)
+  y: number        // % of canvas height, top-left origin (0–100)
+  width: number    // % of canvas width
+  height: number   // % of canvas height
+  color?: 'blue' | 'accent' | 'dark' | 'muted'
+}
+
+export interface DiagramEdge {
+  id: string
+  from: string     // node id
+  to: string       // node id
+  label?: string
+}
+
+export interface DiagramData {
+  nodes: DiagramNode[]
+  edges: DiagramEdge[]
+}
+
+export interface InlineLink {
+  id: string
+  text: string   // the phrase in slide copy to hyperlink
+  url: string
+}
+
+export interface TextHighlight {
+  id: string
+  text: string          // exact phrase to highlight
+  color?: 'blue' | 'gold' | 'red' | 'ink'  // default: blue
+}
+
+export interface ImageElement {
+  id: string
+  src: string
+  x: number       // percent of slide width  0–100
+  y: number       // percent of slide height 0–100
+  width: number   // percent of slide width
+  height: number  // percent of slide height
+  alt?: string
+  objectFit?: 'cover' | 'contain' | 'fill'
+  zIndex?: number
+  crop?: {
+    top: number     // percent clipped from top (0–100)
+    right: number
+    bottom: number
+    left: number
+  }
+}
+
 export interface SlideData {
   id: string
-  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing'
+  type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll' | 'embed'
   mode?: SlideMode
   // cover / closing / shared
   eyebrow?: string
@@ -34,7 +89,10 @@ export interface SlideData {
   accentWord?: string
   // closing
   cta?: string
+  ctaUrl?: string
+  ctaTarget?: '_blank' | '_self'
   contact?: string
+  footerUrl?: string
   // stat-grid
   stats?: StatData[]
   // two-pane
@@ -43,8 +101,37 @@ export interface SlideData {
   split?: '50/50' | '60/40' | '40/60'
   // diagram
   svgContent?: string
+  diagramData?: DiagramData
   placeholder?: string
   context?: string
+  // poll
+  poll?: {
+    question: string
+    type: 'yes-no' | 'multiple-choice' | 'rating' | 'likert'
+    options: string[]
+    allowMultiple?: boolean
+  }
+  // embed slide
+  embed?: {
+    url: string
+    embedType: 'youtube' | 'figma' | 'loom' | 'typeform' | 'webpage'
+    title?: string
+    aspectRatio?: '16:9' | '4:3' | '1:1'
+  }
+  // images
+  images?: ImageElement[]
+  // inline hyperlinks (phrase → URL, rendered in view mode)
+  links?: InlineLink[]
+  // background-color emphasis on specific phrases
+  highlights?: TextHighlight[]
+  // layout variant
+  layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
+  // presenter notes
+  notes?: string
+  // slide build (progressive reveal in present mode)
+  // 0 or undefined = no build, advance immediately
+  // N = N click steps before advancing to next slide
+  buildSteps?: number
 }
 
 export type ShareMode = 'edit' | 'review' | 'present'
