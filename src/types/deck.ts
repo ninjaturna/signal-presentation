@@ -39,6 +39,12 @@ export interface DiagramData {
   edges: DiagramEdge[]
 }
 
+export interface InlineLink {
+  id: string
+  text: string   // the phrase in slide copy to hyperlink
+  url: string
+}
+
 export interface ImageElement {
   id: string
   src: string
@@ -108,6 +114,8 @@ export interface SlideData {
   }
   // images
   images?: ImageElement[]
+  // inline hyperlinks (phrase → URL, rendered in view mode)
+  links?: InlineLink[]
   // layout variant
   layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
   // presenter notes

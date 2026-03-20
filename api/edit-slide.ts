@@ -65,6 +65,13 @@ Return the JSON patch.`,
       .trim()
     const result = JSON.parse(cleaned)
 
+    // Merge links arrays — never wipe existing links when AI adds new ones
+    if (result.patch?.links && req.body.slide?.links) {
+      const existingIds = new Set((req.body.slide.links ?? []).map((l: any) => l.id))
+      const newLinks = (result.patch.links as any[]).filter(l => !existingIds.has(l.id))
+      result.patch.links = [...(req.body.slide.links ?? []), ...newLinks]
+    }
+
     res.json(result)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

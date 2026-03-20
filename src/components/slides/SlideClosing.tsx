@@ -1,8 +1,9 @@
 import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
-import type { SlideData } from '../../types/deck'
+import type { SlideData, InlineLink } from '../../types/deck'
 import type { DeckTheme } from '../../design-system/themes'
+import { renderTextWithLinks } from '../../utils/renderTextWithLinks'
 
 interface SlideClosingProps {
   headline: string
@@ -14,6 +15,7 @@ interface SlideClosingProps {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
+  links?: InlineLink[]
 }
 
 export function SlideClosing({
@@ -22,6 +24,7 @@ export function SlideClosing({
   editable = false,
   onUpdate,
   theme,
+  links,
 }: SlideClosingProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
 
@@ -29,6 +32,22 @@ export function SlideClosing({
   const accentBar = theme?.accentBar ?? colors.gold
   const coverBg   = theme?.coverBg   ?? undefined
   const coverText = theme?.coverText ?? '#FFFFFF'
+
+  const contactStyle = (extra?: React.CSSProperties): React.CSSProperties => ({
+    fontSize: 14, color: colors.mutedDark, display: 'block', ...extra,
+  })
+
+  const ContactLine = ({ style }: { style?: React.CSSProperties }) => contact ? (
+    editable ? (
+      <EditableText
+        value={contact} onSave={v => up({ contact: v })}
+        editable
+        style={contactStyle(style)}
+      />
+    ) : (
+      <div style={contactStyle(style)}>{renderTextWithLinks(contact, links)}</div>
+    )
+  ) : null
 
   const CTAButton = ({ big }: { big?: boolean }) => cta ? (
     <a
@@ -71,13 +90,7 @@ export function SlideClosing({
               }}
             />
             <CTAButton />
-            {contact && (
-              <EditableText
-                value={contact} onSave={v => up({ contact: v })}
-                editable={!!editable}
-                style={{ fontSize: 14, color: colors.mutedDark, marginTop: 28, display: 'block' }}
-              />
-            )}
+            <ContactLine style={{ marginTop: 28 }} />
           </div>
         </>
       )}
@@ -103,13 +116,7 @@ export function SlideClosing({
               }}
             />
             <CTAButton big />
-            {contact && (
-              <EditableText
-                value={contact} onSave={v => up({ contact: v })}
-                editable={!!editable}
-                style={{ fontSize: 13, color: colors.mutedDark, marginTop: 24, display: 'block' }}
-              />
-            )}
+            <ContactLine style={{ fontSize: 13, marginTop: 24 }} />
           </div>
         </>
       )}
@@ -137,22 +144,10 @@ export function SlideClosing({
           {cta && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
               <CTAButton />
-              {contact && (
-                <EditableText
-                  value={contact} onSave={v => up({ contact: v })}
-                  editable={!!editable}
-                  style={{ fontSize: 13, color: colors.mutedDark, display: 'block' }}
-                />
-              )}
+              <ContactLine style={{ fontSize: 13 }} />
             </div>
           )}
-          {!cta && contact && (
-            <EditableText
-              value={contact} onSave={v => up({ contact: v })}
-              editable={!!editable}
-              style={{ fontSize: 13, color: colors.mutedDark, display: 'block' }}
-            />
-          )}
+          {!cta && <ContactLine style={{ fontSize: 13 }} />}
         </div>
       )}
 

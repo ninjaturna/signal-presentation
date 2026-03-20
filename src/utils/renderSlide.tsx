@@ -85,6 +85,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           onUpdate={onUpdate}
           theme={theme}
           layout={slide.layout}
+          links={slide.links}
         />,
         slide, options
       )
@@ -163,6 +164,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           editable={editable}
           onUpdate={onUpdate}
           theme={theme}
+          links={slide.links}
         />,
         slide, options
       )

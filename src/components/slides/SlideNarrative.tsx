@@ -2,8 +2,9 @@ import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
-import type { SlideData } from '../../types/deck'
+import type { SlideData, InlineLink } from '../../types/deck'
 import type { DeckTheme } from '../../design-system/themes'
+import { renderTextWithLinks } from '../../utils/renderTextWithLinks'
 
 interface SlideNarrativeProps {
   eyebrow?: string
@@ -15,9 +16,10 @@ interface SlideNarrativeProps {
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
   layout?: string
+  links?: InlineLink[]
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout, links }: SlideNarrativeProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
@@ -63,16 +65,25 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           }}
         />
         {body && !isMinimal && (
-          <EditableText
-            value={body}
-            onSave={v => up({ body: v })}
-            editable={!!editable}
-            multiline
-            style={{
+          editable ? (
+            <EditableText
+              value={body}
+              onSave={v => up({ body: v })}
+              editable
+              multiline
+              style={{
+                fontSize: 'clamp(12px, 1.3vw, 16px)', lineHeight: 1.65,
+                color: textMuted, display: 'block',
+              }}
+            />
+          ) : (
+            <div style={{
               fontSize: 'clamp(12px, 1.3vw, 16px)', lineHeight: 1.65,
               color: textMuted, display: 'block',
-            }}
-          />
+            }}>
+              {renderTextWithLinks(body, links)}
+            </div>
+          )
         )}
       </div>
       {pullQuote && !isCentered && !isMinimal && (

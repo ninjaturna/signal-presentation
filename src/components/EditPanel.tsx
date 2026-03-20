@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
 import { colors } from '../design-system'
 import { ChatPanel } from './ChatPanel'
+import { TonePicker } from './TonePicker'
+import type { Tone, Length } from './TonePicker'
 import { getVariantsForType } from '../utils/layoutVariants'
 import { detectEmbedType, getEmbedLabel } from '../utils/embedDetect'
-import type { SlideData } from '../types/deck'
+import type { SlideData, InlineLink } from '../types/deck'
 
 interface EditPanelProps {
   slide: SlideData
@@ -83,8 +85,65 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [embedUrl, setEmbedUrl]               = useState('')
   const [embedTitle, setEmbedTitle]           = useState('')
 
+  // Rewrite state
+  const [activeRewriteField, setActiveRewriteField] = useState<string | null>(null)
+  const [rewriteLoadingKey, setRewriteLoadingKey]   = useState<string | null>(null)
+  const [hoveredLabelKey, setHoveredLabelKey]       = useState<string | null>(null)
+
+  // Links state
+  const [showAddLink, setShowAddLink]   = useState(false)
+  const [newLinkText, setNewLinkText]   = useState('')
+  const [newLinkUrl, setNewLinkUrl]     = useState('')
+
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
+  // ── Rewrite handler ──────────────────────────────────────────────────────
+  const rewriteField = async (fieldKey: string, tone: Tone, length: Length) => {
+    const loadingKey = `${tone}-${length}`
+    setRewriteLoadingKey(loadingKey)
+    try {
+      const res = await fetch('/api/edit-slide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instruction: `Rewrite only the "${fieldKey}" field using a ${tone.toLowerCase()} tone. ${
+            length === 'Concise'
+              ? 'Be brief and punchy — 1 sentence or a short phrase.'
+              : 'Be thorough — 2–3 sentences with more context and specificity.'
+          }`,
+          slide,
+        }),
+      })
+      const data = await res.json()
+      if (data.patch) {
+        onUpdate(data.patch)
+        setActiveRewriteField(null)
+      }
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setRewriteLoadingKey(null)
+    }
+  }
+
+  // ── Links helpers ────────────────────────────────────────────────────────
+  const currentLinks = slide.links ?? []
+
+  const addLink = () => {
+    if (!newLinkText.trim() || !newLinkUrl.trim()) return
+    const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+    const url = newLinkUrl.trim().startsWith('http') ? newLinkUrl.trim() : `https://${newLinkUrl.trim()}`
+    onUpdate({ links: [...currentLinks, { id, text: newLinkText.trim(), url }] })
+    setNewLinkText('')
+    setNewLinkUrl('')
+    setShowAddLink(false)
+  }
+
+  const removeLink = (id: string) => {
+    onUpdate({ links: currentLinks.filter(l => l.id !== id) })
+  }
+
+  // ── Diagram / poll / image / embed handlers ──────────────────────────────
   const generateDiagram = async () => {
     if (!diagramPrompt.trim()) return
     setDiagramLoading(true)
@@ -279,15 +338,42 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
         {fields.length > 0 ? (
           fields.map(({ key, label, multiline }) => {
             const value = (slide[key] as string) ?? ''
+            const canRewrite = value.trim().length > 2
+            const isPickerOpen = activeRewriteField === key
+
             return (
               <div key={key}>
-                <label style={{
-                  display: 'block', fontSize: 10, fontWeight: 600,
-                  color: colors.mutedDark, letterSpacing: '0.06em',
-                  textTransform: 'uppercase', marginBottom: 5,
-                }}>
-                  {label}
-                </label>
+                {/* Label row with Rewrite button */}
+                <div
+                  style={{ display: 'flex', alignItems: 'center', marginBottom: 5, gap: 6 }}
+                  onMouseEnter={() => setHoveredLabelKey(key)}
+                  onMouseLeave={() => setHoveredLabelKey(null)}
+                >
+                  <label style={{ ...fieldLabelStyle, marginBottom: 0, flex: 1 }}>
+                    {label}
+                  </label>
+                  {(hoveredLabelKey === key || isPickerOpen) && canRewrite && (
+                    <button
+                      onClick={() => setActiveRewriteField(isPickerOpen ? null : key)}
+                      style={{
+                        background: isPickerOpen ? 'rgba(140,80,220,0.15)' : 'transparent',
+                        border: `1px solid ${isPickerOpen ? 'rgba(140,80,220,0.4)' : 'transparent'}`,
+                        borderRadius: 4,
+                        padding: '2px 6px',
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        color: 'rgba(140,80,220,0.9)',
+                        cursor: 'pointer',
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      ✦ Rewrite
+                    </button>
+                  )}
+                </div>
+
                 {multiline ? (
                   <textarea
                     value={value}
@@ -324,6 +410,15 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                     onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
                   />
                 )}
+
+                {/* TonePicker inline below the field */}
+                {isPickerOpen && (
+                  <TonePicker
+                    loadingKey={rewriteLoadingKey}
+                    onSelect={(tone, length) => rewriteField(key, tone, length)}
+                    onClose={() => setActiveRewriteField(null)}
+                  />
+                )}
               </div>
             )
           })
@@ -353,6 +448,128 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             )}
           </div>
         )}
+
+        {/* ── Inline Links section ──────────────────────────────────────── */}
+        <div style={{
+          background: '#1a1a1e',
+          border: `1px solid ${colors.borderDark}`,
+          borderRadius: 8,
+          padding: '12px',
+        }}>
+          <div style={{
+            fontSize: 10, fontWeight: 700,
+            color: colors.mutedDark, letterSpacing: '0.08em',
+            textTransform: 'uppercase', marginBottom: 10,
+          }}>
+            🔗 Inline links
+          </div>
+
+          {/* Existing links list */}
+          {currentLinks.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+              {currentLinks.map(link => (
+                <div
+                  key={link.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(30,90,242,0.06)',
+                    border: '1px solid rgba(30,90,242,0.18)',
+                    borderRadius: 5, padding: '5px 8px',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      "{link.text}"
+                    </div>
+                    <div style={{ fontSize: 10, color: colors.blue, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      → {link.url.replace(/^https?:\/\//, '')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeLink(link.id)}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: colors.mutedDark, cursor: 'pointer',
+                      fontSize: 14, lineHeight: 1, padding: '0 2px',
+                      fontFamily: 'system-ui', flexShrink: 0,
+                    }}
+                    title="Remove link"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add link form */}
+          {showAddLink ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <input
+                value={newLinkText}
+                onChange={e => setNewLinkText(e.target.value)}
+                onKeyDown={e => { e.stopPropagation(); if (e.key === 'Escape') setShowAddLink(false) }}
+                placeholder="Text phrase to link (exact match)"
+                autoFocus
+                style={{ ...fieldInputStyle, fontSize: 12 }}
+                onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+                onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+              />
+              <input
+                value={newLinkUrl}
+                onChange={e => setNewLinkUrl(e.target.value)}
+                onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') addLink(); if (e.key === 'Escape') setShowAddLink(false) }}
+                placeholder="https://…"
+                style={{ ...fieldInputStyle, fontSize: 12 }}
+                onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+                onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+              />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={addLink}
+                  disabled={!newLinkText.trim() || !newLinkUrl.trim()}
+                  style={{
+                    flex: 1,
+                    background: newLinkText.trim() && newLinkUrl.trim() ? colors.blue : colors.inkSoft,
+                    border: 'none', borderRadius: 5, padding: '6px 10px',
+                    fontSize: 11, fontWeight: 600, color: '#FFFFFF',
+                    cursor: newLinkText.trim() && newLinkUrl.trim() ? 'pointer' : 'default',
+                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    opacity: newLinkText.trim() && newLinkUrl.trim() ? 1 : 0.4,
+                  }}
+                >
+                  Add link
+                </button>
+                <button
+                  onClick={() => { setShowAddLink(false); setNewLinkText(''); setNewLinkUrl('') }}
+                  style={{
+                    background: 'transparent', border: `1px solid ${colors.borderDark}`,
+                    borderRadius: 5, padding: '6px 10px',
+                    fontSize: 11, color: colors.mutedDark, cursor: 'pointer',
+                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddLink(true)}
+              style={{
+                background: 'transparent',
+                border: `1px dashed ${colors.borderDark}`,
+                borderRadius: 5, padding: '6px 10px',
+                fontSize: 11, fontWeight: 600,
+                color: colors.mutedDark, cursor: 'pointer',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                width: '100%',
+              }}
+            >
+              + Add link
+            </button>
+          )}
+        </div>
 
         {/* Presenter notes — all slide types */}
         <div style={{ marginTop: 4 }}>
