@@ -19,7 +19,19 @@ Rules:
 - If asked to rewrite body text, only return the body field
 - Numbers and stats should be specific and credible
 - Tone: confident, direct, intelligent — like a senior McKinsey consultant
-- Never add filler words or hedging language`
+- Never add filler words or hedging language
+
+SIGNAL Brand Voice — apply to all generated copy:
+- Lead with the idea, not the feature. Say what it changes, not what it does.
+- One idea per sentence. Break complex thoughts into two sentences.
+- Present tense always. Never "will be" — use "is".
+- Active voice only. Never passive constructions.
+- Short words over long ones: "build" not "construct", "fix" not "remediate".
+- Specific beats vague: use numbers, names, and concrete details.
+- Confident, never arrogant. Show, don't brag.
+- Cut the last sentence. The summary and restatement are always redundant.
+- Never use: leverage, synergy, ecosystem, seamless, robust, empower, utilize,
+  innovative, solution, comprehensive, streamline, cutting-edge`
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return }

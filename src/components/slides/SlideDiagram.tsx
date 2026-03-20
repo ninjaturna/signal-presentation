@@ -133,7 +133,7 @@ export function SlideDiagram({
 
   return (
     <div style={{
-      width: '100%', height: '100%',
+      width: '100%', aspectRatio: '16/9',
       display: 'flex', flexDirection: 'column',
       padding: '32px 48px',
       boxSizing: 'border-box',

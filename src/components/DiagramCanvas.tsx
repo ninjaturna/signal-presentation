@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { colors } from '../design-system'
+import { chartTokens } from '../design-system/chart-tokens'
 import type { DiagramData, DiagramNode, DiagramEdge } from '../types/deck'
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
@@ -16,24 +17,24 @@ function getNodeColors(color: DiagramNode['color']): NodeColorSet {
   switch (color) {
     case 'blue':
       return {
-        bg: colors.blue, text: '#FFFFFF', subText: 'rgba(255,255,255,0.7)',
-        border: colors.blue, selectedBorder: '#FFFFFF',
+        bg: chartTokens.sequence[0], text: '#FFFFFF', subText: 'rgba(255,255,255,0.7)',
+        border: chartTokens.sequence[0], selectedBorder: '#FFFFFF',
       }
     case 'accent':
       return {
-        bg: colors.gold, text: colors.ink, subText: 'rgba(17,17,19,0.6)',
-        border: colors.gold, selectedBorder: colors.ink,
+        bg: chartTokens.sequence[1], text: colors.ink, subText: 'rgba(17,17,19,0.6)',
+        border: chartTokens.sequence[1], selectedBorder: colors.ink,
       }
     case 'muted':
       return {
-        bg: 'transparent', text: colors.mutedDark, subText: colors.mutedDark,
-        border: colors.borderDark, selectedBorder: colors.blue,
+        bg: 'transparent', text: chartTokens.neutral, subText: chartTokens.neutral,
+        border: colors.borderDark, selectedBorder: chartTokens.primary,
       }
     case 'dark':
     default:
       return {
-        bg: colors.inkSoft, text: '#FFFFFF', subText: colors.mutedDark,
-        border: colors.borderDark, selectedBorder: colors.blue,
+        bg: colors.inkSoft, text: '#FFFFFF', subText: chartTokens.neutral,
+        border: colors.borderDark, selectedBorder: chartTokens.primary,
       }
   }
 }
@@ -96,8 +97,8 @@ interface NodeInspectorProps {
 }
 
 const COLOR_OPTIONS: Array<{ value: DiagramNode['color']; label: string; swatch: string }> = [
-  { value: 'blue',   label: 'Primary',    swatch: colors.blue },
-  { value: 'accent', label: 'Gate',       swatch: colors.gold },
+  { value: 'blue',   label: 'Primary',    swatch: chartTokens.sequence[0] },
+  { value: 'accent', label: 'Gate',       swatch: chartTokens.sequence[1] },
   { value: 'dark',   label: 'Secondary',  swatch: colors.inkSoft },
   { value: 'muted',  label: 'Annotation', swatch: 'transparent' },
 ]
@@ -389,13 +390,13 @@ export function DiagramCanvas({
           <marker id="dc-arrow" viewBox="0 0 12 12" refX="10" refY="6"
             markerWidth="6" markerHeight="6" orient="auto">
             <path d="M1 2 L10 6 L1 10" fill="none"
-              stroke={colors.mutedDark} strokeWidth="1.5"
+              stroke={chartTokens.neutral} strokeWidth="1.5"
               strokeLinecap="round" strokeLinejoin="round"/>
           </marker>
           <marker id="dc-arrow-sel" viewBox="0 0 12 12" refX="10" refY="6"
             markerWidth="6" markerHeight="6" orient="auto">
             <path d="M1 2 L10 6 L1 10" fill="none"
-              stroke={colors.blue} strokeWidth="1.5"
+              stroke={chartTokens.primary} strokeWidth="1.5"
               strokeLinecap="round" strokeLinejoin="round"/>
           </marker>
         </defs>
@@ -414,7 +415,7 @@ export function DiagramCanvas({
             <g key={edge.id}>
               <line
                 x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke={isRelated ? colors.blue : colors.borderDark}
+                stroke={isRelated ? chartTokens.primary : colors.borderDark}
                 strokeWidth={isRelated ? 2 : 1.5}
                 markerEnd={isRelated ? 'url(#dc-arrow-sel)' : 'url(#dc-arrow)'}
                 strokeOpacity={isRelated ? 1 : 0.7}
