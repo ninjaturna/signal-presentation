@@ -109,7 +109,8 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme,
               )}
             </div>
           </div>
-        )})
+          )
+        })}
       </div>
     </SlideShell>
   )
