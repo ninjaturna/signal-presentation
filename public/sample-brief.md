@@ -1,18 +1,20 @@
-# Netflix × Launch
+# Netflix × Launch — AI Enablement Brief
 ## SIGNAL Pitch Deck Content Document
 
-**Prepared for [Internal Review] | March 2026**
+**Prepared for Internal Review | March 2026**
 
-> DRAFT — For internal review only.
+> SAMPLE — This file demonstrates the SIGNAL content doc format.
+> Upload it on the homepage to generate a full branded deck automatically.
+> Replace every [bracketed field] with your own content when using as a template.
 
 ---
 
 ## Pitch Summary
 
-Netflix has 260M+ subscribers globally but recommendation quality hasn't kept pace with
-data volume. Viewing history drives personalization while mood, time of day, and social
-context are ignored. We're pitching a Viewer Intelligence Platform — a 10-week sprint
-to close the gap between Netflix's data advantage and subscriber satisfaction.
+Netflix has 260M+ subscribers and an enormous behavioral data advantage,
+but personalization is still driven almost entirely by viewing history.
+Launch proposes a Viewer Intelligence Platform — a 10-week discovery sprint
+to map the architecture, validate the signal model, and define Phase 1 scope.
 
 ---
 
@@ -20,9 +22,9 @@ to close the gap between Netflix's data advantage and subscriber satisfaction.
 
 | | |
 |---|---|
-| **Prepared for** | Internal review |
-| **Client stakeholder** | Chief Product Officer, VP of Personalization Engineering |
-| **Status** | DRAFT |
+| **Prepared for** | CPO, VP of Personalization Engineering |
+| **Client stakeholder** | Chief Product Officer, Netflix |
+| **Status** | SAMPLE |
 | **Deck format** | 13 slides |
 | **Engagement type** | Opportunity Pitch |
 
@@ -35,42 +37,47 @@ to close the gap between Netflix's data advantage and subscriber satisfaction.
 ### SLIDE 1 | COVER
 
 **HEADING**
-The intelligence layer Netflix hasn't built yet.
+The recommendation engine Netflix hasn't built yet.
 
 **SUBHEADING**
 A 10-week sprint to move from behavioral prediction to contextual understanding.
 
 **BODY**
-Launch × Netflix | March 2026
+Launch by NTT DATA | Prepared for Netflix | March 2026
 
 > **NOTES**
-> Open with: "Before I start — does everyone know why we're here today?"
+> Cover slide. Open with: "Before I start — tell me about your current
+> recommendation satisfaction scores. What are you seeing?"
+> Let them frame the problem in their own words first.
 
 ---
 
 ### SLIDE 2 | THE CHALLENGE
 
 **HEADING**
-Recommendation accuracy is high. Satisfaction is flat.
+260M subscribers. One signal. Flat satisfaction.
 
 **SUBHEADING**
-260M subscribers. Billions of signals. Still recommending based on last Tuesday's watch history.
+Recommendation accuracy is high. The experience of being understood isn't.
 
 **BODY**
-- Viewing history drives 94% of personalization signals — mood, time, and social context are ignored
-- "Content discovery to play" conversion has been flat for 3 consecutive quarters
-- Decision fatigue on the home screen is the #1 cited reason for churn in the 6–18 month cohort
+- Netflix's engine knows what you watched. It doesn't know why you stopped.
+- Mood, time of day, social context, and search intent are invisible to the model.
+- The gap between what subscribers search for and what they finish is widening.
+- Churn in the 6–18 month cohort correlates directly with "nothing to watch" frustration.
 
 > **NOTES**
-> Problem slide. Ask "Does this sound familiar?" before advancing.
-> Let the room sit with the problem.
+> Problem slide. Ask: "Does this match what you're seeing in your data?"
+> before advancing. Let the room confirm or correct.
+> The goal: make them say "yes" before the solution slide appears.
 
-> **GRAPHIC PROMPT — Siloed signals diagram**
-> "Four disconnected boxes labeled: Viewing History, Search Behavior, Account Data, Social Signals.
-> Arrows pointing inward to a central box labeled 'Current recommendation engine'.
-> No connections between the four source boxes — the disconnection is the point.
-> Dark background. Blue nodes. SIGNAL brand style."
-> → Paste into SIGNAL AI graphic co-pilot on the diagram slide.
+> **GRAPHIC PROMPT — Siloed signal diagram**
+> "Four disconnected boxes labeled: Viewing History, Search Behavior,
+> Social Context, Time & Mood Signals. Each with an arrow pointing down
+> to a central box labeled 'Current recommendation engine'.
+> No connections between the four source boxes — the gap is the point.
+> Dark background. Blue nodes. Gold accent on central box. SIGNAL brand style."
+> → Paste into SIGNAL AI graphic co-pilot on a diagram slide.
 
 ---
 
@@ -79,141 +86,158 @@ Recommendation accuracy is high. Satisfaction is flat.
 **POLL TYPE:** multiple-choice
 
 **QUESTION**
-How would you describe your team's current approach to content personalization?
+What best describes your team's current personalization approach?
 
 **OPTIONS**
-- We personalize based on viewing history only
-- We're testing behavioral signals but haven't scaled
-- We have a roadmap but haven't started
-- Personalization isn't a current priority
+- We personalize based on viewing history and explicit ratings
+- We're testing behavioral signals but haven't scaled the model
+- We have a roadmap for contextual personalization but haven't started
+- Personalization infrastructure is our top product priority right now
 
 > **NOTES**
-> Poll 1 — Opener. Run after slide 2. Give the room 30 seconds.
-> Acknowledge results: "Interesting — so most of you are still in viewing history only..."
-> Reference this result when you get to the solution slide.
+> Poll 1 — Opener. Run this after Slide 2 before revealing the solution.
+> Give the audience 30 seconds. Acknowledge results:
+> "Interesting — so most of you are [result]. That shapes how I want
+> to frame what we're going to show you."
+> Reference this data again in the closing.
 
 ---
 
 ### SLIDE 4 | THE SCALE OF THE OPPORTUNITY
 
 **HEADING**
-The signals exist. The infrastructure to connect them doesn't.
+The data advantage is real. The model hasn't caught up.
 
 **SUBHEADING**
-260M subscribers. Four signal sources. Zero unified context layer.
+Netflix generates more behavioral signal per day than most companies see in a decade.
 
 **BODY**
-- 260M+: Global subscriber base generating behavioral data daily
-- 94%: Percentage of recommendations driven by viewing history alone
-- 3 quarters: Length of stagnation in content discovery conversion rate
-- $1.6B: Estimated annual revenue impact of 1% improvement in retention
+- 260M+: Active subscribers globally — each generating daily signal
+- 3.2B: Hours watched per month — intent and completion data largely unused
+- 35%: Of streaming time spent browsing rather than watching
+- < 5%: Of available contextual signals currently used in recommendations
 
 > **NOTES**
-> Stats slide. Enable "Slide Build" — reveal one stat at a time.
-> Lead with the $1.6B number last — it reframes everything before it.
+> Stats slide. Enable "Slide Build" in SIGNAL — reveal one stat at a time.
+> Pause after the browsing stat (35%). Ask: "What does your internal
+> browse-to-play ratio look like?" Get them engaged in the data.
 
 ---
 
 ### SLIDE 5 | THE FULL-BLEED STATEMENT
 
 **STATEMENT**
-The subscriber who streams at midnight and searches on their lunch break is one person. Time to treat them that way.
+Netflix knows what you watched. It's time to understand why.
 
 **ACCENT WORD**
-one person
+why
 
 > **NOTES**
-> Pause for 5 full seconds after this slide. Don't advance early.
+> Full-bleed dark slide. One sentence. No body copy.
+> Hold this slide for 5 full seconds before advancing. Let it land.
+> This is the pivot from problem to solution.
 
 ---
 
 ### SLIDE 6 | OUR APPROACH
 
 **HEADING**
-Three layers. One intelligence platform.
+Three layers. One platform. Built in sequence.
 
 **SUBHEADING**
-We build from signals to decisions — not the other way around.
+Architecture-first, so every phase de-risks the next.
 
 **BODY**
 LEFT: What we build
-- Signal unification layer — connects viewing, search, account, and social data
-- Context inference engine — maps signals to mood, intent, and moment
-- Recommendation reranker — applies context at serve time without replacing the existing stack
+- Layer 1 — Signal unification: connect viewing, search, social, and temporal data
+- Layer 2 — Context engine: infer mood, intent, and social viewing patterns in real time
+- Layer 3 — Recommendation orchestration: surface the right content at the right moment
 
-RIGHT: Why this works
-- Additive, not rip-and-replace — works on top of Netflix's existing recommendation infrastructure
-- Phase 1 scoped to a single subscriber cohort — proof before scale
-- Explainable outputs — every recommendation surfaces its context reasoning
+RIGHT: Why it works
+- Built on Netflix's existing data infrastructure — no rip and replace
+- Each layer delivers standalone value before the next begins
+- Phase 1 scope is testable and measurable within 90 days
 
 > **NOTES**
-> Two-pane. Enable "Slide Build" — reveal left first, explain it, then right.
+> Two-pane slide. Enable "Slide Build" — reveal left pane first.
+> Walk through each layer before revealing the right pane.
+> Emphasize: "We never ask you to bet everything on Phase 3."
 
-> **GRAPHIC PROMPT — Three-layer stack diagram**
-> "Three-layer horizontal stack diagram. Top layer: 'Recommendation Reranker'.
-> Middle layer: 'Context Inference Engine'. Bottom layer: 'Signal Unification Layer'.
-> Arrows showing data flow upward. Blue primary nodes, gold accent for top layer.
-> Clean, executive. SIGNAL brand style. No decorative elements."
+> **GRAPHIC PROMPT — Three-layer platform diagram**
+> "Vertical three-layer stack. Top layer (smallest): 'Recommendation Orchestration'.
+> Middle layer: 'Context Engine'. Bottom layer (widest): 'Signal Unification'.
+> Upward arrows connecting layers showing data flow.
+> Gold accent on top layer, blue for middle, dark for bottom.
+> Labels on right side of each layer with 1-line descriptions.
+> Clean executive style. SIGNAL brand style."
+> → Use as a diagram slide for stronger visual impact.
 
 ---
 
 ### SLIDE 7 | CASE STUDY — THE CHALLENGE
 
 **HEADING**
-A global entertainment brand with 1.9B annual touchpoints — and no unified profile.
+A global streaming platform with 88B in revenue — and a siloed data stack.
 
 **SUBHEADING**
-Parks, streaming, and retail generated billions of signals. None of them talked.
+Parks, retail, and streaming generated billions of behavioral signals. None of them talked.
 
 **BODY**
-Three separate data teams. Three separate recommendation engines. One guest buying
-tickets, watching content, and shopping merchandise — invisible as a single person.
-The cost: flat NPS, rising acquisition costs, declining repeat visit rates.
+The client had data on every guest interaction across physical and digital touchpoints.
+But siloed systems meant personalization stayed surface-level — recommending the same
+ride a guest had just waited 90 minutes for. The data existed. The connection didn't.
 
 > **NOTES**
-> Case study 1 of 3. Just the problem. Do NOT preview the solution.
+> Case study 1 of 3 — Challenge only. Do not preview the solution.
+> Let them sit with the problem. Ask: "Sound familiar?" before advancing.
 
 ---
 
 ### SLIDE 8 | CASE STUDY — WHAT WE DID
 
 **HEADING**
-We built the layer that connected all three.
+We built the intelligence layer the experience team had been asking for.
 
 **SUBHEADING**
-The breakthrough was treating the guest as a unified entity, not three separate customers.
+The insight: the data model wasn't the constraint. The architecture was.
 
 **BODY**
-- Designed a unified identity graph linking park, streaming, and retail touchpoints
-- Built a context inference engine that mapped behavioral patterns to intent signals
-- Deployed a recommendation API that served personalized content across all three surfaces
+- Conducted a 6-week data audit across 4 siloed platforms
+- Designed a unified guest profile schema with real-time context ingestion
+- Built a proof-of-concept personalization loop tested in a single park region
+- Delivered a Phase 2 roadmap scoped for enterprise-wide rollout
 
 > **NOTES**
-> Case study 2 of 3. Don't oversell — the outcome slide does the work.
+> Case study 2 of 3. Focus on the method, not the magic.
+> "We didn't replace their systems. We connected them."
 
-> **GRAPHIC PROMPT — Identity graph diagram**
-> "Three input nodes labeled: Park Visits, Streaming History, Retail Purchases.
-> Arrows pointing to a central hub labeled 'Unified Guest Identity'.
-> Output arrow from hub pointing right to 'Personalized Experience Layer'.
-> Blue input nodes, gold central hub. Dark background. SIGNAL brand style."
+> **GRAPHIC PROMPT — Before/after architecture diagram**
+> "Side-by-side comparison. Left side labeled 'Before': four disconnected
+> platform boxes with no connections between them. Right side labeled 'After':
+> same four boxes now connected through a central 'Unified Intelligence Layer' hub.
+> Red/warning color on left side. Blue/success on right side.
+> Center divider line. Clean layout. SIGNAL brand style."
+> → Paste into SIGNAL AI graphic co-pilot on a diagram slide.
 
 ---
 
 ### SLIDE 9 | CASE STUDY — THE OUTCOME
 
 **HEADING**
-+23% repeat visit rate. Content discovery conversion up 18%.
+< 12% cross-platform personalization. Now a strategic priority.
 
 **SUBHEADING**
-A guest who felt recognized across every surface — not just remembered in one.
+Phase 1 proof-of-concept unlocked a multi-phase enterprise program.
 
 **BODY**
-- 23%: Increase in repeat visits within 90 days of deployment
-- 18%: Lift in content discovery-to-play conversion in the streaming surface
-- 4.1→4.6: NPS improvement across the unified cohort within one quarter
+- 3–5%: Projected sales unlock from personalized recommendations at scale
+- 90 days: Time from kickoff to working proof-of-concept
+- Phase 2 scoped: Full enterprise rollout approved within 8 weeks of Phase 1 close
 
 > **NOTES**
-> Pause after the first stat. Ask: "Does a result like this matter to you?"
+> Case study 3 of 3. Let the numbers land.
+> Pause after the first stat. Ask: "Does a 3–5% revenue unlock matter at Netflix scale?"
+> At $33B in annual revenue, 3% = $1B. Say that if needed.
 
 ---
 
@@ -222,87 +246,98 @@ A guest who felt recognized across every surface — not just remembered in one.
 **POLL TYPE:** multiple-choice
 
 **QUESTION**
-What's your biggest barrier to building a better recommendation engine?
+What's your biggest barrier to building a better recommendation model right now?
 
 **OPTIONS**
-- Data is siloed across systems
-- We lack the ML infrastructure to connect signals at scale
-- There's no executive mandate or budget approval
-- We don't know where to start
+- Data is siloed and we can't get a unified view of subscriber behavior
+- We have the data but lack the ML infrastructure to act on it in real time
+- There's no clear executive mandate to prioritize this above other roadmap items
+- We don't know which contextual signals actually move the needle on satisfaction
 
 > **NOTES**
-> Poll 2 — Diagnostic. Run before the roadmap slide.
-> Use results to decide which phase to emphasize in the close.
-> "Given that most of you said data is siloed — that's exactly what Phase 1 solves."
+> Poll 2 — Diagnostic. Run this before the roadmap slide.
+> Results tell you which part of the solution to emphasize.
+> Reference directly in closing: "Given that most of you said [result],
+> here's exactly how Phase 1 addresses that..."
 
 ---
 
 ### SLIDE 11 | THE ROADMAP
 
 **HEADING**
-Three phases. 18 months. Measurable outcomes at every gate.
+Three phases. Ten weeks to proof. Eighteen months to scale.
 
 **SUBHEADING**
-From signal audit to enterprise-wide context layer — phased to manage risk.
+Structured for risk management — each phase funds the next.
 
 **BODY**
-- Phase 1: Signal Audit + Proof of Concept — 10 weeks — Unified identity graph for one cohort, measurable lift on discovery conversion
-- Phase 2: Context Engine Build — 6 months — Full context inference layer, reranker deployed across all subscriber surfaces
-- Phase 3: Scale + Optimization — 6 months — Enterprise rollout, A/B testing framework, ongoing optimization loop
+- Phase 1: Discovery & Architecture — 10 weeks — Data audit, unified profile design, signal model POC
+- Phase 2: Context Engine Build — 6 months — Real-time ingestion, mood and intent inference, A/B framework
+- Phase 3: Recommendation Orchestration — Ongoing — Full personalization loop, commissioning intelligence, global rollout
 
 > **NOTES**
 > Enable "Slide Build" — reveal one phase at a time.
+> Walk through Phase 1 in detail. Phases 2 and 3 are the vision, not the ask.
+> "Today, we're only asking you to commit to Phase 1."
 
 > **GRAPHIC PROMPT — Phase-gated roadmap**
-> "Horizontal 3-phase roadmap. Phase boxes: 'Signal Audit + POC', 'Context Engine Build', 'Scale + Optimize'.
-> Gate diamonds between phases labeled 'POC Sign-off', 'Architecture Review'.
-> Blue for phases, gold for gates. Timeline labels: '10 weeks', '6 months', '6 months'.
-> Left-to-right flow. SIGNAL brand style."
+> "Horizontal 3-phase roadmap with gate checkpoints between phases.
+> Phase 1: 'Discovery & Architecture' (10 weeks). Gate 1: 'Signal Validated'.
+> Phase 2: 'Context Engine Build' (6 months). Gate 2: 'POC Approved'.
+> Phase 3: 'Recommendation Orchestration' (ongoing).
+> Blue boxes for phases, gold diamonds for gates.
+> Timeline bar below. Left-to-right flow. SIGNAL brand style."
+> → Paste into SIGNAL AI graphic co-pilot on a diagram slide.
 
 ---
 
 ### SLIDE 12 | INVESTMENT SUMMARY
 
 **HEADING**
-One committed partnership. Three phases of measurable return.
+Phase 1: under $300K. Unlimited upside.
 
 **SUBHEADING**
-Scoped for low risk at entry. Structured for scale at exit.
+Low entry. High signal. A 10-week sprint that answers the questions that matter.
 
 **BODY**
-- Phase 1: Under $300,000 — Signal audit, identity graph, and POC deployment
-- Phase 2: $600,000–$800,000 — Context engine build and full reranker deployment
-- Phase 3: TBD based on Phase 2 scope — Scale, optimization, and ongoing partnership
+- Phase 1 — Discovery Sprint: Under $300K — Unified data architecture + signal model proof-of-concept
+- Phase 2 — Platform Build: $1.2–2M — Context engine + A/B testing infrastructure
+- Total program value: Tied directly to subscriber churn reduction and content commissioning ROI
 
 > **NOTES**
-> Lead with value, land on the number.
-> "The Phase 1 investment is under $300K. That's how we derisk this together."
+> Budget slide. Lead with the Phase 1 number — it's the only ask today.
+> "We've done programs like this that unlocked $50M partnerships.
+> Phase 1 is how we prove it's worth that bet."
 
 ---
 
 ### SLIDE 13 | CLOSING — THE ASK
 
 **HEADING**
-Let's build the intelligence layer Netflix's subscribers deserve.
+Let's build the recommendation engine Netflix subscribers actually deserve.
 
 **SUBHEADING**
-Start with a 2-week discovery sprint. No commitment beyond that.
+Start with a 10-week discovery sprint. No commitment beyond that.
 
 **CTA BUTTON TEXT**
 Schedule a working session
 
 **LINK URL**
-https://cal.com/launch/netflix
+https://cal.com
 
 **CONTACT LINE**
-launch.co · hello@launch.co
+launch.nttdata.com · hello@launch.nttdata.com
 
 > **NOTES**
-> If poll 2 showed hesitation — lower-commitment ask: "First call's free."
-> Always end with a specific next step. Never end with "questions?"
+> Closing. Calibrate the ask to poll results.
+> If poll 2 showed data infrastructure as the blocker:
+> "Phase 1 is specifically scoped to solve that. We start there."
+> If the room showed executive mandate as the issue:
+> "First call is free. Let us help you build the internal case."
+> Always close with a specific next step. Never close with "any questions?"
 
 ---
 
-*This is a sample content doc demonstrating the SIGNAL v2 template format.*
-*Upload this file on the homepage to generate a full deck automatically.*
-*Polls at slides 3 and 10 generate interactive SlidePoll components.*
+*SIGNAL Content Doc Template | v2.0 — Netflix Sample*
+*This sample demonstrates polls, diagram prompts, case study arc, and slide builds.*
+*Upload at signal.co to generate your deck.*

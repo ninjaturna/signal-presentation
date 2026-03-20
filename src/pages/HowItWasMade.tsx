@@ -315,7 +315,10 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
             borderRadius: 10, padding: '24px', marginTop: 20, marginBottom: 20,
           }}>
             {[
-              { step: '1', text: 'Download the sample content doc below (Netflix AI enablement example)' },
+              {
+                step: '1',
+                text: 'Download the sample content doc below — a Netflix AI pitch with polls, diagram prompts, and case study arc built in',
+              },
               { step: '2', text: 'Go to the homepage and upload it' },
               { step: '3', text: 'Hit generate and watch it build' },
               { step: '4', text: 'Navigate the deck, try the co-pilot, open the share menu' },
@@ -340,6 +343,37 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
             ))}
           </div>
 
+          {/* What's in the sample */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap' as const,
+            gap: 6,
+            marginTop: 16,
+            marginBottom: 20,
+          }}>
+            {[
+              '13 slides',
+              '2 polls pre-placed',
+              '5 diagram prompts',
+              '3-part case study',
+              'Slide build hints',
+            ].map(tag => (
+              <span key={tag} style={{
+                background: 'rgba(30,90,242,0.08)',
+                border: '1px solid rgba(30,90,242,0.2)',
+                borderRadius: 999,
+                padding: '2px 10px',
+                fontSize: 10,
+                fontWeight: 600,
+                color: '#1E5AF2',
+                letterSpacing: '0.04em',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+              }}>
+                {tag}
+              </span>
+            ))}
+          </div>
+
           {/* CTA buttons */}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
             <button
@@ -355,7 +389,7 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
             </button>
             <a
               href="/sample-brief.md"
-              download="netflix-brief.md"
+              download="netflix-brief-v2.md"
               style={{
                 background: 'transparent',
                 border: '1px solid #222',
@@ -366,7 +400,7 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
                 alignItems: 'center', gap: 6,
               }}
             >
-              ↓ Download sample: netflix-brief.md
+              ↓ Download sample: netflix-brief-v2.md
             </a>
           </div>
 
@@ -378,9 +412,10 @@ export function HowItWasMade({ onBack }: HowItWasMadeProps) {
             borderRadius: 8, padding: '12px 16px',
           }}>
             <p style={{ fontSize: 13, color: '#77706F', lineHeight: 1.5, margin: 0 }}>
-              <span style={{ color: colors.gold, fontWeight: 600 }}>Fair warning:</span>{' '}
-              this was built in 2 hours. There will be bugs. That's kind of the point —
-              imagine what a proper build looks like.
+              <span style={{ color: colors.gold, fontWeight: 600 }}>Note:</span>{' '}
+              The sample deck generates polls, diagrams, and slide builds automatically
+              from the content doc. Edit any slide after generation — or use the
+              AI co-pilot to refine individual fields.
             </p>
           </div>
         </Block>
