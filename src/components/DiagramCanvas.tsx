@@ -242,6 +242,8 @@ interface DiagramCanvasProps {
   onChange?: (data: DiagramData) => void
   containerWidth: number
   containerHeight: number
+  /** CSS transform scale applied by parent — used to compensate drag deltas */
+  scale?: number
 }
 
 export function DiagramCanvas({
@@ -250,6 +252,7 @@ export function DiagramCanvas({
   onChange,
   containerWidth: W,
   containerHeight: H,
+  scale = 1,
 }: DiagramCanvasProps) {
   const [nodes, setNodes] = useState<DiagramNode[]>(() => data.nodes)
   const [edges, setEdges] = useState<DiagramEdge[]>(() => data.edges)
@@ -342,8 +345,8 @@ export function DiagramCanvas({
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return
     const { nodeId, startMouseX, startMouseY, origX, origY } = dragRef.current
-    const dx = ((e.clientX - startMouseX) / W) * 100
-    const dy = ((e.clientY - startMouseY) / H) * 100
+    const dx = ((e.clientX - startMouseX) / scale / W) * 100
+    const dy = ((e.clientY - startMouseY) / scale / H) * 100
 
     if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
       dragRef.current.moved = true

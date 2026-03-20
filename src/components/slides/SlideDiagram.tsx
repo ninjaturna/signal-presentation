@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
-import type { SlideData, DiagramData } from '../../types/deck'
+import type { SlideData, DiagramData, DiagramNode } from '../../types/deck'
 import { DiagramCanvas } from '../DiagramCanvas'
 
 interface SlideDiagramProps {
@@ -18,6 +18,13 @@ interface SlideDiagramProps {
 
 type PanelState = 'idle' | 'input' | 'preview' | 'accepted'
 
+function fitScale(nodes: DiagramNode[]): number {
+  if (!nodes.length) return 1
+  const maxRight  = Math.max(...nodes.map(n => n.x + n.width))
+  const maxBottom = Math.max(...nodes.map(n => n.y + n.height))
+  return Math.min(1, 90 / maxRight, 90 / maxBottom)
+}
+
 // Measures its container and passes px dimensions to DiagramCanvas
 function DiagramCanvasWrapper({
   data,
@@ -28,8 +35,9 @@ function DiagramCanvasWrapper({
   editable: boolean
   onUpdate?: (d: DiagramData) => void
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [dims, setDims] = useState({ w: 0, h: 0 })
+  const ref  = useRef<HTMLDivElement>(null)
+  const [dims, setDims]   = useState({ w: 0, h: 0 })
+  const [scale, setScale] = useState(1)
 
   useEffect(() => {
     const el = ref.current
@@ -43,19 +51,55 @@ function DiagramCanvasWrapper({
     return () => ro.disconnect()
   }, [])
 
+  // Auto-fit whenever diagram data changes
+  useEffect(() => { setScale(fitScale(data.nodes)) }, [data])
+
+  const handleFit  = useCallback(() => setScale(fitScale(data.nodes)), [data])
+  const handleIn   = () => setScale(s => Math.min(2,   Math.round((s + 0.1) * 10) / 10))
+  const handleOut  = () => setScale(s => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))
+
   return (
-    <div ref={ref} style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div ref={ref} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       {dims.w > 0 && dims.h > 0 && (
-        <DiagramCanvas
-          data={data}
-          editable={editable}
-          containerWidth={dims.w}
-          containerHeight={dims.h}
-          onChange={onUpdate}
-        />
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: dims.w, height: dims.h }}>
+          <DiagramCanvas
+            data={data}
+            editable={editable}
+            containerWidth={dims.w}
+            containerHeight={dims.h}
+            scale={scale}
+            onChange={onUpdate}
+          />
+        </div>
       )}
+
+      {/* Zoom controls */}
+      <div style={{
+        position: 'absolute', bottom: 10, right: 10,
+        display: 'flex', alignItems: 'center', gap: 1,
+        background: 'rgba(17,17,19,0.82)',
+        border: `1px solid ${colors.borderDark}`,
+        borderRadius: 7, padding: '2px 3px',
+        zIndex: 30,
+        fontFamily: '"DM Sans", system-ui, sans-serif',
+      }}>
+        <button onClick={handleOut} title="Zoom out" style={zoomBtn}>−</button>
+        <button onClick={handleFit} title="Fit all nodes" style={{ ...zoomBtn, fontSize: 9, padding: '3px 6px' }}>Fit</button>
+        <button onClick={handleIn}  title="Zoom in"  style={zoomBtn}>+</button>
+        <span style={{ fontSize: 9, color: colors.mutedDark, padding: '0 5px 0 3px', minWidth: 28, textAlign: 'center' }}>
+          {Math.round(scale * 100)}%
+        </span>
+      </div>
     </div>
   )
+}
+
+const zoomBtn: React.CSSProperties = {
+  background: 'transparent', border: 'none',
+  color: colors.mutedDark, cursor: 'pointer',
+  fontSize: 15, fontWeight: 600, lineHeight: 1,
+  padding: '3px 7px', borderRadius: 4,
+  fontFamily: '"DM Sans", system-ui, sans-serif',
 }
 
 export function SlideDiagram({
