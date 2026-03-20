@@ -116,11 +116,8 @@ export function TonePicker({ onSelect, loading, onClose }: TonePickerProps) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-        {TONE_OPTIONS.map((option, idx) => {
+        {TONE_OPTIONS.map((option) => {
           const isLoading = loading === option.id
-          // top row = idx 0,1; bottom row = idx 2,3
-          // left col = idx 0,2 (Professional); right col = idx 1,3 (Bold)
-          // Reorder: Professional Concise, Bold Concise, Professional Expanded, Bold Expanded
           return (
             <button
               key={option.id}
