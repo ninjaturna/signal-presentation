@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react'
-import { renderSlide } from '../utils/renderSlide'
 import { colors } from '../design-system'
 import type { SlideData } from '../types/deck'
 
@@ -13,9 +12,188 @@ interface SlidePanelProps {
   onDuplicateSlide?: (index: number) => void
 }
 
-// Thumbnail scale: panel width 168, padding 8px each side = 152px content
-const THUMB_WIDTH = 152
-const SCALE = THUMB_WIDTH / 1280
+// Color map per slide type
+const TYPE_COLORS: Record<string, string> = {
+  cover:           '#1E5AF2',
+  narrative:       '#1E5AF2',
+  'stat-grid':     '#1E5AF2',
+  'two-pane':      '#1E5AF2',
+  'section-break': '#252424',
+  'full-bleed':    '#252424',
+  diagram:         '#1749CC',
+  closing:         '#1E5AF2',
+  poll:            '#FFCC2D',
+}
+
+function SlideTypeBadge({ type }: { type: string; mode: string }) {
+  const color = TYPE_COLORS[type] ?? '#1E5AF2'
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+      {/* Left accent */}
+      {(type === 'cover' || type === 'closing') && (
+        <div style={{
+          position: 'absolute',
+          left: 0, top: 0, bottom: 0,
+          width: 2,
+          background: color,
+        }} />
+      )}
+      {/* Top accent for section-break / full-bleed */}
+      {(type === 'section-break' || type === 'full-bleed') && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          height: 2,
+          background: '#FFCC2D',
+        }} />
+      )}
+      {/* Type label */}
+      <div style={{
+        fontSize: 6,
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: type === 'poll' ? '#FFCC2D' : color,
+        opacity: 0.8,
+      }}>
+        {type.replace('-', ' ')}
+      </div>
+    </div>
+  )
+}
+
+function SlideThumbnailLines({ slide }: { slide: SlideData }) {
+  const isDark = slide.mode === 'dark'
+  const textColor  = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(17,17,19,0.7)'
+  const mutedColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(17,17,19,0.2)'
+
+  const eyebrow  = slide.eyebrow ?? ''
+  const title    = slide.title ?? slide.headline ?? slide.statement ?? ''
+  const hasBody  = !!(slide.body ?? slide.subtitle ?? slide.pullQuote)
+  const statCount = slide.stats?.length ?? 0
+
+  return (
+    <>
+      {/* Eyebrow */}
+      {eyebrow && (
+        <div style={{
+          height: 3,
+          width: `${Math.min(eyebrow.length * 3, 50)}%`,
+          background: '#1E5AF2',
+          borderRadius: 1,
+          marginBottom: 1,
+        }} />
+      )}
+
+      {/* Title lines */}
+      {title && (
+        <>
+          <div style={{
+            height: 4,
+            width: `${Math.min(60 + (title.length % 20), 90)}%`,
+            background: textColor,
+            borderRadius: 1,
+          }} />
+          {title.length > 20 && (
+            <div style={{
+              height: 4,
+              width: `${Math.min(30 + (title.length % 15), 70)}%`,
+              background: textColor,
+              borderRadius: 1,
+              opacity: 0.8,
+            }} />
+          )}
+        </>
+      )}
+
+      {/* Body lines */}
+      {hasBody && (
+        <div style={{ marginTop: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[80, 90, 65].map((w, i) => (
+            <div key={i} style={{
+              height: 2.5,
+              width: `${w}%`,
+              background: mutedColor,
+              borderRadius: 1,
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Stat grid representation */}
+      {statCount > 0 && (
+        <div style={{
+          display: 'flex', gap: 3, marginTop: 3,
+          flex: 1, alignItems: 'flex-end',
+        }}>
+          {Array.from({ length: statCount }).map((_, i) => (
+            <div key={i} style={{
+              flex: 1,
+              height: 18,
+              background: mutedColor,
+              borderRadius: 2,
+              display: 'flex', flexDirection: 'column',
+              padding: 2, gap: 1,
+            }}>
+              <div style={{ height: 3, background: '#1E5AF2', borderRadius: 1, width: '60%' }} />
+              <div style={{ height: 2, background: mutedColor, borderRadius: 1, width: '80%' }} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Poll indicator */}
+      {slide.type === 'poll' && (
+        <div style={{ marginTop: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[100, 70, 45, 60].map((w, i) => (
+            <div key={i} style={{
+              height: 3,
+              width: `${w}%`,
+              background: '#FFCC2D',
+              borderRadius: 1,
+              opacity: 0.6,
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Diagram indicator */}
+      {slide.type === 'diagram' && (
+        <div style={{
+          marginTop: 4,
+          flex: 1,
+          background: mutedColor,
+          borderRadius: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            fontSize: 8,
+            color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+            fontWeight: 700,
+          }}>
+            {slide.svgContent ? '◈' : '⬡'}
+          </div>
+        </div>
+      )}
+
+      {/* Section break: big number */}
+      {slide.type === 'section-break' && slide.number && (
+        <div style={{
+          fontSize: 14,
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.15)',
+          lineHeight: 1,
+          marginTop: 2,
+        }}>
+          {slide.number}
+        </div>
+      )}
+    </>
+  )
+}
 
 export function SlidePanel({
   slides,
@@ -131,26 +309,24 @@ export function SlidePanel({
                 opacity: isDragging ? 0.4 : 1,
                 transition: 'border-color 0.12s, opacity 0.12s',
                 flexShrink: 0,
-                background: slide.mode === 'dark' ? colors.ink : '#FFFFFF',
                 boxShadow: isDropTarget ? `0 -2px 0 0 ${colors.gold}` : 'none',
               }}
             >
-              {/* Scaled slide preview */}
+              {/* Lightweight slide preview — no renderSlide() */}
               <div style={{
                 width: '100%',
                 aspectRatio: '16/9',
                 overflow: 'hidden',
                 pointerEvents: 'none',
+                background: slide.mode === 'dark' ? '#111113' : '#FCF8F5',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '6px 8px',
+                gap: 3,
               }}>
-                <div style={{
-                  width: 1280,
-                  height: 720,
-                  transformOrigin: 'top left',
-                  transform: `scale(${SCALE})`,
-                  pointerEvents: 'none',
-                }}>
-                  {renderSlide(slide, { editable: false })}
-                </div>
+                <SlideTypeBadge type={slide.type} mode={slide.mode ?? 'light'} />
+                <SlideThumbnailLines slide={slide} />
               </div>
 
               {/* Slide number */}
