@@ -5,7 +5,7 @@ import { TonePicker } from './TonePicker'
 import type { Tone, Length } from './TonePicker'
 import { getVariantsForType } from '../utils/layoutVariants'
 import { detectEmbedType, getEmbedLabel } from '../utils/embedDetect'
-import type { SlideData, InlineLink } from '../types/deck'
+import type { SlideData } from '../types/deck'
 
 interface EditPanelProps {
   slide: SlideData
