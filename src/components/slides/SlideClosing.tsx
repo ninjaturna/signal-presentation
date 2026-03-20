@@ -1,7 +1,8 @@
 import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
+import { HighlightText } from '../HighlightText'
 import { colors } from '../../design-system'
-import type { SlideData, InlineLink } from '../../types/deck'
+import type { SlideData, InlineLink, TextHighlight } from '../../types/deck'
 import type { DeckTheme } from '../../design-system/themes'
 import { renderTextWithLinks } from '../../utils/renderTextWithLinks'
 
@@ -16,6 +17,7 @@ interface SlideClosingProps {
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
   links?: InlineLink[]
+  highlights?: TextHighlight[]
 }
 
 export function SlideClosing({
@@ -25,6 +27,7 @@ export function SlideClosing({
   onUpdate,
   theme,
   links,
+  highlights,
 }: SlideClosingProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
 
@@ -81,14 +84,23 @@ export function SlideClosing({
             height: 3, background: accentBar,
           }} />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <EditableText
-              value={headline} onSave={v => up({ headline: v })}
-              editable={!!editable} multiline
-              style={{
+            {editable ? (
+              <EditableText
+                value={headline} onSave={v => up({ headline: v })}
+                editable multiline
+                style={{
+                  fontSize: 40, fontWeight: 600, lineHeight: 1.1,
+                  color: coverText, maxWidth: 560, marginBottom: 32, display: 'block',
+                }}
+              />
+            ) : (
+              <div style={{
                 fontSize: 40, fontWeight: 600, lineHeight: 1.1,
-                color: coverText, maxWidth: 560, marginBottom: 32, display: 'block',
-              }}
-            />
+                color: coverText, maxWidth: 560, marginBottom: 32,
+              }}>
+                <HighlightText text={headline} highlights={highlights ?? []} />
+              </div>
+            )}
             <CTAButton />
             <ContactLine style={{ marginTop: 28 }} />
           </div>
@@ -107,14 +119,23 @@ export function SlideClosing({
             alignItems: 'center', justifyContent: 'center',
             textAlign: 'center', padding: '0 80px',
           }}>
-            <EditableText
-              value={headline} onSave={v => up({ headline: v })}
-              editable={!!editable} multiline
-              style={{
+            {editable ? (
+              <EditableText
+                value={headline} onSave={v => up({ headline: v })}
+                editable multiline
+                style={{
+                  fontSize: 38, fontWeight: 600, lineHeight: 1.1,
+                  color: coverText, maxWidth: 640, marginBottom: 36, display: 'block',
+                }}
+              />
+            ) : (
+              <div style={{
                 fontSize: 38, fontWeight: 600, lineHeight: 1.1,
-                color: coverText, maxWidth: 640, marginBottom: 36, display: 'block',
-              }}
-            />
+                color: coverText, maxWidth: 640, marginBottom: 36,
+              }}>
+                <HighlightText text={headline} highlights={highlights ?? []} />
+              </div>
+            )}
             <CTAButton big />
             <ContactLine style={{ fontSize: 13, marginTop: 24 }} />
           </div>
@@ -132,15 +153,25 @@ export function SlideClosing({
             background: accentBar,
             marginBottom: 28,
           }} />
-          <EditableText
-            value={headline} onSave={v => up({ headline: v })}
-            editable={!!editable} multiline
-            style={{
+          {editable ? (
+            <EditableText
+              value={headline} onSave={v => up({ headline: v })}
+              editable multiline
+              style={{
+                fontSize: 32, fontWeight: 600, lineHeight: 1.2,
+                color: coverText, maxWidth: '60%',
+                marginBottom: cta ? 28 : 0, display: 'block',
+              }}
+            />
+          ) : (
+            <div style={{
               fontSize: 32, fontWeight: 600, lineHeight: 1.2,
               color: coverText, maxWidth: '60%',
-              marginBottom: cta ? 28 : 0, display: 'block',
-            }}
-          />
+              marginBottom: cta ? 28 : 0,
+            }}>
+              <HighlightText text={headline} highlights={highlights ?? []} />
+            </div>
+          )}
           {cta && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
               <CTAButton />

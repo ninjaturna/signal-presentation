@@ -45,6 +45,12 @@ export interface InlineLink {
   url: string
 }
 
+export interface TextHighlight {
+  id: string
+  text: string          // exact phrase to highlight
+  color?: 'blue' | 'gold' | 'red' | 'ink'  // default: blue
+}
+
 export interface ImageElement {
   id: string
   src: string
@@ -116,6 +122,8 @@ export interface SlideData {
   images?: ImageElement[]
   // inline hyperlinks (phrase → URL, rendered in view mode)
   links?: InlineLink[]
+  // background-color emphasis on specific phrases
+  highlights?: TextHighlight[]
   // layout variant
   layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
   // presenter notes

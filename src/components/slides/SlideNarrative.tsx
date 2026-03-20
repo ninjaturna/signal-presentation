@@ -1,8 +1,9 @@
 import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
+import { HighlightText } from '../HighlightText'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
-import type { SlideData, InlineLink } from '../../types/deck'
+import type { SlideData, InlineLink, TextHighlight } from '../../types/deck'
 import type { DeckTheme } from '../../design-system/themes'
 import { renderTextWithLinks } from '../../utils/renderTextWithLinks'
 
@@ -17,10 +18,11 @@ interface SlideNarrativeProps {
   theme?: DeckTheme['tokens']
   layout?: string
   links?: InlineLink[]
+  highlights?: TextHighlight[]
   revealStep?: number
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout, links, revealStep }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout, links, highlights, revealStep }: SlideNarrativeProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
@@ -56,18 +58,28 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
             }}
           />
         )}
-        <EditableText
-          value={headline}
-          onSave={v => up({ headline: v })}
-          editable={!!editable}
-          multiline
-          style={{
+        {editable ? (
+          <EditableText
+            value={headline}
+            onSave={v => up({ headline: v })}
+            editable
+            multiline
+            style={{
+              fontSize: isMinimal ? 'clamp(28px, 3.5vw, 44px)' : 'clamp(18px, 2.6vw, 32px)',
+              fontWeight: 600, lineHeight: 1.2,
+              color: textPrimary, marginBottom: body && !isMinimal ? 20 : 0,
+              display: 'block',
+            }}
+          />
+        ) : (
+          <div style={{
             fontSize: isMinimal ? 'clamp(28px, 3.5vw, 44px)' : 'clamp(18px, 2.6vw, 32px)',
             fontWeight: 600, lineHeight: 1.2,
             color: textPrimary, marginBottom: body && !isMinimal ? 20 : 0,
-            display: 'block',
-          }}
-        />
+          }}>
+            <HighlightText text={headline} highlights={highlights ?? []} />
+          </div>
+        )}
         {body && !isMinimal && (
           editable ? (
             <EditableText
@@ -103,16 +115,25 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           opacity: showPullQuote ? 1 : 0,
           transition: 'opacity 0.35s ease',
         }}>
-          <EditableText
-            value={pullQuote}
-            onSave={v => up({ pullQuote: v })}
-            editable={!!editable}
-            multiline
-            style={{
+          {editable ? (
+            <EditableText
+              value={pullQuote}
+              onSave={v => up({ pullQuote: v })}
+              editable
+              multiline
+              style={{
+                fontSize: 'clamp(14px, 1.6vw, 20px)', fontWeight: 500, lineHeight: 1.4,
+                color: textPrimary, fontStyle: 'italic', display: 'block',
+              }}
+            />
+          ) : (
+            <div style={{
               fontSize: 'clamp(14px, 1.6vw, 20px)', fontWeight: 500, lineHeight: 1.4,
-              color: textPrimary, fontStyle: 'italic', display: 'block',
-            }}
-          />
+              color: textPrimary, fontStyle: 'italic',
+            }}>
+              <HighlightText text={pullQuote} highlights={highlights ?? []} />
+            </div>
+          )}
         </div>
       )}
     </SlideShell>

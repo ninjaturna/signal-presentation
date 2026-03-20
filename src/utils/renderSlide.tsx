@@ -87,6 +87,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           theme={theme}
           layout={slide.layout}
           links={slide.links}
+          highlights={slide.highlights}
           revealStep={revealStep}
         />,
         slide, options
@@ -137,6 +138,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
         <SlideFullBleed
           statement={slide.statement ?? ''}
           accentWord={slide.accentWord}
+          highlights={slide.highlights}
         />,
         slide, options
       )
@@ -169,6 +171,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           onUpdate={onUpdate}
           theme={theme}
           links={slide.links}
+          highlights={slide.highlights}
         />,
         slide, options
       )

@@ -50,6 +50,17 @@ Rules:
     NEVER output a narrative slide for a poll-marked slide.
     For yes-no type, options should be ["Yes", "No"] unless specific options are provided.
 
+HIGHLIGHT USAGE RULE:
+SIGNAL uses background-color text highlights for emphasis — not bold or italic.
+When generating narrative slides with a key phrase that deserves emphasis,
+add a highlights array to the slide:
+  "highlights": [{ "id": "h1", "text": "exact phrase", "color": "blue" }]
+Use sparingly: 1–2 highlights per slide maximum.
+Use "blue" for primary emphasis, "gold" for secondary emphasis or data.
+Never highlight more than 4–5 words at once.
+Example: a statement like "The data exists. The connection doesn't."
+could highlight "The connection doesn't." in blue.
+
 Output ONLY a valid JSON array. No markdown, no backticks, no explanation.
 Each object must have: id (string), type, mode, and the type-specific fields above.`
 

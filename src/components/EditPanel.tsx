@@ -3,7 +3,7 @@ import { colors, Button, Badge } from '../design-system'
 import { useTextSelection } from '../hooks/useTextSelection'
 import { ChatPanel } from './ChatPanel'
 import { TonePicker } from './TonePicker'
-import type { Tone, Length } from './TonePicker'
+import type { ToneOption } from './TonePicker'
 import { getVariantsForType } from '../utils/layoutVariants'
 import { detectEmbedType, getEmbedLabel } from '../utils/embedDetect'
 import type { SlideData, DiagramData } from '../types/deck'
@@ -96,6 +96,11 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const [newLinkText, setNewLinkText]   = useState('')
   const [newLinkUrl, setNewLinkUrl]     = useState('')
 
+  // Highlights state
+  const [newHighlightText, setNewHighlightText]   = useState('')
+  const [newHighlightColor, setNewHighlightColor] = useState<'blue' | 'gold' | 'red' | 'ink'>('blue')
+  const [showHighlightForm, setShowHighlightForm] = useState(false)
+
   // Text selection → link affordance
   const {
     selection: textSelection,
@@ -108,19 +113,14 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
   const fields = EDITABLE_FIELDS[slide.type] ?? []
 
   // ── Rewrite handler ──────────────────────────────────────────────────────
-  const rewriteField = async (fieldKey: string, tone: Tone, length: Length) => {
-    const loadingKey = `${tone}-${length}`
-    setRewriteLoadingKey(loadingKey)
+  const rewriteField = async (fieldKey: string, option: ToneOption) => {
+    setRewriteLoadingKey(option.id)
     try {
       const res = await fetch('/api/edit-slide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          instruction: `Rewrite only the "${fieldKey}" field using a ${tone.toLowerCase()} tone. ${
-            length === 'Concise'
-              ? 'Be brief and punchy — 1 sentence or a short phrase.'
-              : 'Be thorough — 2–3 sentences with more context and specificity.'
-          }`,
+          instruction: `Rewrite only the "${fieldKey}" field. ${option.instruction}`,
           slide,
         }),
       })
@@ -435,8 +435,8 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
                 {/* TonePicker inline below the field */}
                 {isPickerOpen && (
                   <TonePicker
-                    loadingKey={rewriteLoadingKey}
-                    onSelect={(tone, length) => rewriteField(key, tone, length)}
+                    loading={rewriteLoadingKey}
+                    onSelect={(option) => rewriteField(key, option)}
                     onClose={() => setActiveRewriteField(null)}
                   />
                 )}
@@ -595,6 +595,229 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             </button>
           )}
         </div>
+
+        {/* ── Text Highlights section ── */}
+        {(['narrative', 'full-bleed', 'closing'] as const).includes(slide.type as 'narrative' | 'full-bleed' | 'closing') && (
+          <div
+            id="highlights-section"
+            style={{
+              marginTop: 8, paddingTop: 16,
+              borderTop: `1px solid ${colors.borderDark}`,
+            }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', marginBottom: 8,
+            }}>
+              <label style={fieldLabelStyle}>
+                🎨 Text highlights
+              </label>
+              <button
+                onClick={() => setShowHighlightForm(v => !v)}
+                style={{
+                  background: showHighlightForm
+                    ? 'rgba(30,90,242,0.15)' : 'transparent',
+                  border: `1px solid ${showHighlightForm
+                    ? colors.blue : colors.borderDark}`,
+                  borderRadius: 4, padding: '2px 8px',
+                  fontSize: 9, fontWeight: 700,
+                  color: showHighlightForm ? colors.blue : colors.mutedDark,
+                  cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                + Highlight
+              </button>
+            </div>
+
+            {/* Existing highlights */}
+            {(slide.highlights ?? []).length > 0 && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8,
+              }}>
+                {(slide.highlights ?? []).map(h => {
+                  const colorMap: Record<string, string> = {
+                    blue: '#1E5AF2', gold: '#FFCC2D',
+                    red: '#FF1C52', ink: '#111113',
+                  }
+                  return (
+                    <div key={h.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      background: '#1a1a1e',
+                      border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '5px 10px',
+                    }}>
+                      <div style={{
+                        width: 10, height: 10, borderRadius: 2,
+                        background: colorMap[h.color ?? 'blue'],
+                        flexShrink: 0,
+                      }} />
+                      <div style={{
+                        flex: 1, fontSize: 11, fontWeight: 600,
+                        color: '#FFFFFF',
+                        overflow: 'hidden', textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        "{h.text}"
+                      </div>
+                      <button
+                        onClick={() => onUpdate({
+                          highlights: (slide.highlights ?? [])
+                            .filter(x => x.id !== h.id)
+                        })}
+                        style={{
+                          background: 'transparent', border: 'none',
+                          color: colors.mutedDark, cursor: 'pointer',
+                          fontSize: 13, lineHeight: 1, padding: '0 2px',
+                          flexShrink: 0,
+                        }}
+                      >×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Add highlight form */}
+            {showHighlightForm && (
+              <div style={{
+                background: '#1a1a1e',
+                border: `1px solid ${colors.borderDark}`,
+                borderRadius: 8, padding: 10,
+              }}>
+                <label style={{ ...fieldLabelStyle, marginBottom: 4 }}>
+                  Text to highlight (exact match)
+                </label>
+                <input
+                  id="highlight-text-input"
+                  value={newHighlightText}
+                  onChange={e => setNewHighlightText(e.target.value)}
+                  onKeyDown={e => e.stopPropagation()}
+                  placeholder="e.g. disconnected digital tools"
+                  style={fieldInputStyle}
+                />
+                <p style={{
+                  fontSize: 9, color: colors.mutedDark,
+                  marginTop: 3, marginBottom: 8, lineHeight: 1.4,
+                }}>
+                  Select text in a field above to auto-fill,
+                  or type manually. Must match exactly.
+                </p>
+
+                {/* Color picker */}
+                <label style={{ ...fieldLabelStyle, marginBottom: 6 }}>
+                  Highlight color
+                </label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  {([
+                    { value: 'blue' as const, bg: '#1E5AF2', label: 'Blue' },
+                    { value: 'gold' as const, bg: '#FFCC2D', label: 'Gold' },
+                    { value: 'red'  as const, bg: '#FF1C52', label: 'Red'  },
+                    { value: 'ink'  as const, bg: '#111113', label: 'Ink'  },
+                  ]).map(c => (
+                    <button
+                      key={c.value}
+                      onClick={() => setNewHighlightColor(c.value)}
+                      title={c.label}
+                      style={{
+                        width: 24, height: 24,
+                        borderRadius: 4,
+                        background: c.bg,
+                        border: newHighlightColor === c.value
+                          ? '2px solid #FFFFFF'
+                          : `1.5px solid ${colors.borderDark}`,
+                        cursor: 'pointer', padding: 0,
+                        outline: newHighlightColor === c.value
+                          ? `2px solid ${colors.blue}` : 'none',
+                        outlineOffset: 1,
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Preview */}
+                {newHighlightText.trim() && (
+                  <div style={{
+                    marginBottom: 10, padding: '6px 10px',
+                    background: '#111113', borderRadius: 5,
+                    fontSize: 11, color: '#FFFFFF',
+                  }}>
+                    Preview:{' '}
+                    <mark style={{
+                      background: ({
+                        blue: '#1E5AF2', gold: '#FFCC2D',
+                        red: '#FF1C52', ink: '#111113',
+                      } as Record<string, string>)[newHighlightColor],
+                      color: newHighlightColor === 'gold' ? '#111113' : '#FFFFFF',
+                      borderRadius: 3, padding: '0 4px 1px',
+                      fontSize: 'inherit',
+                    }}>
+                      {newHighlightText.trim()}
+                    </mark>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => {
+                      if (!newHighlightText.trim()) return
+                      const newH = {
+                        id: Math.random().toString(36).slice(2, 10),
+                        text: newHighlightText.trim(),
+                        color: newHighlightColor,
+                      }
+                      onUpdate({
+                        highlights: [...(slide.highlights ?? []), newH]
+                      })
+                      setNewHighlightText('')
+                      setShowHighlightForm(false)
+                    }}
+                    disabled={!newHighlightText.trim()}
+                    style={{
+                      flex: 1,
+                      background: newHighlightText.trim()
+                        ? colors.blue : colors.borderDark,
+                      border: 'none', borderRadius: 6,
+                      padding: '7px 12px',
+                      fontSize: 12, fontWeight: 600, color: '#FFFFFF',
+                      cursor: newHighlightText.trim() ? 'pointer' : 'default',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                    }}
+                  >
+                    Add highlight
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowHighlightForm(false)
+                      setNewHighlightText('')
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '7px 12px',
+                      fontSize: 12, color: colors.mutedDark,
+                      cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(slide.highlights ?? []).length === 0 && !showHighlightForm && (
+              <p style={{
+                fontSize: 10, color: colors.mutedDark, lineHeight: 1.6,
+              }}>
+                Add a color background to key words or phrases.
+                SIGNAL uses highlight instead of bold for emphasis.
+                Select text above to auto-fill.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Slide Build toggle ── */}
         {(['stat-grid', 'narrative', 'two-pane', 'section-break'] as const).includes(slide.type as 'stat-grid' | 'narrative' | 'two-pane' | 'section-break') && (
@@ -1266,6 +1489,33 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           >
             🔗 Link this
           </button>
+          {(['narrative', 'full-bleed', 'closing'] as const).includes(slide.type as 'narrative' | 'full-bleed' | 'closing') && (
+            <button
+              onMouseDown={e => {
+                e.preventDefault()
+                setNewHighlightText(textSelection.text)
+                setNewHighlightColor('blue')
+                setShowHighlightForm(true)
+                clearTextSelection()
+                setTimeout(() => {
+                  document.getElementById('highlights-section')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                  document.getElementById('highlight-text-input')?.focus()
+                }, 80)
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 6, padding: '5px 10px',
+                fontSize: 12, fontWeight: 700, color: '#FFFFFF',
+                cursor: 'pointer', flexShrink: 0,
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              🎨 Highlight
+            </button>
+          )}
           <button
             onMouseDown={e => { e.preventDefault(); clearTextSelection() }}
             style={{
