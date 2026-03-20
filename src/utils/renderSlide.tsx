@@ -138,6 +138,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           eyebrow={slide.eyebrow}
           title={slide.title}
           svgContent={slide.svgContent}
+          diagramData={slide.diagramData}
           placeholder={slide.placeholder}
           mode={slide.mode}
           context={slide.context}

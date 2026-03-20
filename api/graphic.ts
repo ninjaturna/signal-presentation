@@ -1,33 +1,42 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 const SYSTEM_PROMPT = `You are a business diagram generator for SIGNAL, a strategic consultancy.
-You output ONLY raw SVG code — no markdown, no backticks, no explanation, nothing before or after the SVG tag.
+You output ONLY a raw JSON object — no markdown, no backticks, no explanation, nothing before or after the JSON.
 
-SIGNAL brand tokens:
-- Blue: #1E5AF2 (primary, CTA, key nodes)
-- Gold: #FFCC2D (accents, highlights)
-- Ink: #111113 (dark backgrounds)
-- Ink Soft: #252424 (dark secondary)
-- Surface: #FCF8F5 (light backgrounds)
-- Muted: #77706F (secondary text)
-- Border dark: #333130
-- Font: DM Sans, system-ui, sans-serif
+Output format:
+{
+  "nodes": [
+    {
+      "id": "unique-id",
+      "label": "Node Label",
+      "sublabel": "Optional subtitle",
+      "x": 5,       // % of canvas width, top-left origin (0–100)
+      "y": 10,      // % of canvas height, top-left origin (0–100)
+      "width": 20,  // % of canvas width
+      "height": 18, // % of canvas height
+      "style": "primary" | "secondary" | "accent"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "node-id",
+      "to": "node-id",
+      "label": "Optional edge label"
+    }
+  ]
+}
 
-SVG rules:
-- Output a single <svg> element, viewBox="0 0 800 400", width="100%", height="100%"
-- Background: transparent (the slide provides the background)
-- All text: font-family="DM Sans, system-ui, sans-serif"
-- Nodes/boxes: rounded rects rx="8", filled with #1E5AF2 (primary) or #252424 (secondary)
-- Text on dark fills: fill="#FFFFFF" or fill="#CED4FE"
-- Text on light fills: fill="#111113"
-- Connector lines: stroke="#333130", stroke-width="1.5", fill="none"
-- Arrow markers: define once in <defs> with id="arrow"
-- Accent elements: stroke="#FFCC2D" or fill="#FFCC2D"
-- Keep diagrams clean — max 8 nodes, clear hierarchy, generous spacing
-- Label font-size: 13px for node labels, 11px for subtitles/descriptions
-- Font weight: 600 for headings, 400 for body
-- No drop shadows, no gradients except for emphasis
-- Always include an arrowhead marker in <defs> for connector lines`
+SIGNAL brand style:
+- style "primary" → blue (#1E5AF2) fill, white text — use for key/hero nodes
+- style "secondary" → dark fill (#252424) — use for supporting nodes
+- style "accent" → gold (#FFCC2D) fill — use for emphasis nodes
+- Max 8 nodes, clear hierarchy, generous spacing
+- Use sublabel for context or metrics beneath the main label
+- Canvas is 100×100 coordinate space; keep nodes within 5–95% x and 5–85% y
+- Typical node: width 18–25%, height 14–20%
+- Leave breathing room between nodes (at least 5% gap)
+- Edges connect logical flow; use labels sparingly (key transitions only)`
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return }
@@ -50,13 +59,25 @@ export default async function handler(req: any, res: any) {
       messages: [
         {
           role: 'user',
-          content: `Generate a clean business diagram SVG for this: ${description}${context ? `\n\nContext: ${context}` : ''}`,
+          content: `Generate a clean business diagram for: ${description}${context ? `\n\nContext: ${context}` : ''}`,
         },
       ],
     })
 
-    const svg = (message.content[0] as { type: string; text: string }).text.trim()
-    res.json({ svg })
+    const raw = (message.content[0] as { type: string; text: string }).text.trim()
+
+    // Parse JSON — strip any accidental markdown fences
+    const jsonText = raw.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
+    let diagramData
+    try {
+      diagramData = JSON.parse(jsonText)
+    } catch {
+      console.error('graphic: failed to parse JSON, raw:', raw.slice(0, 200))
+      res.status(500).json({ error: 'Model returned invalid JSON — please try again' })
+      return
+    }
+
+    res.json({ diagramData })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('graphic error:', message)

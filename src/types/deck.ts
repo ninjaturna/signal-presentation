@@ -14,6 +14,31 @@ export interface StatData {
   context?: string
 }
 
+// ── Structured diagram data model ──────────────────────────────────────────
+
+export interface DiagramNode {
+  id: string
+  label: string
+  sublabel?: string
+  x: number        // % of canvas width, top-left origin (0–100)
+  y: number        // % of canvas height, top-left origin (0–100)
+  width: number    // % of canvas width
+  height: number   // % of canvas height
+  style?: 'primary' | 'secondary' | 'accent'
+}
+
+export interface DiagramEdge {
+  id: string
+  from: string     // node id
+  to: string       // node id
+  label?: string
+}
+
+export interface DiagramData {
+  nodes: DiagramNode[]
+  edges: DiagramEdge[]
+}
+
 export interface ImageElement {
   id: string
   src: string
@@ -64,6 +89,7 @@ export interface SlideData {
   split?: '50/50' | '60/40' | '40/60'
   // diagram
   svgContent?: string
+  diagramData?: DiagramData
   placeholder?: string
   context?: string
   // poll

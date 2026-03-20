@@ -1,14 +1,16 @@
 import { useState, useRef } from 'react'
 import { SlideShell } from '../SlideShell'
 import { EditableText } from '../EditableText'
+import { DiagramCanvas } from '../DiagramCanvas'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
-import type { SlideData } from '../../types/deck'
+import type { SlideData, DiagramData } from '../../types/deck'
 
 interface SlideDiagramProps {
   eyebrow?: string
   title?: string
   svgContent?: string
+  diagramData?: DiagramData
   placeholder?: string
   mode?: SlideMode
   context?: string
@@ -22,24 +24,33 @@ export function SlideDiagram({
   eyebrow,
   title,
   svgContent: committedSvg,
+  diagramData: committedDiagramData,
   placeholder,
   mode = 'light',
   context,
   editable = true,
   onUpdate,
 }: SlideDiagramProps) {
-  const [pendingSvg, setPendingSvg] = useState<string>('')
-  const [panel, setPanel]           = useState<PanelState>(committedSvg ? 'accepted' : 'idle')
-  const [prompt, setPrompt]         = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
+  const [pendingDiagramData, setPendingDiagramData] = useState<DiagramData | null>(null)
+  const [panel, setPanel] = useState<PanelState>(
+    (committedDiagramData || committedSvg) ? 'accepted' : 'idle'
+  )
+  const [prompt, setPrompt]   = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   const textPrimary  = mode === 'dark' ? '#FFFFFF' : colors.ink
   const canvasBg     = mode === 'dark' ? colors.inkSoft : colors.surfaceAlt
   const canvasBorder = mode === 'dark' ? colors.borderDark : colors.border
 
-  const displaySvg = panel === 'preview' ? pendingSvg : committedSvg ?? ''
+  // What to display in the canvas area
+  const displayDiagram: DiagramData | null =
+    panel === 'preview' ? pendingDiagramData
+    : committedDiagramData ?? null
+
+  const displaySvg: string =
+    (panel === 'preview' || !committedDiagramData) ? (committedSvg ?? '') : ''
 
   const generate = async () => {
     if (!prompt.trim()) return
@@ -53,8 +64,12 @@ export function SlideDiagram({
       })
       const data = await res.json()
       if (data.error) { setError(data.error); return }
-      setPendingSvg(data.svg)
-      setPanel('preview')
+      if (data.diagramData) {
+        setPendingDiagramData(data.diagramData)
+        setPanel('preview')
+      } else {
+        setError('Unexpected response from server')
+      }
     } catch {
       setError('Generation failed — check API key in Vercel settings')
     } finally {
@@ -63,16 +78,16 @@ export function SlideDiagram({
   }
 
   const accept = () => {
-    if (!pendingSvg) return
-    onUpdate?.({ svgContent: pendingSvg })
-    setPendingSvg('')
+    if (!pendingDiagramData) return
+    onUpdate?.({ diagramData: pendingDiagramData, svgContent: undefined })
+    setPendingDiagramData(null)
     setPanel('accepted')
     setPrompt('')
   }
 
   const discard = () => {
-    setPendingSvg('')
-    setPanel(committedSvg ? 'accepted' : 'idle')
+    setPendingDiagramData(null)
+    setPanel((committedDiagramData || committedSvg) ? 'accepted' : 'idle')
     setPrompt('')
   }
 
@@ -85,7 +100,7 @@ export function SlideDiagram({
     e.stopPropagation()
     if (e.key === 'Enter') generate()
     if (e.key === 'Escape') {
-      setPanel(committedSvg ? 'accepted' : 'idle')
+      setPanel((committedDiagramData || committedSvg) ? 'accepted' : 'idle')
       setPrompt('')
     }
   }
@@ -120,7 +135,7 @@ export function SlideDiagram({
         </div>
       )}
 
-      {/* SVG Canvas */}
+      {/* Canvas */}
       <div style={{
         flex: 1,
         background: canvasBg,
@@ -132,12 +147,28 @@ export function SlideDiagram({
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        {displaySvg ? (
+        {displayDiagram ? (
+          /* Structured interactive diagram */
+          <DiagramCanvas
+            data={displayDiagram}
+            editable={editable && panel !== 'preview'}
+            mode={mode}
+            onChange={newData => {
+              if (panel === 'preview') {
+                setPendingDiagramData(newData)
+              } else {
+                onUpdate?.({ diagramData: newData })
+              }
+            }}
+          />
+        ) : displaySvg ? (
+          /* Legacy SVG fallback */
           <div
             style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             dangerouslySetInnerHTML={{ __html: displaySvg }}
           />
         ) : (
+          /* Empty state */
           <div style={{ textAlign: 'center', padding: 24 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
@@ -187,7 +218,7 @@ export function SlideDiagram({
         )}
 
         {/* Regenerate button */}
-        {displaySvg && editable && panel !== 'input' && (
+        {(displayDiagram || displaySvg) && editable && panel !== 'input' && (
           <button
             onClick={openInput}
             style={{
@@ -268,7 +299,7 @@ export function SlideDiagram({
                 {loading ? 'Generating…' : 'Generate →'}
               </button>
               <button
-                onClick={() => { setPanel(committedSvg ? 'accepted' : 'idle'); setPrompt('') }}
+                onClick={() => { setPanel((committedDiagramData || committedSvg) ? 'accepted' : 'idle'); setPrompt('') }}
                 style={{
                   background: 'transparent', border: `1px solid ${canvasBorder}`,
                   borderRadius: 8, padding: '8px 12px',
