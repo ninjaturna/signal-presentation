@@ -1,5 +1,7 @@
 import { SlideShell } from '../SlideShell'
+import { EditableText } from '../EditableText'
 import { colors } from '../../design-system'
+import type { SlideData } from '../../types/deck'
 import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideClosingProps {
@@ -8,75 +10,153 @@ interface SlideClosingProps {
   ctaUrl?: string
   ctaTarget?: '_blank' | '_self'
   contact?: string
+  layout?: string
+  editable?: boolean
+  onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
 }
 
-export function SlideClosing({ headline, cta, ctaUrl, ctaTarget, contact, theme }: SlideClosingProps) {
-  const coverBg   = theme?.coverBg   ?? undefined
-  const coverText = theme?.coverText ?? '#FFFFFF'
+export function SlideClosing({
+  headline, cta, ctaUrl, ctaTarget, contact,
+  layout = 'default',
+  editable = false,
+  onUpdate,
+  theme,
+}: SlideClosingProps) {
+  const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
+
   const primary   = theme?.primary   ?? colors.blue
   const accentBar = theme?.accentBar ?? colors.gold
+  const coverBg   = theme?.coverBg   ?? undefined
+  const coverText = theme?.coverText ?? '#FFFFFF'
+
+  const CTAButton = ({ big }: { big?: boolean }) => cta ? (
+    <a
+      href={ctaUrl ?? '#'}
+      target={ctaUrl ? (ctaTarget ?? '_blank') : undefined}
+      rel="noopener noreferrer"
+      onClick={e => { if (!ctaUrl) e.preventDefault(); e.stopPropagation() }}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 12,
+        background: primary, borderRadius: 8,
+        padding: big ? '16px 32px' : '14px 28px',
+        width: 'fit-content', textDecoration: 'none',
+        transition: 'opacity 0.15s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+    >
+      <span style={{ fontSize: big ? 17 : 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
+      <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
+    </a>
+  ) : null
 
   return (
     <SlideShell slideType="closing" mode="dark" style={coverBg ? { background: coverBg } : undefined}>
-      {/* Top accent bar */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        height: 3, background: accentBar,
-      }} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <h2 style={{
-          fontSize: 40, fontWeight: 600, lineHeight: 1.1,
-          color: coverText, maxWidth: 560, marginBottom: 32,
-        }}>
-          {headline}
-        </h2>
-        {cta && (
-          ctaUrl ? (
-            <a
-              href={ctaUrl}
-              target={ctaTarget ?? '_blank'}
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
+      {/* ── Default / Standard: left-aligned, gold top bar ── */}
+      {(layout === 'default' || layout === 'standard') && (
+        <>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            height: 3, background: accentBar,
+          }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <EditableText
+              value={headline} onSave={v => up({ headline: v })}
+              editable={!!editable} multiline
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 12,
-                background: primary, borderRadius: 8,
-                padding: '14px 28px', width: 'fit-content', marginBottom: 32,
-                textDecoration: 'none',
-                cursor: 'pointer',
-                transition: 'background 0.15s, transform 0.1s',
+                fontSize: 40, fontWeight: 600, lineHeight: 1.1,
+                color: coverText, maxWidth: 560, marginBottom: 32, display: 'block',
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = colors.blueDim
-                e.currentTarget.style.transform = 'translateY(-1px)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = primary
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
-              <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
-            </a>
-          ) : (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 12,
-              background: primary, borderRadius: 8,
-              padding: '14px 28px', width: 'fit-content', marginBottom: 32,
-              opacity: 0.6,
-              cursor: 'default',
-            }}>
-              <span style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}>{cta}</span>
-              <span style={{ color: '#FFFFFF', opacity: 0.7 }}>→</span>
-            </div>
-          )
-        )}
-        {contact && (
-          <p style={{ fontSize: 14, color: colors.mutedDark }}>{contact}</p>
-        )}
-      </div>
+            />
+            <CTAButton />
+            {contact && (
+              <EditableText
+                value={contact} onSave={v => up({ contact: v })}
+                editable={!!editable}
+                style={{ fontSize: 14, color: colors.mutedDark, marginTop: 28, display: 'block' }}
+              />
+            )}
+          </div>
+        </>
+      )}
 
+      {/* ── Centered: everything center-aligned ── */}
+      {layout === 'centered' && (
+        <>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            height: 3, background: primary,
+          }} />
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            textAlign: 'center', padding: '0 80px',
+          }}>
+            <EditableText
+              value={headline} onSave={v => up({ headline: v })}
+              editable={!!editable} multiline
+              style={{
+                fontSize: 38, fontWeight: 600, lineHeight: 1.1,
+                color: coverText, maxWidth: 640, marginBottom: 36, display: 'block',
+              }}
+            />
+            <CTAButton big />
+            {contact && (
+              <EditableText
+                value={contact} onSave={v => up({ contact: v })}
+                editable={!!editable}
+                style={{ fontSize: 13, color: colors.mutedDark, marginTop: 24, display: 'block' }}
+              />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Minimal: understated, bottom-anchored ── */}
+      {layout === 'minimal' && (
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          justifyContent: 'flex-end', paddingBottom: 48,
+        }}>
+          <div style={{
+            width: 32, height: 2,
+            background: accentBar,
+            marginBottom: 28,
+          }} />
+          <EditableText
+            value={headline} onSave={v => up({ headline: v })}
+            editable={!!editable} multiline
+            style={{
+              fontSize: 32, fontWeight: 600, lineHeight: 1.2,
+              color: coverText, maxWidth: '60%',
+              marginBottom: cta ? 28 : 0, display: 'block',
+            }}
+          />
+          {cta && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <CTAButton />
+              {contact && (
+                <EditableText
+                  value={contact} onSave={v => up({ contact: v })}
+                  editable={!!editable}
+                  style={{ fontSize: 13, color: colors.mutedDark, display: 'block' }}
+                />
+              )}
+            </div>
+          )}
+          {!cta && contact && (
+            <EditableText
+              value={contact} onSave={v => up({ contact: v })}
+              editable={!!editable}
+              style={{ fontSize: 13, color: colors.mutedDark, display: 'block' }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* SIGNAL watermark */}
       <div style={{
         position: 'absolute', bottom: 32, right: 48,
         fontSize: 13, fontWeight: 600, letterSpacing: '0.15em',

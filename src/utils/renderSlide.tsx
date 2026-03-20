@@ -156,6 +156,9 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           ctaUrl={slide.ctaUrl}
           ctaTarget={slide.ctaTarget}
           contact={slide.contact}
+          layout={slide.layout}
+          editable={editable}
+          onUpdate={onUpdate}
           theme={theme}
         />,
         slide, options

@@ -1,12 +1,13 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import './styles/globals.css'
-import { StagingBanner } from './components/StagingBanner'
-import { LandingPage }   from './pages/LandingPage'
-import { disneyDeck }    from './data/disney-deck'
-import { deckStore }     from './utils/deckStore'
+import { StagingBanner }  from './components/StagingBanner'
+import { LandingPage }    from './pages/LandingPage'
+import { AudienceView }   from './components/AudienceView'
+import { disneyDeck }     from './data/disney-deck'
+import { deckStore }      from './utils/deckStore'
 import type { SlideData, ShareMode } from './types/deck'
 
-// Everything except LandingPage is lazy-loaded — only parsed when navigated to
+// Everything except LandingPage + AudienceView is lazy-loaded
 const DeckDashboard = lazy(() =>
   import('./pages/DeckDashboard').then(m => ({ default: m.DeckDashboard }))
 )
@@ -20,7 +21,7 @@ const DeckEditor = lazy(() =>
   import('./features/deck-editor').then(m => ({ default: m.DeckEditor }))
 )
 
-type Page = 'landing' | 'dashboard' | 'deck' | 'how' | 'editor'
+type Page = 'landing' | 'dashboard' | 'deck' | 'how' | 'editor' | 'audience'
 
 function navigate(path: string) {
   window.history.pushState({}, '', path)
@@ -74,14 +75,20 @@ export default function App() {
       const params = new URLSearchParams(window.location.search)
       const mode   = params.get('mode') as ShareMode | null
 
-      if (path === '/dashboard')      setPage('dashboard')
-      else if (path === '/how')       setPage('how')
-      else if (path === '/editor')    setPage('editor')
+      // Audience view — opened by PresentMode in a popup
+      if (params.get('mode') === 'audience') {
+        setPage('audience')
+        return
+      }
+
+      if (path === '/dashboard')        setPage('dashboard')
+      else if (path === '/how')         setPage('how')
+      else if (path === '/editor')      setPage('editor')
       else if (path.startsWith('/deck')) {
         setShareMode(mode ?? 'edit')
         setPage('deck')
       }
-      else                            setPage('landing')
+      else                              setPage('landing')
     }
     sync()
     window.addEventListener('popstate', sync)
@@ -110,6 +117,11 @@ export default function App() {
 
   const handleSlideUpdate = (slides: SlideData[]) => {
     if (activeDeckId) deckStore.update(activeDeckId, slides)
+  }
+
+  // Audience view — clean popup, no StagingBanner
+  if (page === 'audience') {
+    return <AudienceView />
   }
 
   if (page === 'editor') {
