@@ -23,6 +23,13 @@ export interface ImageElement {
   height: number  // percent of slide height
   alt?: string
   objectFit?: 'cover' | 'contain' | 'fill'
+  zIndex?: number
+  crop?: {
+    top: number     // percent clipped from top (0–100)
+    right: number
+    bottom: number
+    left: number
+  }
 }
 
 export interface SlideData {
