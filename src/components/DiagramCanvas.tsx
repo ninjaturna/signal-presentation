@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import type { DiagramData, DiagramNode } from '../types/deck'
 import { colors } from '../design-system'
 import type { SlideMode } from '../design-system'
@@ -16,6 +16,7 @@ export function DiagramCanvas({ data, editable = true, mode = 'light', onChange 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const dragRef = useRef<{
     nodeId: string
     startX: number
@@ -190,6 +191,7 @@ export function DiagramCanvas({ data, editable = true, mode = 'light', onChange 
               boxSizing: 'border-box',
               padding: '8px 12px',
               userSelect: 'none',
+              overflow: 'visible',
               boxShadow: mode === 'dark' ? 'none' : '0 1px 4px rgba(0,0,0,0.06)',
             }}
             onPointerDown={e => onPointerDownNode(e, node)}
@@ -197,7 +199,37 @@ export function DiagramCanvas({ data, editable = true, mode = 'light', onChange 
             onPointerUp={onPointerUpNode}
             onDoubleClick={e => startEdit(e, node)}
             onClick={e => { e.stopPropagation(); setSelectedId(node.id) }}
+            onMouseEnter={() => setHoveredId(node.id)}
+            onMouseLeave={() => setHoveredId(null)}
           >
+            {/* Hover badges */}
+            {editable && !isEditing && hoveredId === node.id && (
+              <div style={{
+                position: 'absolute',
+                top: -22,
+                right: 0,
+                display: 'flex',
+                gap: 4,
+                zIndex: 20,
+                pointerEvents: 'auto',
+              }}>
+                <div
+                  onMouseDown={e => { e.stopPropagation(); startEdit(e, node) }}
+                  style={nodeBadgeStyle('edit')}
+                >
+                  EDIT
+                </div>
+                <div
+                  onMouseDown={e => {
+                    e.stopPropagation()
+                    window.dispatchEvent(new CustomEvent('signal:rewrite-request', { detail: { text: node.label } }))
+                  }}
+                  style={nodeBadgeStyle('rewrite')}
+                >
+                  ✦ Rewrite
+                </div>
+              </div>
+            )}
             {isEditing ? (
               <input
                 autoFocus
@@ -262,6 +294,7 @@ export function DiagramCanvas({ data, editable = true, mode = 'light', onChange 
       })}
 
       {/* Drag hint */}
+
       {editable && data.nodes.length > 0 && !selectedId && !editingId && (
         <div style={{
           position: 'absolute',
@@ -283,4 +316,20 @@ export function DiagramCanvas({ data, editable = true, mode = 'light', onChange 
       )}
     </div>
   )
+}
+
+function nodeBadgeStyle(variant: 'edit' | 'rewrite'): React.CSSProperties {
+  return {
+    background: variant === 'edit' ? 'rgba(30,90,242,0.9)' : 'rgba(140,80,220,0.88)',
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    padding: '2px 6px',
+    borderRadius: 3,
+    cursor: 'pointer',
+    userSelect: 'none',
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+    whiteSpace: 'nowrap',
+  }
 }
