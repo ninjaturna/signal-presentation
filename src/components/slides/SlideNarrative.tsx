@@ -17,9 +17,10 @@ interface SlideNarrativeProps {
   theme?: DeckTheme['tokens']
   layout?: string
   links?: InlineLink[]
+  revealStep?: number
 }
 
-export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout, links }: SlideNarrativeProps) {
+export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQuote, editable = false, onUpdate, theme, layout, links, revealStep }: SlideNarrativeProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
@@ -27,6 +28,9 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
 
   const isCentered = layout === 'centered'
   const isMinimal  = layout === 'minimal'
+
+  const showBody      = revealStep === undefined || revealStep >= 1
+  const showPullQuote = revealStep === undefined || revealStep >= 2
 
   const maxWidth = isCentered ? '80%' : pullQuote ? '55%' : '70%'
 
@@ -80,6 +84,9 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
             <div style={{
               fontSize: 'clamp(12px, 1.3vw, 16px)', lineHeight: 1.65,
               color: textMuted, display: 'block',
+              opacity: showBody ? 1 : 0,
+              transform: showBody ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'opacity 0.35s ease, transform 0.35s ease',
             }}>
               {renderTextWithLinks(body, links)}
             </div>
@@ -93,6 +100,8 @@ export function SlideNarrative({ eyebrow, headline, body, mode = 'light', pullQu
           width: '36%',
           borderLeft: `3px solid ${accentColor}`,
           paddingLeft: 24,
+          opacity: showPullQuote ? 1 : 0,
+          transition: 'opacity 0.35s ease',
         }}>
           <EditableText
             value={pullQuote}

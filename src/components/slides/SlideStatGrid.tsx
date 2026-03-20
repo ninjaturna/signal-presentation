@@ -20,9 +20,10 @@ interface SlideStatGridProps {
   layout?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
+  revealStep?: number
 }
 
-export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme, layout, editable = false, onUpdate }: SlideStatGridProps) {
+export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme, layout, editable = false, onUpdate, revealStep }: SlideStatGridProps) {
   const textPrimary = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted   = mode === 'dark' ? colors.mutedDark : colors.mutedLight
   const statColor   = theme?.statColor ?? colors.blue
@@ -67,7 +68,9 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme,
         flex: 1,
         alignContent: 'center',
       }}>
-        {stats.map((stat, i) => (
+        {stats.map((stat, i) => {
+          const isVisible = revealStep === undefined || i < revealStep
+          return (
           <div key={i} style={{
             background: isBold ? 'transparent' : statBg,
             border: isBold ? 'none' : `1px solid ${statBorder}`,
@@ -77,6 +80,10 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
+            transition: 'opacity 0.35s ease, transform 0.35s ease',
+            transitionDelay: isVisible ? `${i * 0.06}s` : '0s',
           }}>
             <div style={{
               fontSize: isBold ? 'clamp(36px, 5vw, 72px)' : 'clamp(24px, 3.8vw, 48px)',
@@ -102,7 +109,7 @@ export function SlideStatGrid({ eyebrow, headline, stats, mode = 'light', theme,
               )}
             </div>
           </div>
-        ))}
+        )})
       </div>
     </SlideShell>
   )

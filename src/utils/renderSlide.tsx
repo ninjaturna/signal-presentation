@@ -19,6 +19,7 @@ interface RenderSlideOptions {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
   theme?: DeckTheme['tokens']
+  revealStep?: number
 }
 
 function withWrappers(
@@ -55,7 +56,7 @@ function withWrappers(
 }
 
 export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}): React.ReactElement {
-  const { editable = false, onUpdate, theme } = options
+  const { editable = false, onUpdate, theme, revealStep } = options
 
   switch (slide.type) {
     case 'cover':
@@ -86,6 +87,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           theme={theme}
           layout={slide.layout}
           links={slide.links}
+          revealStep={revealStep}
         />,
         slide, options
       )
@@ -101,6 +103,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           layout={slide.layout}
           editable={editable}
           onUpdate={onUpdate}
+          revealStep={revealStep}
         />,
         slide, options
       )
@@ -112,6 +115,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           right={slide.right ?? { heading: '' }}
           split={slide.split}
           mode={slide.mode}
+          revealStep={revealStep}
         />,
         slide, options
       )
@@ -123,6 +127,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           title={slide.title ?? ''}
           subtitle={slide.subtitle}
           theme={theme}
+          revealStep={revealStep}
         />,
         slide, options
       )

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { colors } from '../design-system'
+import { colors, Button, Badge } from '../design-system'
 import { useTextSelection } from '../hooks/useTextSelection'
 import { ChatPanel } from './ChatPanel'
 import { TonePicker } from './TonePicker'
@@ -596,6 +596,56 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           )}
         </div>
 
+        {/* ── Slide Build toggle ── */}
+        {(['stat-grid', 'narrative', 'two-pane', 'section-break'] as const).includes(slide.type as 'stat-grid' | 'narrative' | 'two-pane' | 'section-break') && (
+          <div style={{
+            marginTop: 8, paddingTop: 16,
+            borderTop: `1px solid ${colors.borderDark}`,
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', marginBottom: 6,
+            }}>
+              <label style={{ ...fieldLabelStyle, marginBottom: 0 }}>
+                🎬 Slide build
+              </label>
+              <button
+                onClick={() => {
+                  const defaultSteps: Record<string, number> = {
+                    'stat-grid': slide.stats?.length ?? 4,
+                    'narrative': 2,
+                    'two-pane': 1,
+                    'section-break': 2,
+                  }
+                  const steps = defaultSteps[slide.type] ?? 0
+                  onUpdate({ buildSteps: (slide.buildSteps ?? 0) > 0 ? 0 : steps })
+                }}
+                style={{
+                  background: (slide.buildSteps ?? 0) > 0
+                    ? 'rgba(30,90,242,0.15)' : 'transparent',
+                  border: `1px solid ${(slide.buildSteps ?? 0) > 0
+                    ? colors.blue : colors.borderDark}`,
+                  borderRadius: 4, padding: '3px 10px',
+                  fontSize: 10, fontWeight: 700,
+                  color: (slide.buildSteps ?? 0) > 0 ? colors.blue : colors.mutedDark,
+                  cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                }}
+              >
+                {(slide.buildSteps ?? 0) > 0
+                  ? `✓ On — ${slide.buildSteps} steps`
+                  : 'Enable'}
+              </button>
+            </div>
+            <p style={{ fontSize: 10, color: colors.mutedDark, lineHeight: 1.5, margin: 0 }}>
+              In Present mode, elements reveal one at a time.
+              {(slide.buildSteps ?? 0) > 0 && (
+                <> Each → advances one step before the next slide.</>
+              )}
+            </p>
+          </div>
+        )}
+
         {/* Presenter notes — all slide types */}
         <div style={{ marginTop: 4 }}>
           <label style={{
@@ -1088,19 +1138,11 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             </div>
 
             {embedUrl && (
-              <div style={{
-                fontSize: 10, fontWeight: 600,
-                color: colors.blue, letterSpacing: '0.06em',
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}>
-                <span style={{
-                  background: 'rgba(30,90,242,0.1)',
-                  border: '1px solid rgba(30,90,242,0.25)',
-                  borderRadius: 4, padding: '2px 6px',
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Badge variant="blue" size="sm">
                   {getEmbedLabel(detectEmbedType(embedUrl))}
-                </span>
-                detected
+                </Badge>
+                <span style={{ fontSize: 10, color: colors.blue }}>detected</span>
               </div>
             )}
 
@@ -1149,34 +1191,21 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
         borderTop: `1px solid ${colors.borderDark}`,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
-        <button
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
           onClick={() => setShowChat(true)}
-          style={{
-            background: colors.blue, border: 'none',
-            borderRadius: 7, padding: '9px 14px',
-            fontSize: 13, fontWeight: 600, color: '#FFFFFF',
-            cursor: 'pointer',
-            fontFamily: '"DM Sans", system-ui, sans-serif',
-            display: 'flex', alignItems: 'center', gap: 6,
-            width: '100%', justifyContent: 'center',
-          }}
         >
           <span style={{ opacity: 0.8 }}>✦</span> AI Co-pilot
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          fullWidth
           onClick={onResetDiagrams}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${colors.borderDark}`,
-            borderRadius: 7, padding: '8px 14px',
-            fontSize: 12, color: colors.mutedDark,
-            cursor: 'pointer',
-            fontFamily: '"DM Sans", system-ui, sans-serif',
-            width: '100%',
-          }}
         >
           Reset diagrams (R)
-        </button>
+        </Button>
       </div>
 
       {/* Floating "Link this" badge — appears on text selection */}

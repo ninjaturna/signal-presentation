@@ -7,17 +7,22 @@ import type { SlideData } from '../types/deck'
 
 export function AudienceView() {
   const [slide, setSlide] = useState<SlideData | null>(null)
+  const [revealStep, setRevealStep] = useState(0)
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
     const channel = new BroadcastChannel('signal-present')
     channel.onmessage = (e) => {
       if (e.data.type === 'SLIDE_CHANGE') {
+        setRevealStep(0)
         setFading(true)
         setTimeout(() => {
           setSlide(e.data.slide)
           setFading(false)
         }, 150)
+      }
+      if (e.data.type === 'BUILD_STEP') {
+        setRevealStep(e.data.revealStep)
       }
       if (e.data.type === 'PRESENT_END') {
         window.close()
@@ -41,7 +46,7 @@ export function AudienceView() {
           opacity: fading ? 0 : 1,
           transition: 'opacity 0.15s ease',
         }}>
-          {renderSlide(slide, { editable: false })}
+          {renderSlide(slide, { editable: false, revealStep })}
         </div>
       ) : (
         <div style={{

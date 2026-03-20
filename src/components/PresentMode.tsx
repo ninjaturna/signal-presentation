@@ -19,6 +19,7 @@ function formatTime(seconds: number): string {
 
 export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps) {
   const [current, setCurrent]           = useState(startIndex)
+  const [revealStep, setRevealStep]     = useState(0)
   const [showNotes, setShowNotes]       = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [elapsed, setElapsed]           = useState(0)
@@ -84,6 +85,7 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
 
   const goTo = useCallback((idx: number) => {
     if (idx < 0 || idx >= slides.length || fading) return
+    setRevealStep(0)
     setFading(true)
     setTimeout(() => { setCurrent(idx); setFading(false) }, 140)
   }, [slides.length, fading])
@@ -91,8 +93,18 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
-          e.preventDefault(); goTo(current + 1); break
+        case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': {
+          e.preventDefault()
+          const buildSteps = slides[current]?.buildSteps ?? 0
+          if (revealStep < buildSteps) {
+            const nextStep = revealStep + 1
+            setRevealStep(nextStep)
+            channelRef.current?.postMessage({ type: 'BUILD_STEP', revealStep: nextStep, slideIndex: current })
+          } else {
+            goTo(current + 1)
+          }
+          break
+        }
         case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
           e.preventDefault(); goTo(current - 1); break
         case 'Escape': onExit(); break
@@ -103,7 +115,7 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [current, goTo, onExit, slides.length])
+  }, [current, revealStep, goTo, onExit, slides.length])
 
   const refocusOrReopenAudience = useCallback(() => {
     if (audienceWin && !audienceWin.closed) {
@@ -173,7 +185,16 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
 
       {/* ── Slide stage ── */}
       <div
-        onClick={() => goTo(current + 1)}
+        onClick={() => {
+          const buildSteps = slides[current]?.buildSteps ?? 0
+          if (revealStep < buildSteps) {
+            const nextStep = revealStep + 1
+            setRevealStep(nextStep)
+            channelRef.current?.postMessage({ type: 'BUILD_STEP', revealStep: nextStep, slideIndex: current })
+          } else {
+            goTo(current + 1)
+          }
+        }}
         style={{
           flex: 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -198,7 +219,7 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
           boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
           borderRadius: 4,
         }}>
-          {renderSlide(slide, { editable: false })}
+          {renderSlide(slide, { editable: false, revealStep })}
         </div>
       </div>
 
@@ -255,6 +276,21 @@ export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps
         <span style={{ fontSize: 12, color: '#666', fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>
           {formatTime(elapsed)}
         </span>
+
+        {(slides[current]?.buildSteps ?? 0) > 0 && (
+          <>
+            <Sep />
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              {Array.from({ length: slides[current].buildSteps! }).map((_, i) => (
+                <div key={i} style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: i < revealStep ? '#FFFFFF' : 'rgba(255,255,255,0.2)',
+                  transition: 'background 0.2s',
+                }} />
+              ))}
+            </div>
+          </>
+        )}
 
         <Sep />
 

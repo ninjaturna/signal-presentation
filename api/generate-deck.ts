@@ -23,6 +23,8 @@ Available slide types and when to use them:
   Fields: eyebrow, title, placeholder (describe what diagram should show)
 - "closing": ALWAYS last non-appendix slide. mode: "dark".
   Fields: headline, cta (call to action button text), contact (optional)
+- "poll": Audience engagement slide. mode: "dark".
+  Fields: eyebrow ("PULSE CHECK" or "QUICK CHECK"), poll: {question, type ("yes-no"|"multiple-choice"|"rating"|"likert"), options: string[]}
 
 Rules:
 1. Slide 1 (cover) is ALWAYS type "cover", mode "dark"
@@ -43,6 +45,10 @@ Rules:
 16. NEVER include NOTES content in any slide output — notes are internal only
 17. Keep all text from the content doc — do not invent or embellish content
 18. For [XX] placeholders: keep them as-is in the output (they signal items needing review)
+19. POLL SLIDE RULE: If a slide has isPoll: true, output type: "poll", mode: "dark", eyebrow: "PULSE CHECK",
+    and poll: { question: pollQuestion, type: pollType, options: pollOptions }.
+    NEVER output a narrative slide for a poll-marked slide.
+    For yes-no type, options should be ["Yes", "No"] unless specific options are provided.
 
 Output ONLY a valid JSON array. No markdown, no backticks, no explanation.
 Each object must have: id (string), type, mode, and the type-specific fields above.`
@@ -73,6 +79,10 @@ export default async function handler(req: any, res: any) {
       left: s.left,
       right: s.right,
       footer: s.footer,
+      isPoll: s.isPoll,
+      pollType: s.pollType,
+      pollQuestion: s.pollQuestion,
+      pollOptions: s.pollOptions,
       // notes intentionally excluded
     }))
 

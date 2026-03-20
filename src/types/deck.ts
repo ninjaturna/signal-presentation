@@ -120,6 +120,10 @@ export interface SlideData {
   layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
   // presenter notes
   notes?: string
+  // slide build (progressive reveal in present mode)
+  // 0 or undefined = no build, advance immediately
+  // N = N click steps before advancing to next slide
+  buildSteps?: number
 }
 
 export type ShareMode = 'edit' | 'review' | 'present'
