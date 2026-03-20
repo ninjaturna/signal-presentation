@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { colors } from '../design-system'
+import { HighlightText } from './HighlightText'
+import { useEditGate } from '../contexts/EditGateContext'
+import type { TextHighlight } from '../types/deck'
 
 interface EditableTextProps {
   value: string
@@ -10,6 +13,7 @@ interface EditableTextProps {
   className?: string
   multiline?: boolean
   placeholder?: string
+  highlights?: TextHighlight[]
 }
 
 export function EditableText({
@@ -21,11 +25,13 @@ export function EditableText({
   className,
   multiline = false,
   placeholder = 'Click to edit',
+  highlights,
 }: EditableTextProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value)
   const [hovered, setHovered] = useState(false)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
+  const { markEdited } = useEditGate()
 
   useEffect(() => { setDraft(value) }, [value])
 
@@ -39,7 +45,10 @@ export function EditableText({
 
   const commit = () => {
     setEditing(false)
-    if (draft.trim() !== value) onSave(draft.trim() || value)
+    if (draft.trim() !== value) {
+      markEdited()
+      onSave(draft.trim() || value)
+    }
   }
 
   const cancel = () => {
@@ -127,7 +136,10 @@ export function EditableText({
         onClick={() => setEditing(true)}
         title="Click to edit"
       >
-        {value || <span style={{ opacity: 0.35 }}>{placeholder}</span>}
+        {highlights?.length
+          ? <HighlightText text={value} highlights={highlights} />
+          : (value || <span style={{ opacity: 0.35 }}>{placeholder}</span>)
+        }
       </Tag>
 
       {/* Badge row — visible on hover */}
