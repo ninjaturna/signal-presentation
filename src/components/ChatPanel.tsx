@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { colors } from '../design-system'
+import { getSignalError, classifyApiError } from '../utils/signalErrors'
+import { ErrorMessage } from './ErrorMessage'
+import type { SignalErrorCode } from '../utils/signalErrors'
 import type { SlideData } from '../types/deck'
 
 interface Message {
   role: 'user' | 'assistant'
   text: string
+  errorCode?: string
   action?: {
     label: string
     onClick: () => void
@@ -21,35 +25,39 @@ interface ChatPanelProps {
   onPrefillConsumed?: () => void
 }
 
-const QUICK_ACTIONS = [
-  'Make this more concise',
-  'Strengthen the headline',
-  'Add a supporting stat',
-  'Sharpen the narrative',
-]
+function getQuickActions(slide: SlideData): string[] {
+  const base = ['Make this more concise', 'Sharpen the narrative']
+  const byType: Record<string, string[]> = {
+    'narrative':     ['Strengthen the headline', 'Add a pull quote'],
+    'stat-grid':     ['Add context to the stats', 'Strengthen the headline'],
+    'two-pane':      ['Tighten the left pane', 'Strengthen the right pane argument'],
+    'cover':         ['Strengthen the headline', 'Sharpen the subtitle'],
+    'section-break': ['Make the title bolder', 'Sharpen the subtitle'],
+    'full-bleed':    ['Make the statement more provocative', 'Suggest an accent word'],
+    'closing':       ['Sharpen the headline', 'Make the CTA more direct'],
+    'diagram':       ['Suggest a better title', 'Improve the eyebrow label'],
+    'poll':          ['Rephrase the question', 'Rewrite the options to be more specific'],
+  }
+  return [...(byType[slide.type] ?? base), ...base].slice(0, 4)
+}
 
 export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, onClose, prefillPrompt, onPrefillConsumed }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const bottomRef    = useRef<HTMLDivElement>(null)
+  const textareaRef  = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Ref to send function so the prefill effect can call it after mount
   const sendRef = useRef<((instruction: string) => Promise<void>) | undefined>(undefined)
 
-  // Auto-send prefill prompt
   useEffect(() => {
     if (!prefillPrompt) return
     onPrefillConsumed?.()
-    // Defer to next tick so component is mounted
-    const t = setTimeout(() => {
-      sendRef.current?.(prefillPrompt)
-    }, 80)
+    const t = setTimeout(() => { sendRef.current?.(prefillPrompt) }, 80)
     return () => clearTimeout(t)
   }, [prefillPrompt, onPrefillConsumed])
 
@@ -59,14 +67,36 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
     setMessages(prev => [...prev, { role: 'user', text: userMsg }])
     setInput('')
     setLoading(true)
+
     try {
       const res = await fetch('/api/edit-slide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instruction: userMsg, slide }),
       })
+
+      // Infrastructure errors (non-2xx)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        const code = (body.signalCode ?? classifyApiError(body.error ?? '', res.status)) as SignalErrorCode
+        const sigError = getSignalError(code)
+        setMessages(prev => [...prev, { role: 'assistant', text: sigError.message, errorCode: code }])
+        return
+      }
+
       const raw = await res.text()
-      let data: { error?: string; patch?: Partial<SlideData>; message?: string; action?: string; slide?: SlideData }
+      let data: {
+        error?: string
+        signalCode?: string
+        cannotFulfill?: boolean
+        errorCode?: string
+        reason?: string
+        patch?: Partial<SlideData>
+        message?: string
+        action?: string
+        slide?: SlideData
+      }
+
       try {
         const cleaned = raw
           .replace(/^```json\s*/i, '')
@@ -75,17 +105,32 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
           .trim()
         data = JSON.parse(cleaned)
       } catch {
+        const sigError = getSignalError('SIG-304')
+        setMessages(prev => [...prev, { role: 'assistant', text: sigError.message, errorCode: 'SIG-304' }])
+        return
+      }
+
+      // Cannot-fulfill response from AI
+      if (data.cannotFulfill) {
+        const code = (data.errorCode ?? 'SIG-101') as SignalErrorCode
+        const sigError = getSignalError(code)
         setMessages(prev => [...prev, {
           role: 'assistant',
-          text: 'Parse error — Claude returned unexpected format. Try again.',
+          text: data.reason ?? sigError.message,
+          errorCode: code,
         }])
-        setLoading(false)
         return
       }
+
+      // Legacy error field
       if (data.error) {
-        setMessages(prev => [...prev, { role: 'assistant', text: `Error: ${data.error}` }])
+        const code = (data.signalCode ?? classifyApiError(data.error)) as SignalErrorCode
+        const sigError = getSignalError(code)
+        setMessages(prev => [...prev, { role: 'assistant', text: sigError.message, errorCode: code }])
         return
       }
+
+      // Successful insert
       if (data.action === 'insert' && data.slide && onInsertSlide) {
         const newSlide: SlideData = {
           ...data.slide,
@@ -100,12 +145,16 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
             onClick: () => onNavigateToSlide?.(insertedIndex),
           } : undefined,
         }])
-      } else {
-        if (data.patch) onUpdate(data.patch)
-        setMessages(prev => [...prev, { role: 'assistant', text: data.message ?? 'Done.' }])
+        return
       }
+
+      // Successful patch
+      if (data.patch) onUpdate(data.patch)
+      setMessages(prev => [...prev, { role: 'assistant', text: data.message ?? 'Done.' }])
+
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Request failed — check API key.' }])
+      const sigError = getSignalError('SIG-305')
+      setMessages(prev => [...prev, { role: 'assistant', text: sigError.message, errorCode: 'SIG-305' }])
     } finally {
       setLoading(false)
       setTimeout(() => textareaRef.current?.focus(), 50)
@@ -114,11 +163,10 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
   sendRef.current = send
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send(input)
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) }
   }
+
+  const quickActions = getQuickActions(slide)
 
   return (
     <div style={{
@@ -166,7 +214,7 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
             QUICK ACTIONS
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {QUICK_ACTIONS.map(action => (
+            {quickActions.map(action => (
               <button
                 key={action}
                 onClick={() => send(action)}
@@ -208,16 +256,25 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
             alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
             gap: 6,
           }}>
-            <div style={{
-              maxWidth: '90%',
-              background: msg.role === 'user' ? colors.blue : colors.inkSoft,
-              borderRadius: msg.role === 'user' ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
-              padding: '8px 12px',
-              fontSize: 13, lineHeight: 1.5,
-              color: msg.role === 'user' ? '#FFFFFF' : colors.mutedDark,
-            }}>
-              {msg.text}
-            </div>
+            {msg.role === 'assistant' && msg.errorCode ? (
+              <ErrorMessage
+                error={{
+                  ...getSignalError(msg.errorCode as SignalErrorCode),
+                  message: msg.text,
+                }}
+              />
+            ) : (
+              <div style={{
+                maxWidth: '90%',
+                background: msg.role === 'user' ? colors.blue : colors.inkSoft,
+                borderRadius: msg.role === 'user' ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
+                padding: '8px 12px',
+                fontSize: 13, lineHeight: 1.5,
+                color: msg.role === 'user' ? '#FFFFFF' : colors.mutedDark,
+              }}>
+                {msg.text}
+              </div>
+            )}
             {msg.action && (
               <button
                 onClick={msg.action.onClick}
@@ -225,10 +282,8 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
                   alignSelf: 'flex-start',
                   background: 'transparent',
                   border: `1px solid ${colors.blue}`,
-                  borderRadius: 6,
-                  padding: '5px 12px',
-                  fontSize: 12, fontWeight: 600,
-                  color: colors.blue,
+                  borderRadius: 6, padding: '5px 12px',
+                  fontSize: 12, fontWeight: 600, color: colors.blue,
                   cursor: 'pointer',
                   fontFamily: '"DM Sans", system-ui, sans-serif',
                   transition: 'background 0.12s',
@@ -257,15 +312,11 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
       </div>
 
       {/* Input */}
-      <div style={{
-        padding: '12px 16px',
-        borderTop: `1px solid ${colors.borderDark}`,
-      }}>
+      <div style={{ padding: '12px 16px', borderTop: `1px solid ${colors.borderDark}` }}>
         <div style={{
           background: colors.inkSoft,
           border: `1px solid ${colors.borderDark}`,
-          borderRadius: 8,
-          padding: '8px 12px',
+          borderRadius: 8, padding: '8px 12px',
         }}>
           <textarea
             ref={textareaRef}

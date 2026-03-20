@@ -117,6 +117,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           split={slide.split}
           mode={slide.mode}
           revealStep={revealStep}
+          theme={theme}
         />,
         slide, options
       )
@@ -139,6 +140,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           statement={slide.statement ?? ''}
           accentWord={slide.accentWord}
           highlights={slide.highlights}
+          theme={theme}
         />,
         slide, options
       )

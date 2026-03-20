@@ -1,6 +1,7 @@
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
 import type { SlideMode } from '../../design-system'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface Pane {
   eyebrow?: string
@@ -16,12 +17,14 @@ interface SlideTwoPaneProps {
   split?: '50/50' | '60/40' | '40/60'
   mode?: SlideMode
   revealStep?: number
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', revealStep }: SlideTwoPaneProps) {
+export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', revealStep, theme }: SlideTwoPaneProps) {
   const textPrimary  = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted    = mode === 'dark' ? colors.mutedDark : colors.mutedLight
   const dividerColor = mode === 'dark' ? colors.borderDark : colors.border
+  const accentColor  = theme?.primary ?? colors.blue
 
   const leftFr   = split === '60/40' ? '60' : split === '40/60' ? '40' : '50'
   const rightFr  = split === '60/40' ? '40' : split === '40/60' ? '60' : '50'
@@ -33,7 +36,7 @@ export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', rev
         <div style={{
           fontSize: 13, fontWeight: 600, letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          color: pane.accent ? colors.gold : colors.blue,
+          color: pane.accent ? colors.gold : accentColor,
           marginBottom: 12,
         }}>
           {pane.eyebrow}
@@ -58,7 +61,7 @@ export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', rev
               <span style={{
                 position: 'absolute', left: 0, top: 8,
                 width: 5, height: 5, borderRadius: '50%',
-                background: colors.blue, display: 'block',
+                background: accentColor, display: 'block',
               }} />
               {b}
             </li>

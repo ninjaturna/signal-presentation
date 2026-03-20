@@ -2,15 +2,18 @@ import { SlideShell } from '../SlideShell'
 import { HighlightText } from '../HighlightText'
 import { colors } from '../../design-system'
 import type { TextHighlight } from '../../types/deck'
+import type { DeckTheme } from '../../design-system/themes'
 
 interface SlideFullBleedProps {
   statement: string
   sub?: string
   accentWord?: string
   highlights?: TextHighlight[]
+  theme?: DeckTheme['tokens']
 }
 
-export function SlideFullBleed({ statement, sub, accentWord, highlights }: SlideFullBleedProps) {
+export function SlideFullBleed({ statement, sub, accentWord, highlights, theme }: SlideFullBleedProps) {
+  const accentColor = theme?.accentBar ?? colors.gold
   const parts = accentWord ? statement.split(accentWord) : null
 
   return (
@@ -33,7 +36,7 @@ export function SlideFullBleed({ statement, sub, accentWord, highlights }: Slide
           ) : parts ? (
             <>
               {parts[0]}
-              <span style={{ color: colors.gold }}>{accentWord}</span>
+              <span style={{ color: accentColor }}>{accentWord}</span>
               {parts[1]}
             </>
           ) : statement}

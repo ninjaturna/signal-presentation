@@ -15,7 +15,7 @@ function resolveOptions(poll: NonNullable<SlideData['poll']>): string[] {
   if (poll.type === 'yes-no')  return ['Yes', 'No']
   if (poll.type === 'rating')  return ['1', '2', '3', '4', '5']
   if (poll.type === 'likert')  return ['1', '2', '3', '4', '5']
-  return poll.options ?? []
+  return (poll.options ?? []).filter(o => o.trim() !== '')
 }
 
 export function SlidePoll({ id, eyebrow, poll, mode = 'dark' }: SlidePollProps) {

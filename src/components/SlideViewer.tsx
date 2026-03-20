@@ -96,7 +96,12 @@ export function SlideViewer({
   const [showPollModal, setShowPollModal]       = useState(false)
   const [activeTransition, setActiveTransition]   = useState<TransitionType>('fade')
   const [diagramSourceText, setDiagramSourceText] = useState<string | null>(null)
-  const [activeTheme, setActiveTheme]     = useState<DeckTheme>(DECK_THEMES[0])
+  const [activeTheme, setActiveTheme]     = useState<DeckTheme>(() => {
+    try {
+      const saved = localStorage.getItem('signal-active-theme')
+      return DECK_THEMES.find(t => t.id === saved) ?? DECK_THEMES[0]
+    } catch { return DECK_THEMES[0] }
+  })
   const [isFullscreen, setIsFullscreen]   = useState(false)
   const [trackingEnabled, setTrackingEnabled] = useState(false)
   const [presenting, setPresenting]       = useState(mode === 'present')
@@ -638,7 +643,11 @@ export function SlideViewer({
       {canEdit && showTheme && (
         <ThemePanel
           currentThemeId={activeTheme.id}
-          onSelect={theme => { setActiveTheme(theme); setShowTheme(false) }}
+          onSelect={theme => {
+            setActiveTheme(theme)
+            setShowTheme(false)
+            try { localStorage.setItem('signal-active-theme', theme.id) } catch {}
+          }}
           onClose={() => setShowTheme(false)}
           activeTransition={activeTransition}
           onTransitionChange={t => setActiveTransition(t)}

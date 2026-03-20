@@ -470,6 +470,227 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           </div>
         )}
 
+        {/* ── Poll content editor ───────────────────────────────────────── */}
+        {slide.type === 'poll' && slide.poll && (
+          <div style={{
+            background: '#1a1a1e',
+            border: `1px solid ${colors.borderDark}`,
+            borderRadius: 8, padding: '12px',
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700,
+              color: colors.mutedDark, letterSpacing: '0.08em',
+              textTransform: 'uppercase', marginBottom: 2,
+            }}>
+              Poll question &amp; options
+            </div>
+
+            {/* Question */}
+            <div>
+              <label style={{ display: 'block', fontSize: 11, color: colors.mutedDark, marginBottom: 4 }}>Question</label>
+              <textarea
+                value={slide.poll.question}
+                onChange={e => onUpdate({ poll: { ...slide.poll!, question: e.target.value } })}
+                onKeyDown={e => e.stopPropagation()}
+                onFocus={e => { e.currentTarget.style.borderColor = colors.blue }}
+                onBlur={e => { e.currentTarget.style.borderColor = colors.borderDark }}
+                rows={2}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: '#111', border: `1px solid ${colors.borderDark}`,
+                  borderRadius: 6, padding: '7px 10px',
+                  fontSize: 13, color: '#FFFFFF', lineHeight: 1.5,
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  outline: 'none', resize: 'vertical',
+                }}
+              />
+            </div>
+
+            {/* Poll type selector */}
+            <div>
+              <label style={{ display: 'block', fontSize: 11, color: colors.mutedDark, marginBottom: 4 }}>Type</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['yes-no', 'multiple-choice', 'rating', 'likert'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => onUpdate({ poll: { ...slide.poll!, type: t, options: t === 'multiple-choice' ? (slide.poll!.options?.length ? slide.poll!.options : ['', '', '', '']) : [] } })}
+                    style={{
+                      flex: 1,
+                      padding: '5px 4px',
+                      borderRadius: 5,
+                      border: `1px solid ${slide.poll!.type === t ? colors.gold : colors.borderDark}`,
+                      background: slide.poll!.type === t ? '#1a1a2e' : 'transparent',
+                      color: slide.poll!.type === t ? colors.gold : colors.mutedDark,
+                      fontSize: 9, fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                      textTransform: 'uppercase', letterSpacing: '0.04em',
+                    }}
+                  >
+                    {t === 'yes-no' ? 'Yes/No' : t === 'multiple-choice' ? 'Multi' : t === 'rating' ? '1–5' : 'Likert'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Multiple-choice options */}
+            {slide.poll.type === 'multiple-choice' && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: colors.mutedDark, marginBottom: 4 }}>Options</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {(slide.poll.options?.length ? slide.poll.options : ['', '', '', '']).map((opt, i) => (
+                    <input
+                      key={i}
+                      value={opt}
+                      onChange={e => {
+                        const opts = [...(slide.poll!.options ?? ['', '', '', ''])]
+                        opts[i] = e.target.value
+                        onUpdate({ poll: { ...slide.poll!, options: opts } })
+                      }}
+                      onKeyDown={e => e.stopPropagation()}
+                      onFocus={ev => { ev.currentTarget.style.borderColor = colors.blue }}
+                      onBlur={ev => { ev.currentTarget.style.borderColor = colors.borderDark }}
+                      placeholder={`Option ${i + 1}`}
+                      style={{
+                        width: '100%', boxSizing: 'border-box',
+                        background: '#111', border: `1px solid ${colors.borderDark}`,
+                        borderRadius: 6, padding: '7px 10px',
+                        fontSize: 13, color: '#FFFFFF',
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                        outline: 'none',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Two-pane content editor ───────────────────────────────────── */}
+        {slide.type === 'two-pane' && (
+          <div style={{
+            background: '#1a1a1e',
+            border: `1px solid ${colors.borderDark}`,
+            borderRadius: 8, padding: '12px',
+            display: 'flex', flexDirection: 'column', gap: 14,
+          }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700,
+              color: colors.mutedDark, letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}>
+              Pane content
+            </div>
+
+            {(['left', 'right'] as const).map(side => {
+              const pane = slide[side] ?? { heading: '' }
+              return (
+                <div key={side} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, color: colors.mutedDark,
+                    letterSpacing: '0.06em', textTransform: 'uppercase',
+                  }}>
+                    {side === 'left' ? '← Left pane' : '→ Right pane'}
+                  </div>
+
+                  {/* Eyebrow */}
+                  <input
+                    value={pane.eyebrow ?? ''}
+                    onChange={e => onUpdate({ [side]: { ...pane, eyebrow: e.target.value } })}
+                    onKeyDown={e => e.stopPropagation()}
+                    onFocus={ev => { ev.currentTarget.style.borderColor = colors.blue }}
+                    onBlur={ev => { ev.currentTarget.style.borderColor = colors.borderDark }}
+                    placeholder="Eyebrow (optional)"
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      background: '#111', border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '5px 8px',
+                      fontSize: 11, color: colors.mutedDark,
+                      fontFamily: '"DM Sans", system-ui, sans-serif', outline: 'none',
+                    }}
+                  />
+
+                  {/* Heading */}
+                  <input
+                    value={pane.heading}
+                    onChange={e => onUpdate({ [side]: { ...pane, heading: e.target.value } })}
+                    onKeyDown={e => e.stopPropagation()}
+                    onFocus={ev => { ev.currentTarget.style.borderColor = colors.blue }}
+                    onBlur={ev => { ev.currentTarget.style.borderColor = colors.borderDark }}
+                    placeholder="Heading"
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      background: '#111', border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '7px 10px',
+                      fontSize: 13, color: '#FFFFFF',
+                      fontFamily: '"DM Sans", system-ui, sans-serif', outline: 'none',
+                    }}
+                  />
+
+                  {/* Bullets */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {(pane.bullets ?? []).map((b, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <span style={{ color: colors.mutedDark, fontSize: 11, flexShrink: 0 }}>•</span>
+                        <input
+                          value={b}
+                          onChange={e => {
+                            const bullets = [...(pane.bullets ?? [])]
+                            bullets[i] = e.target.value
+                            onUpdate({ [side]: { ...pane, bullets } })
+                          }}
+                          onKeyDown={e => e.stopPropagation()}
+                          onFocus={ev => { ev.currentTarget.style.borderColor = colors.blue }}
+                          onBlur={ev => { ev.currentTarget.style.borderColor = colors.borderDark }}
+                          placeholder={`Bullet ${i + 1}`}
+                          style={{
+                            flex: 1, background: '#111',
+                            border: `1px solid ${colors.borderDark}`,
+                            borderRadius: 5, padding: '5px 8px',
+                            fontSize: 12, color: '#FFFFFF',
+                            fontFamily: '"DM Sans", system-ui, sans-serif', outline: 'none',
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            const bullets = (pane.bullets ?? []).filter((_, idx) => idx !== i)
+                            onUpdate({ [side]: { ...pane, bullets } })
+                          }}
+                          style={{
+                            background: 'none', border: 'none',
+                            color: colors.mutedDark, cursor: 'pointer',
+                            fontSize: 14, lineHeight: 1, padding: '0 2px', flexShrink: 0,
+                          }}
+                          title="Remove bullet"
+                        >×</button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const bullets = [...(pane.bullets ?? []), '']
+                        onUpdate({ [side]: { ...pane, bullets } })
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px dashed ${colors.borderDark}`,
+                        borderRadius: 5, padding: '4px 8px',
+                        fontSize: 11, color: colors.mutedDark,
+                        cursor: 'pointer',
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                        textAlign: 'left',
+                      }}
+                    >
+                      + Add bullet
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {/* ── Inline Links section ──────────────────────────────────────── */}
         <div
           id="inline-links-section"
