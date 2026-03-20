@@ -177,6 +177,40 @@ export function CanvasElement({
               boxSizing: 'border-box',
             }}
           />
+        ) : element.link?.url ? (
+          /* CTA button render when link is attached */
+          <div
+            style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            onDoubleClick={startEdit}
+          >
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: colors.blue,
+              borderRadius: 8,
+              padding: '10px 24px',
+              cursor: 'pointer',
+              maxWidth: '100%',
+              boxSizing: 'border-box' as const,
+            }}>
+              <span style={{
+                fontSize: (element as TextElement).styleName === 'headline' ? 20
+                  : (element as TextElement).styleName === 'subheading' ? 16
+                  : 14,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                lineHeight: 1.2,
+                whiteSpace: 'nowrap' as const,
+                overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {(element as TextElement).content || element.link.label || 'Button'}
+              </span>
+              <span style={{ color: '#FFFFFF', opacity: 0.7, fontSize: 16, lineHeight: 1 }}>→</span>
+            </div>
+          </div>
         ) : (
           <div
             style={{
@@ -198,26 +232,27 @@ export function CanvasElement({
         <EmbedElement element={element} scale={scale} />
       )}
 
-      {/* Link badge */}
-      {element.link?.url && (
+      {/* Link URL label — shown when selected (non-button elements don't need badge since button is self-evident) */}
+      {element.link?.url && selected && !editing && (
         <div style={{
           position: 'absolute',
-          top: -10,
-          right: -10,
-          width: 20,
-          height: 20,
-          borderRadius: '50%',
-          background: colors.blue,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 10,
+          top: -22,
+          left: 0,
+          background: 'rgba(30,90,242,0.9)',
+          borderRadius: 4,
+          padding: '2px 7px',
+          fontSize: 9,
           color: '#fff',
-          fontWeight: 700,
+          fontWeight: 600,
           zIndex: 10,
           pointerEvents: 'none',
+          maxWidth: 200,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontFamily: '"DM Sans", system-ui, sans-serif',
         }}>
-          ↗
+          ↗ {element.link.url}
         </div>
       )}
 

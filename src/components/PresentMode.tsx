@@ -1,243 +1,343 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { colors } from '../design-system'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { renderSlide } from '../utils/renderSlide'
+import { colors } from '../design-system'
 import type { SlideData } from '../types/deck'
-import type { DeckTheme } from '../design-system/themes'
 
 interface PresentModeProps {
   slides: SlideData[]
-  initialIndex?: number
-  theme: DeckTheme
-  onClose: () => void
+  startIndex?: number
+  onExit: () => void
 }
 
-export function PresentMode({ slides, initialIndex = 0, theme, onClose }: PresentModeProps) {
-  const [current, setCurrent] = useState(initialIndex)
-  const [showUI, setShowUI]   = useState(true)
-  const [showNotes, setShowNotes] = useState(false)
-  const [elapsed, setElapsed] = useState(0)
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const startTime = useRef(Date.now())
+const DRAWER_HEIGHT = 220
+const TRANSITION = '0.32s cubic-bezier(0.4, 0, 0.2, 1)'
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0')
+  const s = (seconds % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+}
+
+export function PresentMode({ slides, startIndex = 0, onExit }: PresentModeProps) {
+  const [current, setCurrent]           = useState(startIndex)
+  const [showNotes, setShowNotes]       = useState(false)
+  const [showControls, setShowControls] = useState(true)
+  const [elapsed, setElapsed]           = useState(0)
+  const [fading, setFading]             = useState(false)
+  const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const slide     = slides[current]
   const nextSlide = slides[current + 1]
+  const hasNotes  = !!(slide?.notes?.trim())
 
-  // Elapsed timer
+  // Timer
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTime.current) / 1000))
-    }, 1000)
-    return () => clearInterval(interval)
+    timerInterval.current = setInterval(() => setElapsed(e => e + 1), 1000)
+    return () => { if (timerInterval.current) clearInterval(timerInterval.current) }
   }, [])
 
-  // Auto-hide UI after 3s inactivity
-  const showAndResetTimer = useCallback(() => {
-    setShowUI(true)
-    if (hideTimer.current) clearTimeout(hideTimer.current)
-    hideTimer.current = setTimeout(() => setShowUI(false), 3000)
+  const resetControlsTimer = useCallback(() => {
+    if (controlsTimer.current) clearTimeout(controlsTimer.current)
+    setShowControls(true)
+    controlsTimer.current = setTimeout(() => setShowControls(false), 3000)
   }, [])
 
-  useEffect(() => {
-    showAndResetTimer()
-    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
-  }, [showAndResetTimer])
+  useEffect(() => { resetControlsTimer() }, [current, resetControlsTimer])
 
-  // Keyboard nav
+  const goTo = useCallback((idx: number) => {
+    if (idx < 0 || idx >= slides.length || fading) return
+    setFading(true)
+    setTimeout(() => { setCurrent(idx); setFading(false) }, 160)
+  }, [slides.length, fading])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
       switch (e.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
-        case ' ':
-          e.preventDefault()
-          setCurrent(c => Math.min(c + 1, slides.length - 1))
-          break
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          e.preventDefault()
-          setCurrent(c => Math.max(c - 1, 0))
-          break
-        case 'Escape':
-          onClose()
-          break
-        case 'n':
-        case 'N':
-          setShowNotes(v => !v)
-          break
+        case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+          e.preventDefault(); goTo(current + 1); break
+        case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+          e.preventDefault(); goTo(current - 1); break
+        case 'Escape': onExit(); break
+        case 'n': case 'N': setShowNotes(v => !v); break
+        case 'Home': goTo(0); break
+        case 'End': goTo(slides.length - 1); break
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [slides.length, onClose])
+  }, [current, goTo, onExit, slides.length])
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60)
-    return `${m}:${(s % 60).toString().padStart(2, '0')}`
-  }
+  useEffect(() => {
+    document.documentElement.requestFullscreen?.().catch(() => {})
+    return () => {
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {})
+    }
+  }, [])
 
-  const progress = slides.length > 1 ? current / (slides.length - 1) : 1
+  const progress = ((current + 1) / slides.length) * 100
 
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 2000,
-        background: '#000',
-        display: 'flex', flexDirection: 'column',
-        cursor: showUI ? 'default' : 'none',
+        position: 'fixed', inset: 0, background: '#000',
+        zIndex: 9999, display: 'flex', flexDirection: 'column',
         fontFamily: '"DM Sans", system-ui, sans-serif',
-      }}
-      onMouseMove={showAndResetTimer}
-      onClick={showAndResetTimer}
-    >
-      {/* Slide area */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: showNotes && slide.notes ? '16px 16px 0' : '16px',
+        cursor: showControls ? 'default' : 'none',
         overflow: 'hidden',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: 'min(100vw, calc((100vh - 80px) * 16 / 9))',
-        }}>
-          {renderSlide(slide, { editable: false, theme: theme.tokens })}
+      }}
+      onMouseMove={resetControlsTimer}
+    >
+      {/* ── Slide stage ── */}
+      <div
+        onClick={() => goTo(current + 1)}
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          maxHeight: showNotes
+            ? `calc(100vh - ${DRAWER_HEIGHT + 44}px)`
+            : '100vh',
+          transition: `max-height ${TRANSITION}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: showNotes
+              ? `calc((100vh - ${DRAWER_HEIGHT + 44}px) * 16/9)`
+              : 'calc(100vh * 16/9)',
+            aspectRatio: '16/9',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: `max-width ${TRANSITION}`,
+            opacity: fading ? 0 : 1,
+          }}
+        >
+          {renderSlide(slide, { editable: false })}
         </div>
       </div>
 
-      {/* Presenter notes panel */}
-      {showNotes && slide.notes && (
+      {/* ── Progress bar ── */}
+      <div style={{
+        position: 'absolute',
+        bottom: showNotes ? DRAWER_HEIGHT : 0,
+        left: 0, right: 0, height: 3,
+        background: 'rgba(255,255,255,0.08)',
+        transition: `bottom ${TRANSITION}`,
+        zIndex: 20,
+      }}>
         <div style={{
-          background: '#111', borderTop: '1px solid #222',
-          padding: '12px 24px',
-          maxHeight: '25vh', overflowY: 'auto',
-          flexShrink: 0,
-        }}>
-          <div style={{
-            fontSize: 10, fontWeight: 700, color: colors.blue,
-            letterSpacing: '0.08em', marginBottom: 6,
-          }}>
-            PRESENTER NOTES
-          </div>
-          <div style={{ fontSize: 14, color: '#ccc', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-            {slide.notes}
-          </div>
-        </div>
-      )}
-
-      {/* Progress bar */}
-      <div style={{ height: 3, background: '#1a1a1a', flexShrink: 0 }}>
-        <div style={{
-          height: '100%',
-          width: `${progress * 100}%`,
+          height: '100%', width: `${progress}%`,
           background: colors.blue,
-          transition: 'width 0.3s',
+          transition: 'width 0.3s ease',
         }} />
       </div>
 
-      {/* Top-right controls overlay */}
-      <div style={{
-        position: 'absolute', top: 14, right: 14,
-        display: 'flex', gap: 6, alignItems: 'center',
-        opacity: showUI ? 1 : 0,
-        transition: 'opacity 0.3s',
-        pointerEvents: showUI ? 'auto' : 'none',
-      }}>
-        <div style={hud}>
-          {formatTime(elapsed)}
-        </div>
-        <div style={hud}>
+      {/* ── Controls bar ── */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: showNotes ? DRAWER_HEIGHT + 12 : 12,
+          left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(17,17,19,0.92)',
+          backdropFilter: 'blur(8px)',
+          border: `1px solid ${colors.borderDark}`,
+          borderRadius: 12,
+          padding: '8px 16px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          opacity: showControls ? 1 : 0,
+          transition: `opacity 0.3s ease, bottom ${TRANSITION}`,
+          pointerEvents: showControls ? 'auto' : 'none',
+          zIndex: 30, whiteSpace: 'nowrap',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={() => goTo(current - 1)} disabled={current === 0}
+          style={ctrlBtn(current === 0)}>‹</button>
+
+        <span style={{
+          fontSize: 13, fontWeight: 600, color: '#FFFFFF',
+          fontVariantNumeric: 'tabular-nums', minWidth: 52, textAlign: 'center',
+        }}>
           {current + 1} / {slides.length}
-        </div>
-        {slide.notes && (
-          <button
-            onClick={e => { e.stopPropagation(); setShowNotes(v => !v) }}
-            style={{
-              ...hud,
-              border: `1px solid ${showNotes ? colors.blue : '#333'}`,
-              background: showNotes ? 'rgba(30,90,242,0.25)' : 'rgba(0,0,0,0.65)',
-              color: showNotes ? colors.blue : '#888',
-              cursor: 'pointer',
-            }}
-          >
-            N Notes
-          </button>
-        )}
+        </span>
+
+        <button onClick={() => goTo(current + 1)} disabled={current === slides.length - 1}
+          style={ctrlBtn(current === slides.length - 1)}>›</button>
+
+        <Sep />
+
+        <span style={{ fontSize: 12, color: colors.mutedDark, fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>
+          {formatTime(elapsed)}
+        </span>
+
+        <Sep />
+
         <button
-          onClick={e => { e.stopPropagation(); onClose() }}
-          style={{ ...hud, cursor: 'pointer', border: '1px solid #333' }}
+          onClick={() => setShowNotes(v => !v)}
+          style={{
+            background: showNotes ? 'rgba(255,204,45,0.15)' : 'transparent',
+            border: `1px solid ${showNotes ? colors.gold : colors.borderDark}`,
+            borderRadius: 5, padding: '3px 10px',
+            fontSize: 11, fontWeight: 600,
+            color: showNotes ? colors.gold : colors.mutedDark,
+            cursor: 'pointer', fontFamily: '"DM Sans", system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}
         >
-          Esc ✕
+          📝 Notes {hasNotes && <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.gold, display: 'inline-block' }} />}
+        </button>
+
+        <Sep />
+
+        <button onClick={onExit} style={{
+          background: 'transparent', border: 'none',
+          color: colors.mutedDark, cursor: 'pointer',
+          fontSize: 11, fontWeight: 600,
+          fontFamily: '"DM Sans", system-ui, sans-serif', padding: '2px 4px',
+        }}>
+          ✕ Esc
         </button>
       </div>
 
-      {/* Prev/next arrows */}
-      {showUI && (
-        <>
-          <button
-            onClick={e => { e.stopPropagation(); setCurrent(c => Math.max(c - 1, 0)) }}
-            disabled={current === 0}
-            style={navArrow('left', current === 0)}
-          >
-            ‹
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); setCurrent(c => Math.min(c + 1, slides.length - 1)) }}
-            disabled={current === slides.length - 1}
-            style={navArrow('right', current === slides.length - 1)}
-          >
-            ›
-          </button>
-        </>
-      )}
-
-      {/* Up next — bottom left */}
-      {nextSlide && showUI && (
+      {/* ── Notes drawer — slides up from bottom ── */}
+      <div
+        style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0,
+          height: DRAWER_HEIGHT,
+          background: '#111113',
+          borderTop: `1px solid ${colors.borderDark}`,
+          transform: showNotes ? 'translateY(0)' : `translateY(${DRAWER_HEIGHT}px)`,
+          transition: `transform ${TRANSITION}`,
+          zIndex: 25, display: 'flex', flexDirection: 'column',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Drawer header */}
         <div style={{
-          position: 'absolute', bottom: 18, left: 14,
-          background: 'rgba(0,0,0,0.7)',
-          borderRadius: 6, padding: '7px 12px',
-          display: 'flex', alignItems: 'center', gap: 8,
-          maxWidth: 280,
-          opacity: showUI ? 1 : 0,
-          transition: 'opacity 0.3s',
-          pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 20px 0', flexShrink: 0,
         }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#444', letterSpacing: '0.08em', flexShrink: 0 }}>
-            UP NEXT
-          </span>
-          <span style={{
-            fontSize: 11, color: '#777',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {nextSlide.title ?? nextSlide.headline ?? nextSlide.statement ?? nextSlide.type}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              onClick={() => setShowNotes(false)}
+              style={{
+                width: 36, height: 3, borderRadius: 999,
+                background: colors.borderDark, cursor: 'pointer',
+              }}
+            />
+            <span style={{
+              fontSize: 10, fontWeight: 700, color: colors.mutedDark,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}>
+              Presenter notes
+            </span>
+            <span style={{ fontSize: 10, color: colors.borderDark }}>·</span>
+            <span style={{ fontSize: 10, color: colors.mutedDark }}>
+              Slide {current + 1} of {slides.length}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {nextSlide && (
+              <span style={{ fontSize: 9, fontWeight: 700, color: colors.mutedDark, letterSpacing: '0.06em' }}>
+                UP NEXT →
+              </span>
+            )}
+            <button
+              onClick={() => setShowNotes(false)}
+              style={{
+                background: 'transparent', border: 'none',
+                color: colors.mutedDark, cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0,
+              }}
+              title="Close notes (N)"
+            >
+              ×
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Drawer body */}
+        <div style={{
+          flex: 1, display: 'grid',
+          gridTemplateColumns: nextSlide ? '1fr 240px' : '1fr',
+          overflow: 'hidden',
+        }}>
+          {/* Notes text */}
+          <div style={{ padding: '12px 20px 16px', overflowY: 'auto' }}>
+            {hasNotes ? (
+              <p style={{ fontSize: 15, lineHeight: 1.65, color: '#FFFFFF', margin: 0, whiteSpace: 'pre-wrap' }}>
+                {slide.notes}
+              </p>
+            ) : (
+              <p style={{ fontSize: 13, color: colors.mutedDark, fontStyle: 'italic', margin: 0, lineHeight: 1.6 }}>
+                No notes for this slide. Add them in Edit mode via the 📝 Presenter notes field in the right panel.
+              </p>
+            )}
+          </div>
+
+          {/* Next slide preview */}
+          {nextSlide && (
+            <div style={{
+              borderLeft: `1px solid ${colors.borderDark}`,
+              padding: '12px 16px', display: 'flex',
+              flexDirection: 'column', gap: 8, background: '#0d0d0f',
+            }}>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: colors.mutedDark,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+              }}>
+                Up next
+              </span>
+              <div style={{
+                width: '100%', aspectRatio: '16/9', borderRadius: 6,
+                overflow: 'hidden', border: `1px solid ${colors.borderDark}`,
+                position: 'relative',
+                background: nextSlide.mode === 'dark' ? colors.ink : '#FCF8F5',
+              }}>
+                <div style={{
+                  position: 'absolute', width: 1280, height: 720,
+                  transformOrigin: 'top left',
+                  transform: `scale(${208 / 1280})`,
+                  pointerEvents: 'none',
+                }}>
+                  {renderSlide(nextSlide, { editable: false })}
+                </div>
+              </div>
+              <span style={{ fontSize: 10, color: colors.mutedDark }}>
+                Slide {current + 2}
+                {nextSlide.title ? ` · ${nextSlide.title.slice(0, 28)}` : nextSlide.headline ? ` · ${nextSlide.headline.slice(0, 28)}` : ''}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Hint toast ── */}
+      <div style={{
+        position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
+        background: 'rgba(17,17,19,0.85)', borderRadius: 8, padding: '6px 16px',
+        fontSize: 11, color: colors.mutedDark, zIndex: 40,
+        opacity: elapsed < 3 ? 1 : 0, transition: 'opacity 1s ease',
+        pointerEvents: 'none', whiteSpace: 'nowrap',
+      }}>
+        ← → navigate · N notes · Esc exit
+      </div>
     </div>
   )
 }
 
-const hud: React.CSSProperties = {
-  fontSize: 11, fontWeight: 600, color: '#888',
-  background: 'rgba(0,0,0,0.65)',
-  border: '1px solid transparent',
-  borderRadius: 5, padding: '4px 10px',
-  fontVariantNumeric: 'tabular-nums',
-  fontFamily: '"DM Sans", system-ui, sans-serif',
+function ctrlBtn(disabled: boolean): React.CSSProperties {
+  return {
+    background: 'transparent', border: 'none',
+    color: disabled ? colors.borderDark : '#FFFFFF',
+    fontSize: 20, cursor: disabled ? 'default' : 'pointer',
+    padding: '0 4px', lineHeight: 1, fontFamily: 'system-ui',
+  }
 }
 
-function navArrow(side: 'left' | 'right', disabled: boolean): React.CSSProperties {
-  return {
-    position: 'absolute', [side]: 12,
-    top: '50%', transform: 'translateY(-50%)',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid #222',
-    borderRadius: 6, width: 40, height: 56,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 26, color: disabled ? '#222' : '#555',
-    cursor: disabled ? 'default' : 'pointer',
-    fontFamily: 'system-ui',
-    transition: 'color 0.15s',
-  }
+function Sep() {
+  return <div style={{ width: 1, height: 16, background: colors.borderDark, flexShrink: 0 }} />
 }

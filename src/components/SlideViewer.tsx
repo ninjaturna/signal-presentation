@@ -299,21 +299,22 @@ export function SlideViewer({
     return () => window.removeEventListener('signal:rewrite-request', handler)
   }, [canEdit])
 
+  if (presenting) {
+    return (
+      <PresentMode
+        slides={slides}
+        startIndex={current}
+        onExit={() => setPresenting(false)}
+      />
+    )
+  }
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
       height: '100vh', background: '#0c0c0e',
       fontFamily: '"DM Sans", system-ui, sans-serif',
     }}>
-      {/* Present mode overlay */}
-      {presenting && (
-        <PresentMode
-          slides={slides}
-          initialIndex={current}
-          theme={activeTheme}
-          onClose={() => setPresenting(false)}
-        />
-      )}
       {/* Top bar */}
       {!isFullscreen && (
         <div data-no-print style={{
@@ -425,17 +426,15 @@ export function SlideViewer({
                     onClick={() => setPresenting(true)}
                     title="Present (P)"
                     style={{
-                      background: 'transparent',
-                      border: `1px solid ${colors.borderDark}`,
-                      borderRadius: 6, padding: '4px 12px',
-                      fontSize: 12, fontWeight: 600,
-                      color: colors.mutedDark,
+                      background: colors.blue,
+                      border: `1px solid ${colors.blue}`,
+                      borderRadius: 6, padding: '4px 14px',
+                      fontSize: 12, fontWeight: 700,
+                      color: '#FFFFFF',
                       cursor: 'pointer',
                       fontFamily: '"DM Sans", system-ui, sans-serif',
-                      transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 5,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.borderColor = colors.blue }}
-                    onMouseLeave={e => { e.currentTarget.style.color = colors.mutedDark; e.currentTarget.style.borderColor = colors.borderDark }}
                   >
                     ▶ Present
                   </button>
@@ -450,14 +449,6 @@ export function SlideViewer({
             </div>
           )}
 
-          {/* Fullscreen button — all modes */}
-          <button
-            onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()}
-            title="Fullscreen (F)"
-            style={topBarBtn(false)}
-          >
-            {isFullscreen ? '⤢' : '⤡'}
-          </button>
         </div>
       )}
 

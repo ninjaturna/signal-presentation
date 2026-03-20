@@ -164,6 +164,9 @@ export function PropertiesPanel({ element, onUpdate, onDelete }: PropertiesPanel
             >
               Attach link ↗
             </button>
+            <p style={{ fontSize: 10, color: colors.mutedDark, marginTop: 6, lineHeight: 1.4 }}>
+              Attaching a link renders the element as a blue CTA button in the presentation.
+            </p>
           </>
         )}
       </Section>
