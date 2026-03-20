@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useOverflowDetect } from '../hooks/useOverflowDetect'
 import { DENSITY_MESSAGES } from '../utils/wordCount'
-import { EditGateContext } from '../contexts/EditGateContext'
 import { colors } from '../design-system'
 import type { SlideData } from '../types/deck'
 
@@ -87,9 +86,7 @@ export function OverflowBadge({ slide, editable, onUpdate, children }: OverflowB
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <EditGateContext.Provider value={{ markEdited: overflow.markEdited }}>
-        {children}
-      </EditGateContext.Provider>
+      {children}
 
       {/* Overflow badge — edit mode only, shown only after user edits */}
       {editable && overflow.isOverflowing && !showDiff && (

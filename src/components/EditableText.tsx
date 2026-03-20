@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { colors } from '../design-system'
 import { HighlightText } from './HighlightText'
-import { useEditGate } from '../contexts/EditGateContext'
 import type { TextHighlight } from '../types/deck'
 
 interface EditableTextProps {
@@ -31,7 +30,6 @@ export function EditableText({
   const [draft, setDraft]     = useState(value)
   const [hovered, setHovered] = useState(false)
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
-  const { markEdited } = useEditGate()
 
   useEffect(() => { setDraft(value) }, [value])
 
@@ -46,7 +44,6 @@ export function EditableText({
   const commit = () => {
     setEditing(false)
     if (draft.trim() !== value) {
-      markEdited()
       onSave(draft.trim() || value)
     }
   }
