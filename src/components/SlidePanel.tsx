@@ -174,7 +174,7 @@ function SlideThumbnailLines({ slide }: { slide: SlideData }) {
             color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
             fontWeight: 700,
           }}>
-            {slide.svgContent ? '◈' : '⬡'}
+            {(slide.svgContent || slide.diagramData) ? '◈' : '⬡'}
           </div>
         </div>
       )}
