@@ -10,17 +10,35 @@ export function detectEmbedType(url: string): EmbedType {
 
 export function getEmbedSrc(url: string, type: EmbedType): string {
   if (type === 'youtube') {
-    const id = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]
-    return id ? `https://www.youtube.com/embed/${id}?autoplay=0&rel=0` : url
+    const cleanUrl = url.split('?')[0].split('&')[0]
+    const idMatch =
+      cleanUrl.match(/youtube\.com\/watch\/([a-zA-Z0-9_-]{11})/) ??
+      cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) ??
+      url.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+    const id = idMatch?.[1]
+    return id
+      ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`
+      : url
   }
   if (type === 'figma') {
     return `https://www.figma.com/embed?embed_host=signal&url=${encodeURIComponent(url)}`
   }
   if (type === 'loom') {
-    const id = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]
-    return id ? `https://www.loom.com/embed/${id}` : url
+    const cleanUrl = url.split('?')[0]
+    const id = cleanUrl.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]
+    return id ? `https://www.loom.com/embed/${id}?autoplay=1` : url
   }
   return url
+}
+
+export function getYouTubeThumbnail(url: string): string | null {
+  const cleanUrl = url.split('?')[0]
+  const idMatch =
+    cleanUrl.match(/youtube\.com\/watch\/([a-zA-Z0-9_-]{11})/) ??
+    cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) ??
+    url.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+  const id = idMatch?.[1]
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
 }
 
 export function getEmbedLabel(type: EmbedType): string {

@@ -5,11 +5,17 @@ import type { SlideData } from '../types/deck'
 interface Message {
   role: 'user' | 'assistant'
   text: string
+  action?: {
+    label: string
+    onClick: () => void
+  }
 }
 
 interface ChatPanelProps {
   slide: SlideData
   onUpdate: (patch: Partial<SlideData>) => void
+  onInsertSlide?: (slide: SlideData) => number | undefined
+  onNavigateToSlide?: (index: number) => void
   onClose?: () => void
 }
 
@@ -20,7 +26,7 @@ const QUICK_ACTIONS = [
   'Sharpen the narrative',
 ]
 
-export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
+export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
@@ -44,7 +50,7 @@ export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
         body: JSON.stringify({ instruction: userMsg, slide }),
       })
       const raw = await res.text()
-      let data: { error?: string; patch?: Partial<SlideData>; message?: string }
+      let data: { error?: string; patch?: Partial<SlideData>; message?: string; action?: string; slide?: SlideData }
       try {
         const cleaned = raw
           .replace(/^```json\s*/i, '')
@@ -64,8 +70,24 @@ export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
         setMessages(prev => [...prev, { role: 'assistant', text: `Error: ${data.error}` }])
         return
       }
-      if (data.patch) onUpdate(data.patch)
-      setMessages(prev => [...prev, { role: 'assistant', text: data.message ?? 'Done.' }])
+      if (data.action === 'insert' && data.slide && onInsertSlide) {
+        const newSlide: SlideData = {
+          ...data.slide,
+          id: `ai-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 6)}`,
+        }
+        const insertedIndex = onInsertSlide(newSlide)
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          text: data.message ?? 'New slide created.',
+          action: insertedIndex !== undefined ? {
+            label: `→ Go to slide ${insertedIndex + 1}`,
+            onClick: () => onNavigateToSlide?.(insertedIndex),
+          } : undefined,
+        }])
+      } else {
+        if (data.patch) onUpdate(data.patch)
+        setMessages(prev => [...prev, { role: 'assistant', text: data.message ?? 'Done.' }])
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', text: 'Request failed — check API key.' }])
     } finally {
@@ -167,6 +189,7 @@ export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            gap: 6,
           }}>
             <div style={{
               maxWidth: '90%',
@@ -178,6 +201,28 @@ export function ChatPanel({ slide, onUpdate, onClose }: ChatPanelProps) {
             }}>
               {msg.text}
             </div>
+            {msg.action && (
+              <button
+                onClick={msg.action.onClick}
+                style={{
+                  alignSelf: 'flex-start',
+                  background: 'transparent',
+                  border: `1px solid ${colors.blue}`,
+                  borderRadius: 6,
+                  padding: '5px 12px',
+                  fontSize: 12, fontWeight: 600,
+                  color: colors.blue,
+                  cursor: 'pointer',
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  transition: 'background 0.12s',
+                  marginLeft: 4,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(30,90,242,0.1)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                {msg.action.label}
+              </button>
+            )}
           </div>
         ))}
         {loading && (

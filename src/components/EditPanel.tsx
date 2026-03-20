@@ -17,14 +17,51 @@ interface EditPanelProps {
 }
 
 const EDITABLE_FIELDS: Record<string, Array<{ key: keyof SlideData; label: string; multiline?: boolean }>> = {
-  cover:           [{ key: 'eyebrow', label: 'Eyebrow' }, { key: 'title', label: 'Title', multiline: true }, { key: 'subtitle', label: 'Subtitle', multiline: true }, { key: 'meta', label: 'Meta' }],
-  narrative:       [{ key: 'eyebrow', label: 'Eyebrow' }, { key: 'headline', label: 'Headline', multiline: true }, { key: 'body', label: 'Body', multiline: true }, { key: 'pullQuote', label: 'Pull quote', multiline: true }],
-  'stat-grid':     [{ key: 'eyebrow', label: 'Eyebrow' }, { key: 'headline', label: 'Headline', multiline: true }],
-  'two-pane':      [{ key: 'eyebrow', label: 'Eyebrow' }],
-  'section-break': [{ key: 'number', label: 'Number' }, { key: 'title', label: 'Title', multiline: true }, { key: 'subtitle', label: 'Subtitle', multiline: true }],
-  'full-bleed':    [{ key: 'statement', label: 'Statement', multiline: true }, { key: 'accentWord', label: 'Accent word' }],
-  diagram:         [{ key: 'eyebrow', label: 'Eyebrow' }, { key: 'title', label: 'Title', multiline: true }, { key: 'placeholder', label: 'Placeholder', multiline: true }],
-  closing:         [{ key: 'headline', label: 'Headline', multiline: true }, { key: 'cta', label: 'CTA text' }, { key: 'contact', label: 'Contact' }],
+  cover: [
+    { key: 'eyebrow', label: 'Eyebrow' },
+    { key: 'title', label: 'Title', multiline: true },
+    { key: 'subtitle', label: 'Subtitle', multiline: true },
+    { key: 'meta', label: 'Meta line' },
+  ],
+  narrative: [
+    { key: 'eyebrow', label: 'Eyebrow' },
+    { key: 'headline', label: 'Headline', multiline: true },
+    { key: 'body', label: 'Body', multiline: true },
+    { key: 'pullQuote', label: 'Pull quote', multiline: true },
+  ],
+  'stat-grid': [
+    { key: 'eyebrow', label: 'Eyebrow' },
+    { key: 'headline', label: 'Headline', multiline: true },
+  ],
+  'two-pane': [
+    { key: 'eyebrow', label: 'Eyebrow (shared)' },
+  ],
+  'section-break': [
+    { key: 'number', label: 'Number (e.g. 01)' },
+    { key: 'title', label: 'Title', multiline: true },
+    { key: 'subtitle', label: 'Subtitle', multiline: true },
+  ],
+  'full-bleed': [
+    { key: 'statement', label: 'Statement', multiline: true },
+    { key: 'accentWord', label: 'Accent word (highlighted in gold)' },
+  ],
+  diagram: [
+    { key: 'eyebrow', label: 'Eyebrow' },
+    { key: 'title', label: 'Title', multiline: true },
+    { key: 'placeholder', label: 'Placeholder hint', multiline: true },
+  ],
+  closing: [
+    { key: 'headline', label: 'Headline', multiline: true },
+    { key: 'cta', label: 'CTA button text' },
+    { key: 'contact', label: 'Contact line' },
+  ],
+  poll: [
+    { key: 'eyebrow', label: 'Eyebrow' },
+  ],
+  embed: [
+    { key: 'eyebrow', label: 'Eyebrow' },
+    { key: 'title', label: 'Title', multiline: true },
+  ],
 }
 
 export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertDiagram, onInsertPoll, onInsertImage, onInsertEmbed }: EditPanelProps) {
@@ -291,9 +328,30 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
             )
           })
         ) : (
-          <p style={{ fontSize: 13, color: colors.mutedDark, lineHeight: 1.5 }}>
-            No editable text fields for this slide type. Use AI Co-pilot to make changes.
-          </p>
+          <div style={{
+            background: '#1a1a1e',
+            border: `1px solid ${colors.borderDark}`,
+            borderRadius: 8, padding: '14px',
+            fontSize: 12, color: colors.mutedDark, lineHeight: 1.6,
+          }}>
+            {slide.type === 'two-pane' && (
+              <>
+                <div style={{ fontWeight: 600, color: '#FFFFFF', marginBottom: 6 }}>Two-pane slide</div>
+                Use ✦ AI Co-pilot to edit left/right pane content — e.g.
+                "Update the left pane heading to..." or "Add a bullet to the right pane about..."
+              </>
+            )}
+            {slide.type === 'poll' && (
+              <>
+                <div style={{ fontWeight: 600, color: '#FFFFFF', marginBottom: 6 }}>Poll slide</div>
+                Poll question and options are set at creation time.
+                Use ✦ AI Co-pilot to rephrase the question or change options.
+              </>
+            )}
+            {slide.type !== 'two-pane' && slide.type !== 'poll' && (
+              <>No editable text fields for this slide type. Use ✦ AI Co-pilot.</>
+            )}
+          </div>
         )}
 
         {/* CTA URL — closing slides only */}

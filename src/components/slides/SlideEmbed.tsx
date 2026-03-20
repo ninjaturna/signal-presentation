@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { SlideShell } from '../SlideShell'
 import { colors } from '../../design-system'
-import { detectEmbedType, getEmbedSrc, getEmbedLabel } from '../../utils/embedDetect'
+import { detectEmbedType, getEmbedSrc, getEmbedLabel, getYouTubeThumbnail } from '../../utils/embedDetect'
 import type { SlideData } from '../../types/deck'
 
 interface SlideEmbedProps {
@@ -64,33 +64,80 @@ export function SlideEmbed({ eyebrow, title, embed, mode = 'light' }: SlideEmbed
         ) : (
           <div
             onClick={() => setActive(true)}
-            style={{
-              width: '100%', height: '100%',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', gap: 16,
-            }}
+            style={{ width: '100%', height: '100%', cursor: 'pointer' }}
           >
-            <EmbedIcon type={embedType} size={48} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, marginBottom: 4 }}>
-                {embed.title ?? label}
+            {embedType === 'youtube' ? (
+              /* YouTube: thumbnail + play button overlay */
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                {(() => {
+                  const thumb = getYouTubeThumbnail(embed.url)
+                  return thumb ? (
+                    <img
+                      src={thumb}
+                      alt="YouTube thumbnail"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: '#000' }} />
+                  )
+                })()}
+                {/* Dark overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                {/* Play button */}
+                <div style={{
+                  position: 'absolute', top: '50%', left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 72, height: 72, borderRadius: '50%',
+                  background: 'rgba(255,0,0,0.92)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                }}>
+                  <svg width={28} height={28} viewBox="0 0 24 24" fill="white">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                {/* Title overlay */}
+                {embed.title && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '20px 16px 12px',
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                    fontSize: 14, fontWeight: 600, color: '#FFFFFF',
+                  }}>
+                    {embed.title}
+                  </div>
+                )}
               </div>
+            ) : (
+              /* Non-YouTube: icon + label + button */
               <div style={{
-                fontSize: 12, color: colors.mutedDark,
-                maxWidth: 320, overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                width: '100%', height: '100%',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 16, padding: 32,
               }}>
-                {embed.url}
+                <EmbedIcon type={embedType} size={48} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, marginBottom: 4 }}>
+                    {embed.title ?? label}
+                  </div>
+                  <div style={{
+                    fontSize: 12, color: colors.mutedDark,
+                    maxWidth: 320, overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {embed.url}
+                  </div>
+                </div>
+                <div style={{
+                  background: colors.blue, borderRadius: 8,
+                  padding: '8px 20px',
+                  fontSize: 13, fontWeight: 600, color: '#FFFFFF',
+                }}>
+                  Click to open {label} →
+                </div>
               </div>
-            </div>
-            <div style={{
-              background: colors.blue, borderRadius: 8,
-              padding: '8px 20px',
-              fontSize: 13, fontWeight: 600, color: '#FFFFFF',
-            }}>
-              Click to open {label} →
-            </div>
+            )}
           </div>
         )}
 

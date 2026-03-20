@@ -516,6 +516,15 @@ export function SlideViewer({
             <ChatPanel
               slide={slide}
               onUpdate={(patch) => updateSlide(slide.id, patch)}
+              onInsertSlide={(newSlide) => {
+                const insertAt = current + 1
+                const next = [...slides.slice(0, insertAt), newSlide, ...slides.slice(insertAt)]
+                pushSlides(next)
+                onSlidesChange?.(next)
+                setCurrent(insertAt)
+                return insertAt
+              }}
+              onNavigateToSlide={(index) => setCurrent(index)}
               onClose={() => setShowChat(false)}
             />
           </div>
