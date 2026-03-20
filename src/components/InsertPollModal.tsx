@@ -7,7 +7,7 @@ interface InsertPollModalProps {
   onClose: () => void
 }
 
-type PollType = 'yes-no' | 'multiple-choice' | 'rating'
+type PollType = 'yes-no' | 'multiple-choice' | 'rating' | 'likert'
 
 export function InsertPollModal({ onInsert, onClose }: InsertPollModalProps) {
   const [question, setQuestion] = useState('')
@@ -27,6 +27,7 @@ export function InsertPollModal({ onInsert, onClose }: InsertPollModalProps) {
         options: pollType === 'multiple-choice' ? options.map(o => o.trim()).filter(Boolean) : [],
         allowMultiple: false,
       },
+
     }
     onInsert(slide)
   }
@@ -93,25 +94,25 @@ export function InsertPollModal({ onInsert, onClose }: InsertPollModalProps) {
           {/* Type selector */}
           <div>
             <label style={labelStyle}>Poll type</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {(['yes-no', 'multiple-choice', 'rating'] as PollType[]).map(t => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
+              {(['yes-no', 'multiple-choice', 'rating', 'likert'] as PollType[]).map(t => (
                 <button
                   key={t}
                   onClick={() => setPollType(t)}
                   style={{
-                    flex: 1,
                     padding: '8px 4px',
                     borderRadius: 6,
                     border: `1px solid ${pollType === t ? colors.blue : colors.borderDark}`,
                     background: pollType === t ? '#1a1a2e' : 'transparent',
                     color: pollType === t ? colors.blue : '#666',
-                    fontSize: 11, fontWeight: 600,
+                    fontSize: 10, fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: '"DM Sans", system-ui, sans-serif',
                     transition: 'all 0.15s',
+                    textAlign: 'center',
                   }}
                 >
-                  {t === 'yes-no' ? 'Yes / No' : t === 'multiple-choice' ? 'Multiple Choice' : 'Rating 1–5'}
+                  {t === 'yes-no' ? 'Yes / No' : t === 'multiple-choice' ? 'Multi-choice' : t === 'rating' ? 'Rating 1–5' : 'Likert'}
                 </button>
               ))}
             </div>
@@ -139,6 +140,14 @@ export function InsertPollModal({ onInsert, onClose }: InsertPollModalProps) {
           {pollType === 'rating' && (
             <div style={{ fontSize: 12, color: '#555', padding: '8px 0' }}>
               Renders as a 1–5 numbered scale. Respondents tap a number.
+            </div>
+          )}
+
+          {/* Likert preview */}
+          {pollType === 'likert' && (
+            <div style={{ fontSize: 12, color: '#555', padding: '8px 0', lineHeight: 1.5 }}>
+              Renders as a 5-point agreement scale:<br/>
+              <span style={{ color: '#444' }}>Strongly Disagree · Disagree · Neutral · Agree · Strongly Agree</span>
             </div>
           )}
         </div>

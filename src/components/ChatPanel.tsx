@@ -17,6 +17,8 @@ interface ChatPanelProps {
   onInsertSlide?: (slide: SlideData) => number | undefined
   onNavigateToSlide?: (index: number) => void
   onClose?: () => void
+  prefillPrompt?: string
+  onPrefillConsumed?: () => void
 }
 
 const QUICK_ACTIONS = [
@@ -26,7 +28,7 @@ const QUICK_ACTIONS = [
   'Sharpen the narrative',
 ]
 
-export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, onClose }: ChatPanelProps) {
+export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, onClose, prefillPrompt, onPrefillConsumed }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
@@ -36,6 +38,20 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Ref to send function so the prefill effect can call it after mount
+  const sendRef = useRef<((instruction: string) => Promise<void>) | undefined>(undefined)
+
+  // Auto-send prefill prompt
+  useEffect(() => {
+    if (!prefillPrompt) return
+    onPrefillConsumed?.()
+    // Defer to next tick so component is mounted
+    const t = setTimeout(() => {
+      sendRef.current?.(prefillPrompt)
+    }, 80)
+    return () => clearTimeout(t)
+  }, [prefillPrompt, onPrefillConsumed])
 
   const send = async (instruction: string) => {
     if (!instruction.trim() || loading) return
@@ -95,6 +111,7 @@ export function ChatPanel({ slide, onUpdate, onInsertSlide, onNavigateToSlide, o
       setTimeout(() => textareaRef.current?.focus(), 50)
     }
   }
+  sendRef.current = send
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

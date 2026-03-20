@@ -84,6 +84,8 @@ export interface SlideData {
   images?: ImageElement[]
   // layout variant
   layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
+  // presenter notes
+  notes?: string
 }
 
 export type ShareMode = 'edit' | 'review' | 'present'

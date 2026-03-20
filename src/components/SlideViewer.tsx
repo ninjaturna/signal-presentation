@@ -11,6 +11,7 @@ import type { TransitionType } from './ThemePanel'
 import { InsertPollModal } from './InsertPollModal'
 import { DiagramFromTextPanel } from './DiagramFromTextPanel'
 import { SlidePanel } from './SlidePanel'
+import { PresentMode } from './PresentMode'
 import { triggerPrintExport } from './PrintExport'
 import { DECK_THEMES } from '../design-system/themes'
 import type { DeckTheme } from '../design-system/themes'
@@ -98,6 +99,8 @@ export function SlideViewer({
   const [activeTheme, setActiveTheme]     = useState<DeckTheme>(DECK_THEMES[0])
   const [isFullscreen, setIsFullscreen]   = useState(false)
   const [trackingEnabled, setTrackingEnabled] = useState(false)
+  const [presenting, setPresenting]       = useState(mode === 'present')
+  const [rewritePrompt, setRewritePrompt] = useState<string | null>(null)
 
   // Mode flags
   const canEdit     = mode === 'edit'
@@ -250,6 +253,10 @@ export function SlideViewer({
         case 'R':
           if (canEdit) resetDiagrams()
           break
+        case 'p':
+        case 'P':
+          if (canEdit) setPresenting(true)
+          break
         case 'Escape':
           setShowShare(false)
           break
@@ -277,12 +284,36 @@ export function SlideViewer({
     return () => window.removeEventListener('signal:diagram-request', handler)
   }, [canEdit])
 
+  // Rewrite trigger from EditableText "✦ Rewrite" badge
+  useEffect(() => {
+    if (!canEdit) return
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text
+      if (text) {
+        setRewritePrompt(`Rewrite this text to be more compelling and concise: "${text}"`)
+        setShowChat(true)
+        setShowEditPanel(false)
+      }
+    }
+    window.addEventListener('signal:rewrite-request', handler)
+    return () => window.removeEventListener('signal:rewrite-request', handler)
+  }, [canEdit])
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
       height: '100vh', background: '#0c0c0e',
       fontFamily: '"DM Sans", system-ui, sans-serif',
     }}>
+      {/* Present mode overlay */}
+      {presenting && (
+        <PresentMode
+          slides={slides}
+          initialIndex={current}
+          theme={activeTheme}
+          onClose={() => setPresenting(false)}
+        />
+      )}
       {/* Top bar */}
       {!isFullscreen && (
         <div data-no-print style={{
@@ -390,6 +421,24 @@ export function SlideViewer({
                     + Poll
                   </button>
                   <PdfButton slides={slides} title={title} />
+                  <button
+                    onClick={() => setPresenting(true)}
+                    title="Present (P)"
+                    style={{
+                      background: 'transparent',
+                      border: `1px solid ${colors.borderDark}`,
+                      borderRadius: 6, padding: '4px 12px',
+                      fontSize: 12, fontWeight: 600,
+                      color: colors.mutedDark,
+                      cursor: 'pointer',
+                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.borderColor = colors.blue }}
+                    onMouseLeave={e => { e.currentTarget.style.color = colors.mutedDark; e.currentTarget.style.borderColor = colors.borderDark }}
+                  >
+                    ▶ Present
+                  </button>
                   <ShareMenu open={showShare} onToggle={() => setShowShare(v => !v)} />
                 </>
               )}
@@ -526,6 +575,8 @@ export function SlideViewer({
               }}
               onNavigateToSlide={(index) => setCurrent(index)}
               onClose={() => setShowChat(false)}
+              prefillPrompt={rewritePrompt ?? undefined}
+              onPrefillConsumed={() => setRewritePrompt(null)}
             />
           </div>
         )}

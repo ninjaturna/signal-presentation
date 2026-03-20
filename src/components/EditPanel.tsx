@@ -354,6 +354,35 @@ export function EditPanel({ slide, onUpdate, onClose, onResetDiagrams, onInsertD
           </div>
         )}
 
+        {/* Presenter notes — all slide types */}
+        <div style={{ marginTop: 4 }}>
+          <label style={{
+            display: 'block', fontSize: 10, fontWeight: 600,
+            color: colors.mutedDark, letterSpacing: '0.06em',
+            textTransform: 'uppercase', marginBottom: 5,
+          }}>
+            Presenter notes
+          </label>
+          <textarea
+            value={slide.notes ?? ''}
+            onChange={e => onUpdate({ notes: e.target.value || undefined })}
+            onKeyDown={e => e.stopPropagation()}
+            placeholder="Private notes visible only in Present mode…"
+            rows={3}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: '#1a1a1e',
+              border: `1px solid ${colors.borderDark}`,
+              borderRadius: 6, padding: '7px 10px',
+              fontSize: 12, color: '#FFFFFF', lineHeight: 1.5,
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+              outline: 'none', resize: 'vertical',
+            }}
+            onFocus={e => (e.currentTarget.style.borderColor = colors.blue)}
+            onBlur={e => (e.currentTarget.style.borderColor = colors.borderDark)}
+          />
+        </div>
+
         {/* CTA URL — closing slides only */}
         {slide.type === 'closing' && (
           <div style={{

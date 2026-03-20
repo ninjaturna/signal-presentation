@@ -58,6 +58,11 @@ export function EditableText({
     window.dispatchEvent(new CustomEvent('signal:diagram-request', { detail: { text: value } }))
   }
 
+  const handleRewriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.dispatchEvent(new CustomEvent('signal:rewrite-request', { detail: { text: value } }))
+  }
+
   if (!editable) {
     return <Tag style={style} className={className}>{value}</Tag>
   }
@@ -140,6 +145,14 @@ export function EditableText({
             EDIT
           </div>
 
+          {/* Rewrite badge */}
+          <div
+            onClick={handleRewriteClick}
+            style={badgeStyle('rewrite', true)}
+          >
+            ✦ Rewrite
+          </div>
+
           {/* Diagram badge — only for longer text */}
           {showDiagramBadge && (
             <div
@@ -156,8 +169,11 @@ export function EditableText({
 }
 
 function badgeStyle(bg: string, clickable: boolean): React.CSSProperties {
+  let background = 'rgba(119,112,111,0.85)'
+  if (bg === '#1E5AF2') background = 'rgba(30,90,242,0.9)'
+  else if (bg === 'rewrite') background = 'rgba(140,80,220,0.88)'
   return {
-    background: bg === '#1E5AF2' ? 'rgba(30,90,242,0.9)' : 'rgba(119,112,111,0.85)',
+    background,
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: 700,
