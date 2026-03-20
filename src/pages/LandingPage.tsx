@@ -1,4 +1,9 @@
 import { useState, useRef } from 'react'
+
+const preloadViewer = () => {
+  import('../components/SlideViewer')
+  import('../utils/renderSlide')
+}
 import { colors } from '../design-system'
 import { parseContentDoc } from '../utils/parseContentDoc'
 import type { ParsedContentDoc } from '../utils/parseContentDoc'
@@ -105,6 +110,7 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <button
             onClick={onViewDemo}
+            onMouseEnter={preloadViewer}
             style={{ background: 'transparent', border: 'none', fontSize: 13, color: '#666', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Demo deck
@@ -316,6 +322,7 @@ export function LandingPage({ onViewDemo, onHowItsMade, onDeckGenerated }: Landi
             </div>
             <button
               onClick={onViewDemo}
+              onMouseEnter={preloadViewer}
               style={{ background: 'transparent', border: '1px solid #333', borderRadius: 6, padding: '5px 12px', fontSize: 12, color: '#888', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               View demo deck →
