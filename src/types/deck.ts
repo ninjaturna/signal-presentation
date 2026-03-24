@@ -124,8 +124,8 @@ export interface SlideData {
   links?: InlineLink[]
   // background-color emphasis on specific phrases
   highlights?: TextHighlight[]
-  // layout variant
-  layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold'
+  // layout variant — per-slide override (theme provides defaults)
+  layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold' | 'editorial' | 'cinematic' | 'split' | 'oversized'
   // presenter notes
   notes?: string
   // slide build (progressive reveal in present mode)

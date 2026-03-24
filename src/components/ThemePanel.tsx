@@ -11,6 +11,99 @@ const TRANSITIONS: { id: TransitionType; label: string }[] = [
   { id: 'zoom',       label: 'Zoom'  },
 ]
 
+// Mini slide thumbnail — visualizes the theme's cover layout + colors
+function ThemeThumbnail({ theme, size = 40 }: { theme: DeckTheme; size?: number }) {
+  const t = theme.tokens
+  const w = size * 1.78  // 16:9
+  const h = size
+
+  const isLight = ['#F7F7F5', '#FCF8F5', '#FFFFFF'].includes(t.coverBg)
+  const coverLayout = t.coverLayout
+
+  return (
+    <div style={{
+      width: w, height: h,
+      background: t.coverBg,
+      borderRadius: 4,
+      position: 'relative',
+      overflow: 'hidden',
+      flexShrink: 0,
+    }}>
+      {/* Left accent bar (default/bold layouts) */}
+      {(coverLayout === 'default' || coverLayout === 'bold') && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0,
+          width: coverLayout === 'bold' ? 3 : 2,
+          height: '100%',
+          background: t.accentBar,
+        }} />
+      )}
+
+      {/* Top accent rule (cinematic/editorial) */}
+      {(coverLayout === 'cinematic' || coverLayout === 'editorial') && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          height: 2, background: t.accentColor,
+        }} />
+      )}
+
+      {/* Split left block (split layout) */}
+      {coverLayout === 'split' && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0,
+          width: '40%', height: '100%',
+          background: t.accentColor,
+        }} />
+      )}
+
+      {/* Diagonal accent (cinematic) */}
+      {coverLayout === 'cinematic' && (
+        <div style={{
+          position: 'absolute',
+          top: 0, right: 0,
+          width: '45%', height: '100%',
+          background: t.accentColor,
+          clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0% 100%)',
+          opacity: 0.18,
+        }} />
+      )}
+
+      {/* Headline block */}
+      <div style={{
+        position: 'absolute',
+        left: coverLayout === 'split' ? '44%' : coverLayout === 'editorial' ? 8 : 6,
+        right: coverLayout === 'cinematic' ? '42%' : 6,
+        top: '50%',
+        transform: 'translateY(-50%)',
+      }}>
+        <div style={{
+          width: '70%',
+          height: 3,
+          background: t.coverText,
+          opacity: 0.9,
+          marginBottom: 3,
+          borderRadius: 2,
+        }} />
+        <div style={{
+          width: '50%',
+          height: 2,
+          background: t.coverText,
+          opacity: 0.4,
+          borderRadius: 2,
+        }} />
+      </div>
+
+      {/* Bottom bar (editorial layout) */}
+      {coverLayout === 'editorial' && (
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          height: 6, background: t.accentColor,
+        }} />
+      )}
+    </div>
+  )
+}
+
 interface ThemePanelProps {
   currentThemeId: string
   onSelect: (theme: DeckTheme) => void
@@ -19,11 +112,13 @@ interface ThemePanelProps {
   onTransitionChange: (t: TransitionType) => void
 }
 
-export function ThemePanel({ currentThemeId, onSelect, onClose, activeTransition, onTransitionChange }: ThemePanelProps) {
+export function ThemePanel({
+  currentThemeId, onSelect, onClose, activeTransition, onTransitionChange,
+}: ThemePanelProps) {
   return (
     <div style={{
       position: 'fixed', right: 24, top: '50%', transform: 'translateY(-50%)',
-      width: 240, background: '#16161a', border: '1px solid #1e1e24',
+      width: 256, background: '#16161a', border: '1px solid #1e1e24',
       borderRadius: 12, zIndex: 1000, overflow: 'hidden',
       boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
     }}>
@@ -66,41 +161,44 @@ export function ThemePanel({ currentThemeId, onSelect, onClose, activeTransition
         </div>
       </div>
 
-      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {DECK_THEMES.map(theme => (
-          <button
-            key={theme.id}
-            onClick={() => onSelect(theme)}
-            style={{
-              background: currentThemeId === theme.id ? '#1a1a2e' : '#111',
-              border: `1px solid ${currentThemeId === theme.id ? colors.blue : '#1e1e24'}`,
-              borderRadius: 8, padding: '10px 12px',
-              cursor: 'pointer', textAlign: 'left',
-              display: 'flex', alignItems: 'center', gap: 12,
-              fontFamily: '"DM Sans", system-ui, sans-serif',
-            }}
-          >
-            {/* Color swatch */}
-            <div style={{
-              width: 32, height: 32, borderRadius: 6, flexShrink: 0,
-              background: theme.tokens.coverBg,
-              border: `2px solid ${theme.tokens.primary}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <div style={{
-                width: 10, height: 10, borderRadius: 2,
-                background: theme.tokens.primary,
-              }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc' }}>{theme.name}</div>
-              <div style={{ fontSize: 11, color: '#444', marginTop: 2 }}>{theme.description}</div>
-            </div>
-            {currentThemeId === theme.id && (
-              <div style={{ marginLeft: 'auto', fontSize: 10, color: colors.blue }}>✓</div>
-            )}
-          </button>
-        ))}
+      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {DECK_THEMES.map(theme => {
+          const isActive = currentThemeId === theme.id
+          return (
+            <button
+              key={theme.id}
+              onClick={() => onSelect(theme)}
+              style={{
+                background: isActive ? '#1a1a2e' : '#111',
+                border: `1px solid ${isActive ? colors.blue : '#1e1e24'}`,
+                borderRadius: 8, padding: '8px 10px',
+                cursor: 'pointer', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: 10,
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                transition: 'border-color 0.15s',
+              }}
+            >
+              <ThemeThumbnail theme={theme} size={36} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 12, fontWeight: 600,
+                  color: isActive ? '#fff' : '#ccc',
+                }}>
+                  {theme.name}
+                </div>
+                <div style={{
+                  fontSize: 10, color: '#555', marginTop: 1,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {theme.description}
+                </div>
+              </div>
+              {isActive && (
+                <div style={{ fontSize: 10, color: colors.blue, flexShrink: 0 }}>✓</div>
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
