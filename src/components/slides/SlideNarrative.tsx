@@ -76,6 +76,7 @@ export function SlideNarrative({
               onSave={v => up({ headline: v })}
               editable
               multiline
+              highlights={highlights}
               style={{
                 fontSize: headlineFontSize,
                 fontWeight: 700,
@@ -167,6 +168,7 @@ export function SlideNarrative({
               onSave={v => up({ headline: v })}
               editable
               multiline
+              highlights={highlights}
               style={{
                 fontSize: 'clamp(32px, 5vw, 68px)',
                 fontWeight: 700,
@@ -242,6 +244,7 @@ export function SlideNarrative({
             onSave={v => up({ headline: v })}
             editable
             multiline
+            highlights={highlights}
             style={{
               fontSize: headlineFontSize,
               fontWeight: 600, lineHeight: 1.2,
@@ -299,6 +302,7 @@ export function SlideNarrative({
               onSave={v => up({ pullQuote: v })}
               editable
               multiline
+              highlights={highlights}
               style={{
                 fontSize: 'clamp(14px, 1.6vw, 20px)', fontWeight: 500,
                 lineHeight: 1.4, color: textPrimary, fontStyle: 'italic',

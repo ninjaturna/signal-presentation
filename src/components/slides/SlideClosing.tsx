@@ -127,6 +127,7 @@ export function SlideClosing({
             <EditableText
               value={headline} onSave={v => up({ headline: v })}
               editable multiline
+              highlights={highlights}
               style={{
                 fontSize: headlineFontSize,
                 fontWeight: 700, lineHeight: 1.05,
@@ -181,6 +182,7 @@ export function SlideClosing({
             <EditableText
               value={headline} onSave={v => up({ headline: v })}
               editable multiline
+              highlights={highlights}
               style={{
                 fontSize: headlineFontSize,
                 fontWeight: 600, lineHeight: 1.1,
@@ -227,6 +229,7 @@ export function SlideClosing({
             <EditableText
               value={headline} onSave={v => up({ headline: v })}
               editable multiline
+              highlights={highlights}
               style={{
                 fontSize: 'clamp(24px, 3.5vw, 44px)',
                 fontWeight: 600, lineHeight: 1.2,
@@ -276,6 +279,7 @@ export function SlideClosing({
           <EditableText
             value={headline} onSave={v => up({ headline: v })}
             editable multiline
+            highlights={highlights}
             style={{
               fontSize: headlineFontSize,
               fontWeight: 600, lineHeight: 1.1,
