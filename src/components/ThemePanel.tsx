@@ -16,8 +16,6 @@ function ThemeThumbnail({ theme, size = 40 }: { theme: DeckTheme; size?: number 
   const t = theme.tokens
   const w = size * 1.78  // 16:9
   const h = size
-
-  const isLight = ['#F7F7F5', '#FCF8F5', '#FFFFFF'].includes(t.coverBg)
   const coverLayout = t.coverLayout
 
   return (
