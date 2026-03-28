@@ -3,9 +3,19 @@ import './styles/globals.css'
 import { StagingBanner }  from './components/StagingBanner'
 import { LandingPage }    from './pages/LandingPage'
 import { AudienceView }   from './components/AudienceView'
-import { disneyDeck }     from './data/disney-deck'
+import { disneyDeck, disneyDeckMeta } from './data/disney-deck'
 import { deckStore }      from './utils/deckStore'
-import type { SlideData, ShareMode } from './types/deck'
+import type { SlideData, ShareMode, DeckMeta } from './types/deck'
+
+const DECK_META_KEY = 'signal-deck-meta'
+
+function loadDeckMeta(): DeckMeta {
+  try {
+    const raw = localStorage.getItem(DECK_META_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* ignore */ }
+  return disneyDeckMeta
+}
 
 // Everything except LandingPage + AudienceView is lazy-loaded
 const DeckDashboard = lazy(() =>
@@ -67,6 +77,12 @@ export default function App() {
   const [activeDeck, setActiveDeck] = useState<SlideData[]>(disneyDeck)
   const [deckTitle, setDeckTitle]   = useState('Disney AI Enablement · SIGNAL')
   const [activeDeckId, setActiveDeckId] = useState<string | undefined>()
+  const [deckMeta, setDeckMeta]     = useState<DeckMeta>(loadDeckMeta)
+
+  const handleDeckMetaChange = (meta: DeckMeta) => {
+    setDeckMeta(meta)
+    try { localStorage.setItem(DECK_META_KEY, JSON.stringify(meta)) } catch { /* ignore */ }
+  }
 
   // URL-based routing on load + back/forward
   useEffect(() => {
@@ -101,17 +117,19 @@ export default function App() {
     setPage(p)
   }
 
-  const handleDeckGenerated = (slides: SlideData[], title: string) => {
+  const handleDeckGenerated = (slides: SlideData[], title: string, meta?: DeckMeta) => {
     goTo('dashboard', '/dashboard')
     setActiveDeck(slides)
     setDeckTitle(title)
+    if (meta) handleDeckMetaChange(meta)
   }
 
-  const handleOpenDeck = (slides: SlideData[], title: string, deckId?: string) => {
+  const handleOpenDeck = (slides: SlideData[], title: string, deckId?: string, meta?: DeckMeta) => {
     setActiveDeck(slides)
     setDeckTitle(title)
     setActiveDeckId(deckId)
     setShareMode('edit')
+    if (meta) handleDeckMetaChange(meta)
     goTo('deck', '/deck')
   }
 
@@ -139,7 +157,7 @@ export default function App() {
         <StagingBanner />
         <HowItWasMade
           onBack={() => goTo('dashboard', '/dashboard')}
-          onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
+          onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL', undefined, disneyDeckMeta)}
         />
       </Suspense>
     )
@@ -153,6 +171,8 @@ export default function App() {
           slides={activeDeck}
           title={deckTitle}
           mode={shareMode}
+          deckMeta={deckMeta}
+          onDeckMetaChange={handleDeckMetaChange}
           onBack={() => goTo('dashboard', '/dashboard')}
           onSlidesChange={handleSlideUpdate}
           onOpenEditor={() => goTo('editor', '/editor')}
@@ -179,7 +199,7 @@ export default function App() {
     <>
       <StagingBanner />
       <LandingPage
-        onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL')}
+        onViewDemo={() => handleOpenDeck(disneyDeck, 'Disney AI Enablement · SIGNAL', undefined, disneyDeckMeta)}
         onHowItsMade={() => goTo('how', '/how')}
         onDeckGenerated={handleDeckGenerated}
       />

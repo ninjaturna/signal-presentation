@@ -1,4 +1,16 @@
-import type { SlideData } from '../types/deck'
+import type { SlideData, DeckMeta } from '../types/deck'
+
+export const disneyDeckMeta: DeckMeta = {
+  clientName:      'Disney',
+  clientDomain:    'disney.com',
+  themeId:         'onyx',
+  themeReason:     'Selected Onyx for Disney — AI, premium, and experience-forward signals.',
+  themeConfidence: 'high',
+  preparedBy:      'Launch by NTT DATA',
+  preparedFor:     'Disney Parks & Experiences',
+  date:            'March 2026',
+  confidential:    true,
+}
 
 export const disneyDeck: SlideData[] = [
 
@@ -12,6 +24,7 @@ export const disneyDeck: SlideData[] = [
     title: 'The intelligence layer Disney\'s experience deserves.',
     subtitle: 'A platform to unify guest data across parks, streaming, and retail — and put it to work.',
     meta: 'Launch by NTT DATA · Prepared for Disney · March 2026 · Confidential',
+    showLogo: true,
     notes: 'Cover slide. Open with: "Before I start — tell me what\'s driving this conversation internally right now." Let them frame the problem in their own words. Then begin.',
   },
 
@@ -231,9 +244,10 @@ export const disneyDeck: SlideData[] = [
     layout: 'default',
     headline: 'Let\'s build the intelligence layer Disney\'s experience deserves.',
     cta: 'Schedule a working session',
-    ctaUrl: 'https://cal.com',
+    ctaUrl: 'https://signal.launchbynttdata.com',
     ctaTarget: '_blank',
-    contact: 'launch.nttdata.com · hello@launch.nttdata.com',
+    contact: 'tam@launchbynttdata.com · signal.launchbynttdata.com',
+    showLogo: true,
     notes: 'Closing. Calibrate the ask to poll 2 results. If data infrastructure was the top blocker: "Phase 1 is specifically scoped to solve that first." If executive mandate was the issue: "First call is free. Let us help you build the internal case." Always close with a specific next step — never with "any questions?"',
   },
 ]
