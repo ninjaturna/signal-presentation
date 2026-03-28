@@ -74,13 +74,9 @@ function makePlaceholder(clientName: string): LogoResult {
 }
 
 async function fetchFromBrandfetch(domain: string): Promise<LogoResult> {
-  const apiKey = (import.meta as any).env?.VITE_BRANDFETCH_API_KEY ?? ''
-  const headers: Record<string, string> = { 'Accept': 'application/json' }
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`
-
-  const res = await fetch(`https://api.brandfetch.io/v2/brands/${domain}`, {
-    headers,
-    signal: AbortSignal.timeout(5000),
+  // Call our own server-side proxy — keeps API key out of the client bundle
+  const res = await fetch(`/api/logo?domain=${encodeURIComponent(domain)}`, {
+    signal: AbortSignal.timeout(6000),
   })
 
   if (!res.ok) throw new Error(`Brandfetch ${res.status} for ${domain}`)
