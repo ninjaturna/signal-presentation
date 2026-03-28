@@ -69,6 +69,21 @@ export interface ImageElement {
   }
 }
 
+export interface DeckMeta {
+  clientName?:      string
+  clientDomain?:    string
+  logoUrl?:         string
+  themeId:          string
+  themeReason?:     string
+  themeConfidence?: 'high' | 'medium' | 'low'
+  deckType?:        string
+  industry?:        string
+  preparedBy?:      string
+  preparedFor?:     string
+  date?:            string
+  confidential?:    boolean
+}
+
 export interface SlideData {
   id: string
   type: 'cover' | 'narrative' | 'stat-grid' | 'two-pane' | 'section-break' | 'full-bleed' | 'diagram' | 'closing' | 'poll' | 'embed'
@@ -128,6 +143,8 @@ export interface SlideData {
   layout?: 'default' | 'centered' | 'split-right' | 'minimal' | 'bold' | 'editorial' | 'cinematic' | 'split' | 'oversized'
   // presenter notes
   notes?: string
+  themeOverride?: string
+  showLogo?:      boolean
   // slide build (progressive reveal in present mode)
   // 0 or undefined = no build, advance immediately
   // N = N click steps before advancing to next slide
