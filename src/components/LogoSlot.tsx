@@ -19,7 +19,7 @@ const SIZE_MAP = {
 }
 
 export function LogoSlot({
-  clientName, logoUrl, mode = 'light', theme,
+  clientName, logoUrl, mode = 'light',
   size = 'md', editable = false, onLogoChange, style = {},
 }: LogoSlotProps) {
   const { logo, loading } = useClientLogo(logoUrl ? undefined : clientName)

@@ -19,7 +19,7 @@ interface SlideCoverProps {
 }
 
 export function SlideCover({
-  eyebrow, title, subtitle, meta, mode,
+  eyebrow, title, subtitle, meta,
   editable = false, onUpdate, theme, deckMeta, layout,
 }: SlideCoverProps) {
   const up = (patch: Partial<SlideData>) => onUpdate?.(patch)

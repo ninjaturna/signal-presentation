@@ -97,7 +97,7 @@ export function SlideViewer({
   const [showShare, setShowShare]         = useState(false)
   const [showTheme, setShowTheme]               = useState(false)
   const [showPollModal, setShowPollModal]       = useState(false)
-  const [activeTransition, setActiveTransition]   = useState<TransitionType>('fade')
+  const [activeTransition, _setActiveTransition]   = useState<TransitionType>('fade')
   const [diagramSourceText, setDiagramSourceText] = useState<string | null>(null)
   const [activeDeckMeta, setActiveDeckMeta] = useState<DeckMeta>(
     initialDeckMeta ?? { themeId: 'meridian' }

@@ -16,88 +16,62 @@ function ThemeThumbnail({ theme, size = 40 }: { theme: DeckTheme; size?: number 
   const t = theme.tokens
   const w = size * 1.78  // 16:9
   const h = size
-  const coverLayout = t.coverLayout
+  const isCentered = theme.style.coverLayout === 'centered'
 
   return (
     <div style={{
       width: w, height: h,
-      background: t.coverBg,
+      background: t.groundAccent,
       borderRadius: 4,
       position: 'relative',
       overflow: 'hidden',
       flexShrink: 0,
     }}>
-      {/* Left accent bar (default/bold layouts) */}
-      {(coverLayout === 'default' || coverLayout === 'bold') && (
+      {/* Left accent bar */}
+      {!isCentered && (
         <div style={{
           position: 'absolute', top: 0, left: 0,
-          width: coverLayout === 'bold' ? 3 : 2,
-          height: '100%',
-          background: t.accentBar,
-        }} />
-      )}
-
-      {/* Top accent rule (cinematic/editorial) */}
-      {(coverLayout === 'cinematic' || coverLayout === 'editorial') && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0,
-          height: 2, background: t.accentColor,
-        }} />
-      )}
-
-      {/* Split left block (split layout) */}
-      {coverLayout === 'split' && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0,
-          width: '40%', height: '100%',
-          background: t.accentColor,
-        }} />
-      )}
-
-      {/* Diagonal accent (cinematic) */}
-      {coverLayout === 'cinematic' && (
-        <div style={{
-          position: 'absolute',
-          top: 0, right: 0,
-          width: '45%', height: '100%',
-          background: t.accentColor,
-          clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0% 100%)',
-          opacity: 0.18,
+          width: 2, height: '100%',
+          background: t.barLeft,
         }} />
       )}
 
       {/* Headline block */}
       <div style={{
         position: 'absolute',
-        left: coverLayout === 'split' ? '44%' : coverLayout === 'editorial' ? 8 : 6,
-        right: coverLayout === 'cinematic' ? '42%' : 6,
+        left: isCentered ? '50%' : 6,
+        right: 6,
         top: '50%',
-        transform: 'translateY(-50%)',
+        transform: isCentered ? 'translate(-50%, -50%)' : 'translateY(-50%)',
+        textAlign: isCentered ? 'center' : 'left',
       }}>
         <div style={{
           width: '70%',
           height: 3,
-          background: t.coverText,
+          background: t.textReversed,
           opacity: 0.9,
           marginBottom: 3,
           borderRadius: 2,
+          marginLeft: isCentered ? 'auto' : undefined,
+          marginRight: isCentered ? 'auto' : undefined,
         }} />
         <div style={{
           width: '50%',
           height: 2,
-          background: t.coverText,
+          background: t.textReversed,
           opacity: 0.4,
           borderRadius: 2,
+          marginLeft: isCentered ? 'auto' : undefined,
+          marginRight: isCentered ? 'auto' : undefined,
         }} />
       </div>
 
-      {/* Bottom bar (editorial layout) */}
-      {coverLayout === 'editorial' && (
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          height: 6, background: t.accentColor,
-        }} />
-      )}
+      {/* Accent dot */}
+      <div style={{
+        position: 'absolute', bottom: 4, right: 4,
+        width: 4, height: 4, borderRadius: '50%',
+        background: t.accent,
+      }} />
     </div>
   )
 }

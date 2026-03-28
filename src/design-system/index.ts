@@ -1,5 +1,5 @@
 export * from './tokens'
-export * from './theme'
+export { defaultModeFor, darkTheme, lightTheme, modeClasses } from './theme'
 export type { SlideMode } from './theme'
 export * from './themes'
 export * from './component-tokens'
