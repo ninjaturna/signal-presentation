@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedContentDoc } from '../src/utils/parseContentDoc'
+import { selectThemeFromDoc } from '../src/utils/themeSelector'
+import { inferDomain } from '../src/utils/logoService'
 
 // Do NOT instantiate at module level on Edge Runtime —
 // env vars are only available at request time, not at cold start
@@ -79,6 +81,17 @@ export default async function handler(req: any, res: any) {
   try {
     const doc: ParsedContentDoc = req.body
 
+    const rawDocText = req.body._rawText ?? ''
+    const themeSelection = selectThemeFromDoc(rawDocText)
+    const clientName = doc.clientName ?? ''
+    const deckMeta = {
+      clientName,
+      clientDomain: clientName ? inferDomain(clientName) : undefined,
+      themeId:         themeSelection.themeId,
+      themeReason:     themeSelection.reason,
+      themeConfidence: themeSelection.confidence,
+    }
+
     const slideSummary = doc.slides.map(s => ({
       number: s.number,
       title: s.title,
@@ -120,7 +133,7 @@ Return a SlideData[] JSON array with one object per slide in order.`
     const cleaned = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim()
     const slides  = JSON.parse(cleaned)
 
-    res.json({ slides, meta: { clientName: doc.clientName, documentTitle: doc.documentTitle } })
+    res.json({ slides, deckMeta, meta: { clientName: doc.clientName, documentTitle: doc.documentTitle } })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('generate-deck error:', message)
