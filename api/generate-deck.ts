@@ -1,7 +1,61 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedContentDoc } from '../src/utils/parseContentDoc'
-import { selectThemeFromDoc } from '../src/utils/themeSelector'
-import { inferDomain } from '../src/utils/logoService'
+
+// ── Inlined from src/utils/logoService — avoids cross-bundle import ────────
+const KNOWN_DOMAINS: Record<string, string> = {
+  'disney': 'disney.com', 'walt disney': 'disney.com', 'netflix': 'netflix.com',
+  'hbo': 'hbo.com', 'apple': 'apple.com', 'google': 'google.com',
+  'alphabet': 'google.com', 'nike': 'nike.com', 'adidas': 'adidas.com',
+  'hilton': 'hilton.com', 'marriott': 'marriott.com', 'pfizer': 'pfizer.com',
+  'microsoft': 'microsoft.com', 'amazon': 'amazon.com', 'meta': 'meta.com',
+  'salesforce': 'salesforce.com', 'servicenow': 'servicenow.com',
+  'royal caribbean': 'royalcaribbean.com', 'expedia': 'expedia.com',
+  'capital one': 'capitalone.com', "lowe's": 'lowes.com', 'lowes': 'lowes.com',
+  'verizon': 'verizon.com', 'assurant': 'assurant.com',
+  'ntt data': 'nttdata.com', 'ntt': 'nttdata.com', 'launch': 'launchbynttdata.com',
+}
+function inferDomain(clientName: string): string {
+  const lower = clientName.toLowerCase().trim()
+  for (const [key, domain] of Object.entries(KNOWN_DOMAINS)) {
+    if (lower.includes(key)) return domain
+  }
+  const clean = lower
+    .replace(/\b(inc|corp|ltd|llc|co|company|the|group|holdings|global|international)\b/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim().split(/\s+/).join('')
+  return `${clean}.com`
+}
+
+// ── Inlined from src/utils/themeSelector — avoids cross-bundle import ─────
+const THEME_SELECTORS = [
+  { id: 'meridian', priority: 3, clientSignals: ['accenture','deloitte','pwc','kpmg','microsoft','salesforce','servicenow','ibm','ntt','launch'], industrySignals: ['technology','consulting','finance','banking','insurance','enterprise','saas','software','b2b','telecommunications','audit','advisory'], deckTypeSignals: ['proposal','pitch','capabilities','rfi','rfp','due diligence','partnership','co-sell'], toneSignals: ['precision','authority','corporate','professional','strategic','analytical','credible','structured'], avoid: [] },
+  { id: 'forge',    priority: 4, clientSignals: ['ge','siemens','honeywell','caterpillar','ford','gm','ups','fedex','amazon'], industrySignals: ['manufacturing','industrial','operations','supply chain','logistics','energy','oil','gas','mining','construction','infrastructure','utilities','automotive'], deckTypeSignals: ['qbr','quarterly business review','investment','investor','board','performance review','kpi','executive dashboard'], toneSignals: ['data-driven','metrics','roi','performance','results','heavy','serious','operational'], avoid: ['healthcare','consumer','lifestyle','hospitality'] },
+  { id: 'verdant',  priority: 4, clientSignals: ['pfizer','jnj','johnson','merck','cvs','unitedhealth','humana','who','cdc'], industrySignals: ['healthcare','pharma','life sciences','biotech','medical','sustainability','esg','environment','climate','social impact','nonprofit','public sector','government'], deckTypeSignals: ['case study','impact report','esg report','white paper','thought leadership','research','discovery'], toneSignals: ['warm','human','trusted','evidence-based','scientific','responsible','purpose-driven','community'], avoid: ['dark','luxury','aggressive'] },
+  { id: 'onyx',     priority: 4, clientSignals: ['openai','anthropic','nvidia','crowdstrike','palantir','apple','netflix','hbo','disney','tesla'], industrySignals: ['ai','artificial intelligence','machine learning','cybersecurity','security','blockchain','crypto','deep tech','semiconductor','defense','aerospace','luxury','fashion'], deckTypeSignals: ['ai strategy','security briefing','technology vision','product launch','innovation','transformation'], toneSignals: ['premium','exclusive','dark','bold','disruptive','cutting-edge','innovative','high-stakes'], avoid: ['healthcare','government','nonprofit'] },
+  { id: 'solana',   priority: 4, clientSignals: ['disney','hilton','marriott','nike','adidas','starbucks','target','walmart','gap','royal caribbean','expedia'], industrySignals: ['retail','consumer','hospitality','hotel','travel','tourism','food','beverage','entertainment','media','sports','culture','e-commerce','dtc','brand'], deckTypeSignals: ['brand strategy','customer experience','cx','partnership','closing','next steps','kickoff','introduction'], toneSignals: ['warm','approachable','friendly','human','emotional','relationship','community','experience','guest'], avoid: ['financial','legal','compliance','security'] },
+]
+function selectThemeFromDoc(rawText: string): { themeId: string; reason: string; confidence: 'high'|'medium'|'low' } {
+  const text = rawText.slice(0, 2000).toLowerCase()
+  const scored = THEME_SELECTORS.map(t => {
+    let score = t.priority
+    const matched: string[] = []
+    const check = (signals: string[], w: number) => {
+      for (const s of signals) { if (text.includes(s)) { score += w; matched.push(s) } }
+    }
+    check(t.clientSignals, 5)
+    check(t.industrySignals, 3)
+    check(t.deckTypeSignals, 3)
+    check(t.toneSignals, 2)
+    for (const a of t.avoid) { if (text.includes(a)) score -= 4 }
+    return { id: t.id, score, matched }
+  }).sort((a, b) => b.score - a.score)
+  const winner = scored[0]
+  const diff = winner.score - scored[1].score
+  const confidence: 'high'|'medium'|'low' = diff >= 6 ? 'high' : diff >= 3 ? 'medium' : 'low'
+  const top = winner.matched.slice(0, 3).join(', ')
+  const reason = top ? `Selected ${winner.id} based on ${top} signals.` : `${winner.id} applied as default.`
+  return { themeId: winner.score > 0 ? winner.id : 'meridian', reason, confidence }
+}
 
 // Do NOT instantiate at module level on Edge Runtime —
 // env vars are only available at request time, not at cold start
