@@ -17,14 +17,14 @@ interface SlideTwoPaneProps {
   split?: '50/50' | '60/40' | '40/60'
   mode?: SlideMode
   revealStep?: number
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
 }
 
 export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', revealStep, theme }: SlideTwoPaneProps) {
   const textPrimary  = mode === 'dark' ? '#FFFFFF' : colors.ink
   const textMuted    = mode === 'dark' ? colors.mutedDark : colors.mutedLight
   const dividerColor = mode === 'dark' ? colors.borderDark : colors.border
-  const accentColor  = theme?.primary ?? colors.blue
+  const accentColor  = theme?.tokens.accent ?? colors.blue
 
   const leftFr   = split === '60/40' ? '60' : split === '40/60' ? '40' : '50'
   const rightFr  = split === '60/40' ? '40' : split === '40/60' ? '60' : '50'
@@ -72,7 +72,7 @@ export function SlideTwoPane({ left, right, split = '50/50', mode = 'light', rev
   )
 
   return (
-    <SlideShell slideType="content" mode={mode}>
+    <SlideShell slideType="content" mode={mode} theme={theme}>
       <div style={{
         flex: 1,
         display: 'grid',

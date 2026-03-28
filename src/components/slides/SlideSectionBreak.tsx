@@ -6,18 +6,18 @@ interface SlideSectionBreakProps {
   number?: string
   title: string
   subtitle?: string
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
   revealStep?: number
 }
 
 export function SlideSectionBreak({ number, title, subtitle, theme, revealStep }: SlideSectionBreakProps) {
-  const sectionBg    = theme?.sectionBg ?? undefined
-  const accentBar    = theme?.accentBar ?? colors.gold
+  const sectionBg    = theme?.tokens.groundAccent ?? undefined
+  const accentBar    = theme?.tokens.barLeft ?? colors.gold
   const showTitle    = revealStep === undefined || revealStep >= 1
   const showSubtitle = revealStep === undefined || revealStep >= 2
 
   return (
-    <SlideShell slideType="section-break" mode="dark" style={sectionBg ? { background: sectionBg } : undefined}>
+    <SlideShell slideType="section-break" mode="dark" theme={theme} style={sectionBg ? { background: sectionBg } : undefined}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <div>
           {number && (

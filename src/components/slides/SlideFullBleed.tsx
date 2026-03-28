@@ -9,15 +9,15 @@ interface SlideFullBleedProps {
   sub?: string
   accentWord?: string
   highlights?: TextHighlight[]
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
 }
 
 export function SlideFullBleed({ statement, sub, accentWord, highlights, theme }: SlideFullBleedProps) {
-  const accentColor = theme?.accentBar ?? colors.gold
+  const accentColor = theme?.tokens.barLeft ?? theme?.tokens.accent ?? colors.gold
   const parts = accentWord ? statement.split(accentWord) : null
 
   return (
-    <SlideShell slideType="cover" mode="dark" fullBleed>
+    <SlideShell slideType="cover" mode="dark" fullBleed theme={theme}>
       <div style={{
         flex: 1,
         display: 'flex',

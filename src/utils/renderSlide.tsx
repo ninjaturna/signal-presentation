@@ -12,13 +12,14 @@ import {
 } from '../components/slides'
 import { SlideImageLayer } from '../components/SlideImageLayer'
 import { OverflowBadge } from '../components/OverflowBadge'
-import type { SlideData } from '../types/deck'
+import type { SlideData, DeckMeta } from '../types/deck'
 import type { DeckTheme } from '../design-system/themes'
 
 interface RenderSlideOptions {
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
+  deckMeta?: DeckMeta
   revealStep?: number
 }
 
@@ -56,7 +57,7 @@ function withWrappers(
 }
 
 export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}): React.ReactElement {
-  const { editable = false, onUpdate, theme, revealStep } = options
+  const { editable = false, onUpdate, theme, deckMeta, revealStep } = options
 
   switch (slide.type) {
     case 'cover':
@@ -69,6 +70,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           editable={editable}
           onUpdate={onUpdate}
           theme={theme}
+          deckMeta={deckMeta}
           layout={slide.layout}
         />,
         slide, options
@@ -172,6 +174,7 @@ export function renderSlide(slide: SlideData, options: RenderSlideOptions = {}):
           editable={editable}
           onUpdate={onUpdate}
           theme={theme}
+          deckMeta={deckMeta}
           links={slide.links}
           highlights={slide.highlights}
         />,

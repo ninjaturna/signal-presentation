@@ -16,7 +16,7 @@ interface SlideStatGridProps {
   headline?: string
   stats: Stat[]
   mode?: SlideMode
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
   layout?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
@@ -29,21 +29,21 @@ export function SlideStatGrid({
 }: SlideStatGridProps) {
   const isDark      = mode === 'dark'
   const textPrimary = isDark ? '#FFFFFF' : colors.ink
-  const textMuted   = isDark ? (theme?.bodyText ?? colors.mutedDark) : colors.mutedLight
-  const statColor   = theme?.statColor   ?? colors.blue
-  const accentColor = theme?.accentColor ?? colors.blue
-  const cardBg      = theme?.cardBg      ?? (isDark ? colors.inkSoft : colors.surfaceAlt)
-  const cardBorder  = theme?.cardBorder  ?? (isDark ? colors.borderDark : colors.border)
+  const textMuted   = isDark ? (theme?.tokens.textMuted ?? colors.mutedDark) : colors.mutedLight
+  const statColor   = theme?.tokens.statValue  ?? colors.blue
+  const accentColor = theme?.tokens.accent     ?? colors.blue
+  const cardBg      = theme?.tokens.statCard   ?? (isDark ? colors.inkSoft : colors.surfaceAlt)
+  const cardBorder  = theme?.tokens.statBorder ?? (isDark ? colors.borderDark : colors.border)
 
   // Per-slide layout overrides theme default
-  const effectiveLayout = layout ?? theme?.statLayout ?? 'default'
+  const effectiveLayout = layout ?? 'default'
   const isBold      = effectiveLayout === 'bold'
   const isOversized = effectiveLayout === 'oversized'
 
   // ── OVERSIZED — magazine-style, numbers dominate ──────────────
   if (isOversized) {
     return (
-      <SlideShell slideType="content" mode={mode}>
+      <SlideShell slideType="content" mode={mode} theme={theme}>
         {/* Eyebrow + headline row */}
         <div style={{
           display: 'flex', alignItems: 'center',
@@ -145,7 +145,7 @@ export function SlideStatGrid({
   // ── BOLD — large numbers, top-rule, card-free ─────────────────
   if (isBold) {
     return (
-      <SlideShell slideType="content" mode={mode}>
+      <SlideShell slideType="content" mode={mode} theme={theme}>
         {(eyebrow !== undefined || headline !== undefined) && (
           <div style={{ marginBottom: 32 }}>
             {eyebrow !== undefined && (
@@ -180,7 +180,7 @@ export function SlideStatGrid({
             const isVisible = revealStep === undefined || i < revealStep
             return (
               <div key={i} style={{
-                borderTop: `3px solid ${statColor}`,
+                borderTop: `3px solid ${theme?.tokens.statBorderTop ?? statColor}`,
                 paddingTop: 24,
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
@@ -215,7 +215,7 @@ export function SlideStatGrid({
 
   // ── DEFAULT — card grid ────────────────────────────────────────
   return (
-    <SlideShell slideType="content" mode={mode}>
+    <SlideShell slideType="content" mode={mode} theme={theme}>
       {(eyebrow !== undefined || headline !== undefined) && (
         <div style={{ marginBottom: 32 }}>
           {eyebrow !== undefined && (

@@ -6,17 +6,16 @@ import { EditPanel } from './EditPanel'
 import { ShareMenu } from './ShareMenu'
 import { CommentSidebar } from './CommentSidebar'
 import { GdprBanner } from './GdprBanner'
-import { ThemePanel } from './ThemePanel'
 import type { TransitionType } from './ThemePanel'
+import { ThemePicker } from './ThemePicker'
 import { InsertPollModal } from './InsertPollModal'
 import { DiagramFromTextPanel } from './DiagramFromTextPanel'
 import { SlidePanel } from './SlidePanel'
 import { PresentMode } from './PresentMode'
 import { triggerPrintExport } from './PrintExport'
-import { DECK_THEMES } from '../design-system/themes'
-import type { DeckTheme } from '../design-system/themes'
+import { getTheme } from '../design-system/themes'
 import { useUndoHistory } from '../hooks/useUndoHistory'
-import type { SlideData, ShareMode, ImageElement, DiagramData } from '../types/deck'
+import type { SlideData, ShareMode, ImageElement, DiagramData, DeckMeta } from '../types/deck'
 
 // ─── PdfButton sub-component ───────────────────────────────────────────────
 
@@ -71,8 +70,10 @@ interface SlideViewerProps {
   title?: string
   mode?: ShareMode
   deckId?: string
+  deckMeta?: DeckMeta
   onBack?: () => void
   onSlidesChange?: (slides: SlideData[]) => void
+  onDeckMetaChange?: (meta: DeckMeta) => void
   onOpenEditor?: () => void
 }
 
@@ -83,8 +84,10 @@ export function SlideViewer({
   title = 'SIGNAL',
   mode = 'edit',
   deckId,
+  deckMeta: initialDeckMeta,
   onBack,
   onSlidesChange,
+  onDeckMetaChange,
 }: SlideViewerProps) {
   const { current: slides, push: pushSlides, undo, redo, canUndo, canRedo } = useUndoHistory<SlideData[]>(initialSlides)
   const [current, setCurrent]             = useState(0)
@@ -96,12 +99,16 @@ export function SlideViewer({
   const [showPollModal, setShowPollModal]       = useState(false)
   const [activeTransition, setActiveTransition]   = useState<TransitionType>('fade')
   const [diagramSourceText, setDiagramSourceText] = useState<string | null>(null)
-  const [activeTheme, setActiveTheme]     = useState<DeckTheme>(() => {
+  const [activeDeckMeta, setActiveDeckMeta] = useState<DeckMeta>(
+    initialDeckMeta ?? { themeId: 'meridian' }
+  )
+  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
+    if (initialDeckMeta?.themeId) return initialDeckMeta.themeId
     try {
-      const saved = localStorage.getItem('signal-active-theme')
-      return DECK_THEMES.find(t => t.id === saved) ?? DECK_THEMES[0]
-    } catch { return DECK_THEMES[0] }
+      return localStorage.getItem('signal-active-theme') ?? 'meridian'
+    } catch { return 'meridian' }
   })
+  const activeTheme = getTheme(activeThemeId)
   const [isFullscreen, setIsFullscreen]   = useState(false)
   const [trackingEnabled, setTrackingEnabled] = useState(false)
   const [presenting, setPresenting]       = useState(mode === 'present')
@@ -508,7 +515,8 @@ export function SlideViewer({
               {renderSlide(slide, {
                 editable: canTextEdit,
                 onUpdate: (patch) => updateSlide(slide.id, patch),
-                theme: activeTheme.tokens,
+                theme: activeTheme,
+                deckMeta: activeDeckMeta,
               })}
             </div>
           </div>
@@ -641,17 +649,23 @@ export function SlideViewer({
 
       {/* Theme panel — edit mode only, fixed overlay */}
       {canEdit && showTheme && (
-        <ThemePanel
-          currentThemeId={activeTheme.id}
-          onSelect={theme => {
-            setActiveTheme(theme)
-            setShowTheme(false)
-            try { localStorage.setItem('signal-active-theme', theme.id) } catch {}
-          }}
-          onClose={() => setShowTheme(false)}
-          activeTransition={activeTransition}
-          onTransitionChange={t => setActiveTransition(t)}
-        />
+        <div data-no-print style={{
+          position: 'fixed', top: 56, right: 16, zIndex: 50,
+        }}>
+          <ThemePicker
+            activeThemeId={activeThemeId}
+            deckMeta={activeDeckMeta}
+            onThemeChange={themeId => {
+              setActiveThemeId(themeId)
+              const newMeta = { ...activeDeckMeta, themeId }
+              setActiveDeckMeta(newMeta)
+              onDeckMetaChange?.(newMeta)
+              setShowTheme(false)
+              try { localStorage.setItem('signal-active-theme', themeId) } catch {}
+            }}
+            onClose={() => setShowTheme(false)}
+          />
+        </div>
       )}
 
       {/* Insert poll modal — edit mode only */}

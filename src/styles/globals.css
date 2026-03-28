@@ -155,6 +155,13 @@
   }
 }
 
+/* Logo slot shimmer animation */
+@keyframes signal-shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
 /* Dark mode surfaces — used inside slide shells */
 .signal-dark {
   --surface-bg:      var(--color-ink);

@@ -15,7 +15,7 @@ interface SlideNarrativeProps {
   pullQuote?: string
   editable?: boolean
   onUpdate?: (patch: Partial<SlideData>) => void
-  theme?: DeckTheme['tokens']
+  theme?: DeckTheme
   layout?: string
   links?: InlineLink[]
   highlights?: TextHighlight[]
@@ -31,26 +31,21 @@ export function SlideNarrative({
 
   const isDark       = mode === 'dark'
   const textPrimary  = isDark ? '#FFFFFF' : colors.ink
-  const textMuted    = isDark ? (theme?.bodyText ?? colors.mutedDark) : colors.mutedLight
-  const accentColor  = theme?.accentColor ?? theme?.accentBar ?? (isDark ? colors.gold : colors.blue)
-  const headlineScale = theme?.headlineScale ?? 'normal'
+  const textMuted    = isDark ? (theme?.tokens.textMuted ?? colors.mutedDark) : colors.mutedLight
+  const accentColor  = theme?.tokens.accent ?? theme?.tokens.barLeft ?? (isDark ? colors.gold : colors.blue)
 
   const showBody      = revealStep === undefined || revealStep >= 1
   const showPullQuote = revealStep === undefined || revealStep >= 2
 
   // Per-slide layout overrides theme default
-  const effectiveLayout = layout ?? theme?.narrativeLayout ?? 'default'
+  const effectiveLayout = layout ?? 'default'
 
-  const headlineFontSize = headlineScale === 'massive'
-    ? 'clamp(28px, 4.2vw, 56px)'
-    : headlineScale === 'large'
-    ? 'clamp(22px, 3.4vw, 44px)'
-    : 'clamp(18px, 2.6vw, 32px)'
+  const headlineFontSize = 'clamp(18px, 2.6vw, 32px)'
 
   // ── EDITORIAL — accent rule, oversized headline, body beside ──
   if (effectiveLayout === 'editorial') {
     return (
-      <SlideShell slideType="content" mode={mode}>
+      <SlideShell slideType="content" mode={mode} theme={theme}>
 
         {/* Top accent rule */}
         <div style={{
@@ -147,7 +142,7 @@ export function SlideNarrative({
   // ── MINIMAL — massive bottom-anchored headline ─────────────────
   if (effectiveLayout === 'minimal') {
     return (
-      <SlideShell slideType="content" mode={mode}>
+      <SlideShell slideType="content" mode={mode} theme={theme}>
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           justifyContent: 'flex-end',
